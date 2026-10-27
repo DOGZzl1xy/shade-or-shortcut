@@ -4,11 +4,12 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>City Shade Map</title>
-<meta name="description" content="Hour-by-hour sidewalk shade for all of Philadelphia, with where walkers can and cannot find a cooler route home.">
+<meta name="description" content="Hour-by-hour sidewalk shade for all of Philadelphia, and where walks home have a cooler option.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500&family=Space+Grotesk:wght@400;500;600&family=Space+Mono&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500&family=Space+Grotesk:wght@500;600&family=Space+Mono&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="vendor/maplibre-gl.css">
-<link rel="stylesheet" href="css/site.css">
+<link rel="stylesheet" href="css/site.css?v=15a08dc">
 <style>
   #map { position: fixed; top: var(--nav-h); left: 0; right: 0; bottom: 0; }
   #side { position: fixed; top: calc(var(--nav-h) + 14px); left: 14px; width: 320px; max-height: calc(100vh - var(--nav-h) - 28px); overflow-y: auto; z-index: 5; }
@@ -45,7 +46,7 @@
     <select id="gridvar">
       <option value="cluster">Cluster (k = 3)</option>
       <option value="sun_red">Achievable sun reduction</option>
-      <option value="no_alt_share">No cooler alternative (&lt; 2%)</option>
+      <option value="no_alt_share">No cooler option (&lt; 2%)</option>
       <option value="sun_share">Sun share of the shortest walk</option>
       <option value="network_km_km2">Sidewalk density (km/km²)</option>
       <option value="none">Hide grid</option>
@@ -64,6 +65,6 @@
 </div>
 <script src="vendor/maplibre-gl.js"></script>
 <script src="vendor/pmtiles.js"></script>
-<script type="module" src="js/map.js"></script>
+<script type="module" src="js/map.js?v=15a08dc"></script>
 </body>
 </html>
