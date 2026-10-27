@@ -32,10 +32,6 @@ ul.task-list li input[type="checkbox"] {
 <script src="site_libs/quarto-nav/quarto-nav.js"></script>
 <script src="site_libs/quarto-nav/headroom.min.js"></script>
 <script src="site_libs/clipboard/clipboard.min.js"></script>
-<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
-<script src="site_libs/quarto-search/fuse.min.js"></script>
-<script src="site_libs/quarto-search/quarto-search.js"></script>
-<meta name="quarto:offset" content="./">
 <script src="site_libs/quarto-html/quarto.js" type="module"></script>
 <script src="site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
 <script src="site_libs/quarto-html/popper.min.js"></script>
@@ -45,20 +41,8 @@ ul.task-list li input[type="checkbox"] {
 <link href="site_libs/quarto-html/quarto-syntax-highlighting-dark-f41162f81dd66dbd42c3d463b140dc68.css" rel="stylesheet" id="quarto-text-highlighting-styles">
 <script src="site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="site_libs/bootstrap/bootstrap-ae73614a2d9a3140b18044ba04d92a90.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="dark">
+<link href="site_libs/bootstrap/bootstrap-d69f2ca21dae9656bc97ea7e3f15cba2.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="dark">
 <script id="quarto-search-options" type="application/json">{
-  "location": "navbar",
-  "copy-button": false,
-  "collapse-after": 3,
-  "panel-placement": "end",
-  "type": "overlay",
-  "limit": 50,
-  "keyboard-shortcut": [
-    "f",
-    "/",
-    "s"
-  ],
-  "show-item-context": false,
   "language": {
     "search-no-results-text": "No results",
     "search-matching-documents-text": "matching documents",
@@ -88,12 +72,11 @@ ul.task-list li input[type="checkbox"] {
     <span class="navbar-title">Shade or Shortcut</span>
     </a>
   </div>
-            <div id="quarto-search" class="" title="Search"></div>
           <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
   <span class="navbar-toggler-icon"></span>
 </button>
           <div class="collapse navbar-collapse" id="navbarCollapse">
-            <ul class="navbar-nav navbar-nav-scroll me-auto">
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
   <li class="nav-item">
     <a class="nav-link" href="./app/index.html"> 
 <span class="menu-text">Story</span></a>
@@ -172,13 +155,16 @@ ul.task-list li input[type="checkbox"] {
 <p>All numbers are for 15:00 (June 21 and August 1 pooled) with the dynamic θ, unless stated.</p>
 <section id="how-much-sun-can-a-walk-home-avoid" class="level2 page-columns page-full">
 <h2 class="anchored" data-anchor-id="how-much-sun-can-a-walk-home-avoid">How much sun can a walk home avoid?</h2>
+<div class="label">
+Walks of 300–800 m from rapid-transit stations, 15:00 (the Story shows frequent bus stops; both are in the table)
+</div>
 <div class="stat-row">
 <div>
 <div class="v sun">
 66%
 </div>
 <div class="label">
-of the shortest walk is sunny (rapid transit, 300–800 m)
+of the shortest walk is sunny
 </div>
 </div>
 <div>
@@ -206,7 +192,7 @@ of walks have no cooler option
 </div>
 </div>
 </div>
-<div id="8e23e727" class="cell page-columns page-full" data-execution_count="3">
+<div id="2cf25e8b" class="cell page-columns page-full" data-execution_count="3">
 <div class="cell-output cell-output-display cell-output-markdown column-page-inset-right" data-execution_count="3">
 <table class="caption-top table table-sm table-striped small">
 <colgroup>
@@ -296,14 +282,14 @@ of walks have no cooler option
 </table>
 </div>
 </div>
-<p>Rapid = rapid-transit stations; Bus = high-frequency bus stops. Sun ↓ = sun reduction of the coolest walk; Exposure ↓ = weighted exposure reduction.</p>
+<p>Rapid = rapid-transit stations; Bus = frequent bus stops. Sun ↓ = sun reduction of the coolest walk; Exposure ↓ = weighted exposure reduction.</p>
 <ul>
 <li><p><strong>The coolest walk is rarely more than a few percent longer.</strong> Mean detours stay below 1% in every group, and 95% of coolest walks are at most 0.9%–3.5% longer than the shortest walk, depending on the group.</p></li>
 <li><p><strong>Rapid-transit walks gain more</strong> than bus walks of the same length: stations sit in denser, taller parts of the city where a parallel street in building shade is usually available.</p></li>
 <li><p><strong>Short walks have no choice.</strong> Under 300 m, more than four in five walks have no cooler option.</p></li>
 <li><p><strong>Weighted exposure falls much less than sun.</strong> With θ near 0.2, a metre moved from sun into shade lowers the cost by only 0.2 m; the remaining heat burden of shaded walking is still counted.</p></li>
 </ul>
-<div id="4e68b7a3" class="cell" data-execution_count="5">
+<div id="9b73a0be" class="cell" data-execution_count="5">
 <div class="cell-output cell-output-display" data-execution_count="5">
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
@@ -318,7 +304,7 @@ of walks have no cooler option
 <section id="where-can-walkers-find-shade" class="level2">
 <h2 class="anchored" data-anchor-id="where-can-walkers-find-shade">Where can walkers find shade?</h2>
 <p>Walks home from frequent bus stops are summarised on a 500 m grid by where people live, and the cells are grouped into three types by how sunny their 300–800 m walks are and how much of that sun can be avoided. Cells vary gradually, so the types are a convenient summary rather than sharp classes.</p>
-<div id="fb9bb1cc" class="cell" data-execution_count="7">
+<div id="45ee124f" class="cell" data-execution_count="7">
 <div class="cell-output cell-output-display cell-output-markdown" data-execution_count="7">
 <table class="caption-top table table-sm table-striped small">
 <colgroup>
@@ -383,7 +369,7 @@ of walks have no cooler option
 <section id="rapid-transit-stations" class="level2">
 <h2 class="anchored" data-anchor-id="rapid-transit-stations">Rapid-transit stations</h2>
 <p>Stations ranked by sun reduction for walks of 300–800 m, the six largest and four smallest. Only the 65 stations with at least 50 such walks are ranked; 6 with fewer walks are shown as hollow circles on the <a href="app/map.html">city map</a>.</p>
-<div id="72f847a8" class="cell" data-execution_count="10">
+<div id="aafe31fa" class="cell" data-execution_count="10">
 <div class="cell-output cell-output-display cell-output-markdown" data-execution_count="10">
 <table class="caption-top table table-sm table-striped small">
 <colgroup>
@@ -490,7 +476,7 @@ of walks have no cooler option
 </div>
 </div>
 <p>At Front–Girard and Huntingdon (L) the coolest walk follows the elevated L on the side its shadow falls; at Broad–Spring Garden (B) it simply crosses to the shaded side of the street; at Wyndmoor (Regional Rail) it follows tree-lined streets.</p>
-<div id="d43f80fe" class="cell" data-execution_count="12">
+<div id="f959f960" class="cell" data-execution_count="12">
 <div class="cell-output cell-output-display" data-execution_count="12">
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
@@ -503,17 +489,17 @@ of walks have no cooler option
 </section>
 <section id="through-buildings-university-city" class="level2 page-columns page-full">
 <h2 class="anchored" data-anchor-id="through-buildings-university-city">Through buildings (University City)</h2>
-<div id="3c6a3d0b" class="cell page-columns page-full" data-execution_count="13">
+<div id="52dd49a8" class="cell page-columns page-full" data-execution_count="13">
 <div class="cell-output cell-output-display cell-output-markdown column-page-inset-right" data-execution_count="13">
 <table class="caption-top table table-sm table-striped small">
 <colgroup>
-<col style="width: 9%">
-<col style="width: 25%">
 <col style="width: 8%">
-<col style="width: 22%">
+<col style="width: 31%">
+<col style="width: 7%">
+<col style="width: 20%">
+<col style="width: 8%">
+<col style="width: 13%">
 <col style="width: 9%">
-<col style="width: 14%">
-<col style="width: 10%">
 </colgroup>
 <thead>
 <tr class="header">
@@ -538,7 +524,7 @@ of walks have no cooler option
 </tr>
 <tr class="even">
 <td style="text-align: left;">Campus</td>
-<td style="text-align: left;">+ no-PennCard buildings</td>
+<td style="text-align: left;">+ buildings open without a Penn ID</td>
 <td style="text-align: right;">3,000</td>
 <td style="text-align: left;">5%</td>
 <td style="text-align: left;">12.2%</td>
@@ -547,7 +533,7 @@ of walks have no cooler option
 </tr>
 <tr class="odd">
 <td style="text-align: left;">Campus</td>
-<td style="text-align: left;">+ all annotated buildings</td>
+<td style="text-align: left;">+ all mapped buildings</td>
 <td style="text-align: right;">3,000</td>
 <td style="text-align: left;">18%</td>
 <td style="text-align: left;">12.8%</td>
@@ -565,7 +551,7 @@ of walks have no cooler option
 </tr>
 <tr class="odd">
 <td style="text-align: left;">Station</td>
-<td style="text-align: left;">+ no-PennCard buildings</td>
+<td style="text-align: left;">+ buildings open without a Penn ID</td>
 <td style="text-align: right;">5,202</td>
 <td style="text-align: left;">4%</td>
 <td style="text-align: left;">17.1%</td>
@@ -574,7 +560,7 @@ of walks have no cooler option
 </tr>
 <tr class="even">
 <td style="text-align: left;">Station</td>
-<td style="text-align: left;">+ all annotated buildings</td>
+<td style="text-align: left;">+ all mapped buildings</td>
 <td style="text-align: right;">5,202</td>
 <td style="text-align: left;">19%</td>
 <td style="text-align: left;">18.9%</td>
@@ -587,7 +573,7 @@ of walks have no cooler option
 </div>
 <p>Campus = building to building; Station = rapid-transit station to building. * compared with the shortest walk on the outdoor-only network.</p>
 <p>Opening the annotated buildings puts about one in five coolest walks indoors and removes another 1.2–2.4 points of sun, without making walks longer. The Indoor Contribution Index stays close to zero (median below 0.001 in absolute value): indoor passages here offer an equally long but cooler option, not a shortcut. This differs from the Dubai stations of Wen et al.&nbsp;(2025), where indoor networks through malls and connected towers make indoor routes real shortcuts. With θ near 0.2–0.3 for most of a 300–1,200 m walk, an indoor metre beats building shade by only about 0.1 m of cost, so indoor routes are chosen mainly when they are already on the way; walks of 800–1,200 m use them about three times as often as walks of 300–800 m.</p>
-<div id="66529d83" class="cell" data-execution_count="15">
+<div id="eb12ba2a" class="cell" data-execution_count="15">
 <div class="cell-output cell-output-display" data-execution_count="15">
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
@@ -611,6 +597,10 @@ of walks have no cooler option
 </section>
 
 </main> <!-- /main -->
+<script>
+  // site title as on the hand-written pages: "Shade or Shortcut" with a cyan "or"
+  document.querySelectorAll(".navbar-title").forEach((el) => { el.innerHTML = 'Shade <span class="or">or</span> Shortcut'; });
+</script>
 <script id="quarto-html-after-body" type="application/javascript">
   window.document.addEventListener("DOMContentLoaded", function (event) {
     const icon = "";

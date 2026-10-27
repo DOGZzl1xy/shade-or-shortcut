@@ -1,5 +1,5 @@
 // City map: sidewalk shade by hour (PMTiles), 500 m grid indicators and clusters (bus walks), rapid-transit stations.
-import { VERSION, handoff, nav, collapsible, baseStyle, getJSON, shadeRamp, pmtilesProtocol, COLORS, CLUSTERS, GRID_RAMPS, ATTR, pct, timeControl, newMap } from "./common.js?v=94fd121";
+import { VERSION, handoff, nav, collapsible, baseStyle, getJSON, shadeRamp, pmtilesProtocol, COLORS, CLUSTERS, GRID_RAMPS, ATTR, pct, timeControl, newMap } from "./common.js?v=6ebe937";
 
 nav("map.html");
 pmtilesProtocol();
@@ -94,7 +94,7 @@ map.on("click", "grid", (e) => {
   if (map.queryRenderedFeatures(e.point, { layers: ["st"] }).length || outside(e.lngLat)) return;
   const p = e.features[0].properties;
   popup.setLngLat(e.lngLat).setHTML(`<b>${p.cluster_name}</b><div style="margin-top:6px;font-size:12px">
-    ${p.trips} walks home from high-frequency bus stops (300–800 m) · sun on shortest ${pct(p.sun_share, 0)} · achievable reduction ${pct(p.sun_red, 0)} ·
+    ${p.trips} walks home from frequent bus stops (300–800 m) · sun on the shortest walk ${pct(p.sun_share, 0)} · less sun possible ${pct(p.sun_red, 0)} ·
     no cooler option ${pct(p.no_alt_share, 0)}<br>building height ${p.bldg_height_m} m · canopy ${pct(p.canopy, 0)} · sidewalks ${p.network_km_km2} km/km²</div>`).addTo(map);
 });
 for (const l of ["st", "grid"]) {

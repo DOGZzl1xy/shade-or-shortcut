@@ -32,10 +32,6 @@ ul.task-list li input[type="checkbox"] {
 <script src="site_libs/quarto-nav/quarto-nav.js"></script>
 <script src="site_libs/quarto-nav/headroom.min.js"></script>
 <script src="site_libs/clipboard/clipboard.min.js"></script>
-<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
-<script src="site_libs/quarto-search/fuse.min.js"></script>
-<script src="site_libs/quarto-search/quarto-search.js"></script>
-<meta name="quarto:offset" content="./">
 <script src="site_libs/quarto-html/quarto.js" type="module"></script>
 <script src="site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
 <script src="site_libs/quarto-html/popper.min.js"></script>
@@ -45,20 +41,8 @@ ul.task-list li input[type="checkbox"] {
 <link href="site_libs/quarto-html/quarto-syntax-highlighting-dark-f41162f81dd66dbd42c3d463b140dc68.css" rel="stylesheet" id="quarto-text-highlighting-styles">
 <script src="site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="site_libs/bootstrap/bootstrap-ae73614a2d9a3140b18044ba04d92a90.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="dark">
+<link href="site_libs/bootstrap/bootstrap-d69f2ca21dae9656bc97ea7e3f15cba2.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="dark">
 <script id="quarto-search-options" type="application/json">{
-  "location": "navbar",
-  "copy-button": false,
-  "collapse-after": 3,
-  "panel-placement": "end",
-  "type": "overlay",
-  "limit": 50,
-  "keyboard-shortcut": [
-    "f",
-    "/",
-    "s"
-  ],
-  "show-item-context": false,
   "language": {
     "search-no-results-text": "No results",
     "search-matching-documents-text": "matching documents",
@@ -117,12 +101,11 @@ window.Quarto = {
     <span class="navbar-title">Shade or Shortcut</span>
     </a>
   </div>
-            <div id="quarto-search" class="" title="Search"></div>
           <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
   <span class="navbar-toggler-icon"></span>
 </button>
           <div class="collapse navbar-collapse" id="navbarCollapse">
-            <ul class="navbar-nav navbar-nav-scroll me-auto">
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
   <li class="nav-item">
     <a class="nav-link" href="./app/index.html"> 
 <span class="menu-text">Story</span></a>
@@ -213,7 +196,7 @@ window.Quarto = {
 <p>We use the cost function of Wen et al.&nbsp;(2025):</p>
 <p><span class="math display">\[C = L_{\text{sun}} + (1 - 0.5\,\theta)\,L_{\text{tree}} + (1 - \theta)\,L_{\text{building}} + (1 - 1.5\,\theta)\,L_{\text{indoor}}\]</span></p>
 <p>A metre in the sun costs 1. A metre in tree shade costs a little less (1 − 0.5θ), a metre in building shade less again (1 − θ), and an air-conditioned indoor metre the least (1 − 1.5θ): tree shade sits between sun and building shade. The reward θ grows with the distance already walked, so shade matters more the longer you have been in the heat:</p>
-<div id="290c7ffa" class="cell" data-execution_count="2">
+<div id="04eabf57" class="cell" data-execution_count="2">
 <div class="cell-output cell-output-display" data-execution_count="2">
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
@@ -227,7 +210,7 @@ window.Quarto = {
 </section>
 <section id="walks-home-from-transit" class="level2">
 <h2 class="anchored" data-anchor-id="walks-home-from-transit">Walks home from transit</h2>
-<p>Every home within 1.2 km of a frequent stop is one walk, from the stop to the home (431,100 walks). Results are always reported by trip length (under 300 m, 300–800 m, 800–1,200 m), and places are only compared within one length band, because short walks rarely have any alternative. Rapid transit and high-frequency bus are reported separately.</p>
+<p>Every home within 1.2 km of a frequent stop is one walk, from the stop to the home (431,100 walks). Results are always reported by trip length (under 300 m, 300–800 m, 800–1,200 m), and places are only compared within one length band, because short walks rarely have any alternative. Rapid transit and frequent buses are reported separately.</p>
 <p>Walking the other way (home to stop) gives the same answer: for 500 walks of at least 400 m, the mean sun reduction is 14.2% one way and 14.2% the other (correlation 0.990).</p>
 </section>
 <section id="metrics" class="level2">
@@ -284,6 +267,10 @@ window.Quarto = {
 </section>
 
 </main> <!-- /main -->
+<script>
+  // site title as on the hand-written pages: "Shade or Shortcut" with a cyan "or"
+  document.querySelectorAll(".navbar-title").forEach((el) => { el.innerHTML = 'Shade <span class="or">or</span> Shortcut'; });
+</script>
 <script id="quarto-html-after-body" type="application/javascript">
   window.document.addEventListener("DOMContentLoaded", function (event) {
     const icon = "";

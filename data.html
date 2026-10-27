@@ -32,10 +32,6 @@ ul.task-list li input[type="checkbox"] {
 <script src="site_libs/quarto-nav/quarto-nav.js"></script>
 <script src="site_libs/quarto-nav/headroom.min.js"></script>
 <script src="site_libs/clipboard/clipboard.min.js"></script>
-<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
-<script src="site_libs/quarto-search/fuse.min.js"></script>
-<script src="site_libs/quarto-search/quarto-search.js"></script>
-<meta name="quarto:offset" content="./">
 <script src="site_libs/quarto-html/quarto.js" type="module"></script>
 <script src="site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
 <script src="site_libs/quarto-html/popper.min.js"></script>
@@ -45,20 +41,8 @@ ul.task-list li input[type="checkbox"] {
 <link href="site_libs/quarto-html/quarto-syntax-highlighting-dark-f41162f81dd66dbd42c3d463b140dc68.css" rel="stylesheet" id="quarto-text-highlighting-styles">
 <script src="site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="site_libs/bootstrap/bootstrap-ae73614a2d9a3140b18044ba04d92a90.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="dark">
+<link href="site_libs/bootstrap/bootstrap-d69f2ca21dae9656bc97ea7e3f15cba2.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="dark">
 <script id="quarto-search-options" type="application/json">{
-  "location": "navbar",
-  "copy-button": false,
-  "collapse-after": 3,
-  "panel-placement": "end",
-  "type": "overlay",
-  "limit": 50,
-  "keyboard-shortcut": [
-    "f",
-    "/",
-    "s"
-  ],
-  "show-item-context": false,
   "language": {
     "search-no-results-text": "No results",
     "search-matching-documents-text": "matching documents",
@@ -88,12 +72,11 @@ ul.task-list li input[type="checkbox"] {
     <span class="navbar-title">Shade or Shortcut</span>
     </a>
   </div>
-            <div id="quarto-search" class="" title="Search"></div>
           <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
   <span class="navbar-toggler-icon"></span>
 </button>
           <div class="collapse navbar-collapse" id="navbarCollapse">
-            <ul class="navbar-nav navbar-nav-scroll me-auto">
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
   <li class="nav-item">
     <a class="nav-link" href="./app/index.html"> 
 <span class="menu-text">Story</span></a>
@@ -253,7 +236,7 @@ points checked for shade, every 2 m
 24
 </div>
 <div class="label">
-hours: June 21 and Aug 1, 8:00–19:00
+hours: June 21 and August 1, 8:00–19:00
 </div>
 </div>
 <div>
@@ -266,7 +249,7 @@ height model of buildings and trees
 </div>
 </div>
 <p>Building and tree heights come from the 2022 LiDAR survey, flown before the leaves came out. Building heights agree closely with the city’s own records (median absolute difference 0.5 m over 541,222 buildings); bridges and elevated rail lines are included, so they cast shadows too. Trees cover 17% of the city in the model (the median tree is 15 m tall). Covered walkways and passages through buildings (4.2 km) are always in shade.</p>
-<div id="ef370552" class="cell figure-light" data-execution_count="4">
+<div id="70cfe145" class="cell figure-light" data-execution_count="4">
 <div class="cell-output cell-output-display" data-execution_count="4">
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
@@ -280,7 +263,7 @@ height model of buildings and trees
 <section id="whose-walks" class="level2">
 <h2 class="anchored" data-anchor-id="whose-walks">Whose walks</h2>
 <p>Each walk starts at a stop: any rapid-transit station (Regional Rail, L (Market-Frankford), B (Broad Street) or the T trolley tunnel) or a bus stop with at least 6 buses an hour in one direction between 15:00 and 19:00. Every home within 1.2 km walking distance of such a stop is one walk, 431,100 in all. The other 91,649 homes (17.5%), mostly in the Northeast and Roxborough, have no frequent stop that close.</p>
-<div id="0ad553dc" class="cell figure-light" data-execution_count="6">
+<div id="8e55ddba" class="cell figure-light" data-execution_count="6">
 <div class="cell-output cell-output-display" data-execution_count="6">
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
@@ -308,6 +291,10 @@ height model of buildings and trees
 </section>
 
 </main> <!-- /main -->
+<script>
+  // site title as on the hand-written pages: "Shade or Shortcut" with a cyan "or"
+  document.querySelectorAll(".navbar-title").forEach((el) => { el.innerHTML = 'Shade <span class="or">or</span> Shortcut'; });
+</script>
 <script id="quarto-html-after-body" type="application/javascript">
   window.document.addEventListener("DOMContentLoaded", function (event) {
     const icon = "";
