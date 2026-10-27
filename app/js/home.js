@@ -1,6 +1,6 @@
 // Home page: a scroll story over one fixed map; each screen sets the map view and layers for its one sentence.
 import { VERSION, nav, baseStyle, getJSON, shadeRamp, pmtilesProtocol, COLORS, CLUSTERS, GRID_RAMPS, ATTR, DEMO_CENTER, pct, newMap,
-  routeLayers, ROUTE_LAYERS } from "./common.js?v=6ebe937";
+  routeLayers, ROUTE_LAYERS } from "./common.js?v=ac2d5dd";
 
 nav("index.html");
 pmtilesProtocol();
@@ -10,7 +10,7 @@ const EMPTY = { type: "FeatureCollection", features: [] };
 const map = newMap({
   container: "map", center: DEMO_CENTER, zoom: 15.6, pitch: 0, interactive: false,
   style: baseStyle({
-    city: { type: "vector", url: `pmtiles://data/city_shade.pmtiles?v=${VERSION}`, attribution: `${ATTR.shade}; ${ATTR.chm}; ${ATTR.osm}` },
+    city: { type: "vector", url: `pmtiles://data/city_shade.pmtiles?v=${VERSION}`, attribution: `${ATTR.shade}; ${ATTR.chm}; ${ATTR.osm}; ${ATTR.heat}` },
     grid: { type: "geojson", data: EMPTY },
     bld: { type: "geojson", data: EMPTY },
     hero: { type: "geojson", data: EMPTY },
@@ -48,8 +48,9 @@ const styleReady = new Promise((res) => map.once("style.load", res));
 getJSON("data/massing.geojson").then((d) => styleReady.then(() => map.getSource("mass").setData(d)));
 getJSON("data/stations.geojson").then((d) => styleReady.then(() => map.getSource("st").setData(d)));
 getJSON("data/shade_types.geojson").then((d) => styleReady.then(() => map.getSource("types").setData(d)));
-const [hero, summary, layers, grid] = await Promise.all([
-  getJSON("data/hero.json"), getJSON("data/summary.json"), getJSON("data/demo_layers.json"), getJSON("data/grid.geojson")]);
+const [hero, summary, layers, grid, heat] = await Promise.all([
+  getJSON("data/hero.json"), getJSON("data/summary.json"), getJSON("data/demo_layers.json"), getJSON("data/grid.geojson"),
+  getJSON("data/heat.json")]);
 const $ = (id) => document.getElementById(id);
 // shade-type close-up: a spot with all four states within a block, one labelled example of each
 const TF = hero.types_focus, TYPES_AT = TF.center;
@@ -76,7 +77,18 @@ const oneIn = (x) => { const n = Math.round(1 / x); return n >= 2 && n <= 10 ? `
 set("n-km", Math.round(summary.sidewalk_km).toLocaleString("en-US"));
 // opening screens: sun height and the city's sidewalks in sun / tree shade / building shade at 15:00 on June 21
 const elev = `${Math.round(summary.sun_elevation_15)}°`, ss = summary.sidewalk_share_15;
-set("s-elev", elev); document.querySelectorAll(".n-elev").forEach((el) => { el.textContent = elev; });
+document.querySelectorAll(".n-elev").forEach((el) => { el.textContent = elev; });
+// opening heat screen: airport air temperature (NOAA ACIS) and a Landsat surface-temperature map
+const fToC = (f) => Math.round(((f - 32) * 5) / 9);
+const day = (iso) => new Date(`${iso}T12:00`).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
+const A = heat.air, L = heat.lst;
+set("h-hot", `${A.hottest_f} °F`);
+set("h-hot-cap", `${fToC(A.hottest_f)} °C, ${day(A.hottest_day)}: the hottest day of the summer`);
+set("h-days", A.hot_days);
+set("h-days-cap", `days at ${A.days_at_or_above} °F or above, summer ${A.summer[0].slice(0, 4)}`);
+$("r-lst").style.background = `linear-gradient(to right,${L.ramp.map(([, c]) => c).join(",")})`;
+$("e-lst").innerHTML = `<span>${L.ramp_c[0]} °C</span><span>${L.ramp_c[1]} °C</span>`;
+set("lst-cap", `Ground surface on ${day(L.date)}, ${L.time_local} (air ${A.scene_day_max_f} °F): median ${Math.round(L.median_c)} °C.`);
 set("s-sunny", pct(ss.sun, 0)); set("d-tree", pct(ss.tree, 0)); set("d-bldg", pct(ss.bldg, 0)); set("d-indoor", summary.annotated_buildings);
 set("n-trips", summary.city_trips.toLocaleString("en-US"));
 set("s-sun", pct(b6.short_sun_share, 0));
@@ -244,6 +256,9 @@ const stopHours = () => { clearInterval(hourTimer); hourTimer = null; };
 
 let ready = false;      // set once the style is in and the data are on the map
 styleReady.then(() => {
+  // the surface-temperature image sits under the sidewalks and the labels
+  map.addSource("lst", { type: "image", url: `data/${L.image}?v=${VERSION}`, coordinates: L.coordinates });   // credit: ATTR.heat
+  map.addLayer({ id: "lst", type: "raster", source: "lst", layout: { visibility: "none" }, paint: { "raster-opacity": 0.9, "raster-fade-duration": 0 } }, "lines");
   map.moveLayer("ref", "mass");          // street and place names under the white boxes and the walks
   map.getSource("grid").setData(grid);
   map.getSource("bld").setData(layers.buildings);
@@ -270,7 +285,7 @@ const CITY = { center: [-75.135, 39.995], zoom: 10.9, duration: 2200 };
 const scene = ({ city = false, grid = false, bld = false, route = false, mass = false, types = false, st = false, cityOpacity = 0.9 } = {}) => {
   if (current !== "shade") stopHours();
   if (current !== "hero" && current !== "example") heroOn = false;
-  vis("city", city); vis("bld", bld); vis("mass", mass); vis("st", st); routes(route); if (!grid) vis("grid", false);
+  vis("city", city); vis("bld", bld); vis("mass", mass); vis("st", st); vis("lst", current === "heat"); routes(route); if (!grid) vis("grid", false);
   for (const id of ["types", "types-in"]) { vis(id, true); map.setPaintProperty(id, "line-opacity", types ? 1 : 0); }
   showPills(types);
   map.setPaintProperty("city", "line-opacity", cityOpacity);
@@ -279,9 +294,8 @@ const scene = ({ city = false, grid = false, bld = false, route = false, mass = 
 const STEPS = {
   hero: () => { scene({ route: true }); drawn = false; startLoop(); fitPair(PAIRS[pairIdx]); },
   heat: () => {
-    // sidewalks mostly in the sun (under half shaded) at 15:00, the rest dark
-    scene({ city: true }); map.setPaintProperty("city", "line-color", ["step", ["get", "s7"], COLORS.sun, 50, "#2a2e36"]);
-    fly({ center: [-75.1652, 39.9502], zoom: 14.6, duration: 2000 });
+    // the whole city's ground surface temperature on a clear July morning (Landsat)
+    scene(); fly({ ...CITY, zoom: 10.35 });
   },
   sources: () => { scene(); fly({ center: TYPES_AT, zoom: 17, duration: 2000 }); },
   types: () => { scene({ types: true }); fly({ center: TYPES_AT, zoom: 17, duration: 1200 }); },

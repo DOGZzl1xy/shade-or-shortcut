@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500&family=Space+Grotesk:wght@500;600&family=Space+Mono&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="vendor/maplibre-gl.css">
-<link rel="stylesheet" href="css/site.css?v=6ebe937">
+<link rel="stylesheet" href="css/site.css?v=ac2d5dd">
 <script>
   // a page cross-fade the browser skips (e.g. in a background tab) rejects its promises; nothing to do about it
   const quiet = (e) => { const t = e.viewTransition; if (t) [t.ready, t.finished, t.updateCallbackDone].forEach((q) => q.catch(() => {})); };
@@ -37,6 +37,8 @@
   .step .stat { display: flex; gap: 40px; margin: 16px 0 2px; flex-wrap: wrap; }
   .step .stat .big { font-size: clamp(34px, 4vw, 48px); }
   .cap { font-size: 13px; color: var(--dim); }
+  .step .stat.two { flex-wrap: nowrap; gap: 24px; }
+  .step .stat.two > div { flex: 1 1 0; min-width: 0; }
   .legend-row { display: flex; gap: 14px; flex-wrap: wrap; margin-top: 14px; font-size: 12px; color: var(--dim); }
   .ramp { height: 8px; border-radius: 4px; margin-top: 14px; max-width: 260px; }
   .ends { display: flex; justify-content: space-between; max-width: 260px; font: 10px var(--mono); color: var(--dim); }
@@ -119,13 +121,14 @@
 
   <section id="stage-1" data-step="heat">
     <div class="panel step">
-      <div class="label">Philadelphia · June 21 · 15:00</div>
+      <div class="label">Philadelphia · summer</div>
       <h2>Summer afternoons in Philadelphia are <em class="sun">hot and bright</em>.</h2>
-      <div class="stat">
-        <div><div class="big num sun" id="s-elev">–</div><div class="cap">sun height</div></div>
-        <div><div class="big num sun" id="s-sunny">–</div><div class="cap">of sidewalks in the sun</div></div>
+      <div class="stat two">
+        <div><div class="big num sun" id="h-hot">–</div><div class="cap" id="h-hot-cap">&nbsp;</div></div>
+        <div><div class="big num sun" id="h-days">–</div><div class="cap" id="h-days-cap">&nbsp;</div></div>
       </div>
-      <div class="legend-row"><span><span class="legend-swatch" style="background:var(--sun)"></span>sidewalk mostly in the sun</span></div>
+      <div class="ramp" id="r-lst"></div><div class="ends" id="e-lst"></div>
+      <div class="cap" id="lst-cap" style="margin-top:6px">&nbsp;</div>
     </div>
   </section>
 
@@ -170,6 +173,7 @@
           <figcaption><b class="t-indoor">Indoors</b><span id="d-indoor">–</span> buildings mapped</figcaption>
         </figure>
       </div>
+      <p class="cap" style="margin:10px 0 0">The other <span id="s-sunny">–</span> of sidewalk length is in the sun.</p>
     </div>
   </section>
 
@@ -257,6 +261,6 @@
 </main>
 <script src="vendor/maplibre-gl.js"></script>
 <script src="vendor/pmtiles.js"></script>
-<script type="module" src="js/home.js?v=6ebe937"></script>
+<script type="module" src="js/home.js?v=ac2d5dd"></script>
 </body>
 </html>

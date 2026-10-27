@@ -1,8 +1,8 @@
 // Shared helpers for the hand-written pages: navigation, basemap, colours, data loading.
 
 // cache key for scripts and data: "dev" in the source; scripts/publish_site.sh writes the commit into the published copy
-// (here and in every "?v=6ebe937"), so returning visitors never mix new scripts with cached old data
-export const VERSION = "6ebe937";
+// (here and in every "?v=ac2d5dd"), so returning visitors never mix new scripts with cached old data
+export const VERSION = "ac2d5dd";
 
 export const COLORS = { sun: "#ff8a3d", bldg: "#5b8cff", tree: "#43c27a", indoor: "#b48cff", cool: "#35d0e0", dim: "#8b8a84" };
 // grid clusters 0-2; colour-blind safe (checked with the dataviz palette validator: CVD ΔE >= 16 on #07080b)
@@ -17,6 +17,7 @@ export const ATTR = {
     '<a href="https://www.pasda.psu.edu/">PASDA</a> land cover and DVRPC sidewalks',
   chm: "Canopy outside the city: Meta / WRI CHMv2 (CC BY 4.0)",
   osm: "Campus footways © OpenStreetMap contributors (ODbL)",
+  heat: "Surface temperature: USGS Landsat 8; air temperature: NOAA ACIS",
 };
 
 // the view handed over from the story page ("#b=west,south,east,north"), so the next page opens where the story ended
