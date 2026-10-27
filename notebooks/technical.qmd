@@ -124,11 +124,14 @@ for t, s in items:
 ```{python}
 #| output: asis
 b, dc = q2["buildings"], s6["direction_check"]
+md = f"{b['median_err_m']:+.1f}".replace("-", "\u2212")   # signed median, LiDAR minus record
 print(f"""- **Synthetic shadows.** Unit tests cast shadows from box buildings and trees on flat ground and check the shadow
   length against height / tan(sun elevation) for several sun positions, no shadow on the sunny side, tree versus building
   priority, terrain shadows and observers on bridge decks.
 - **Building heights.** LiDAR heights agree with the city's recorded heights for {b['compared']:,} buildings
-  (Spearman ρ = {b['spearman_r']:.2f}, median absolute difference {b['median_abs_err_m']:.1f} m).
+  (Spearman ρ = {b['spearman_r']:.2f}; Pearson r = {b['pearson_r']:.2f}). The median difference (LiDAR minus record) is
+  {md} m, so LiDAR heights are typically {abs(b['median_err_m']):.1f} m {'lower' if b['median_err_m'] < 0 else 'higher'} than the records;
+  the median absolute difference is {b['median_abs_err_m']:.1f} m.
 - **Routing.** With θ fixed, the search reproduces networkx Dijkstra exactly on {s5['networkx_nodes_checked']:,} nodes
   (largest absolute difference {s5['networkx_fixed_theta_max_abs_err']:g}). Hand-computed small networks check the cost
   rule, tree versus building shade and the indoor term.

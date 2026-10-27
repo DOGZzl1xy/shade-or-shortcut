@@ -41,7 +41,7 @@ print(f"""::: {{.stat-row}}
 #| output: asis
 b, s = q2["buildings"], q2["shares_in_city"]
 print(f"Building and tree heights come from the 2022 LiDAR survey, flown before the leaves came out. Building heights agree closely "
-      f"with the city's own records (median difference {b['median_abs_err_m']:.1f} m over {b['compared']:,} buildings); bridges and "
+      f"with the city's own records (median absolute difference {b['median_abs_err_m']:.1f} m over {b['compared']:,} buildings); bridges and "
       f"elevated rail lines are included, so they cast shadows too. Trees cover {pct(s['tree_phase2'], 0)} of the city in the model "
       f"(the median tree is {s['tree_height_median_m']:.0f} m tall). Covered walkways and passages through buildings "
       f"({s4['covered_km_total']:.1f} km) are always in shade.")
