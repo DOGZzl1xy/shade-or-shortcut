@@ -1,4 +1,4 @@
-/* Shade or Shortcut — shared styles for the hand-written pages (dark base, thin HUD frames, monospace labels; warm = sun, cyan = shade, violet = indoors). */
+/* Shade or Shortcut — shared styles for the hand-written pages (dark base, monospace labels; warm = sun, cyan = shade, violet = indoors). */
 :root {
   --bg: #07080b;
   --panel: rgba(12, 14, 19, 0.82);
@@ -69,17 +69,10 @@ a:hover { color: #fff; }
   backdrop-filter: blur(8px);
 }
 .legend-swatch { display: inline-block; width: 18px; height: 4px; border-radius: 2px; vertical-align: middle; margin-right: 6px; }
-
-/* ---- HUD corners (opening screen only) */
-.hud { position: absolute; inset: 14px; pointer-events: none; z-index: 3; }
-.hud i { position: absolute; width: 18px; height: 18px; border-color: var(--line-strong); border-style: solid; }
-.hud i:nth-child(1) { top: 0; left: 0; border-width: 1px 0 0 1px; }
-.hud i:nth-child(2) { top: 0; right: 0; border-width: 1px 1px 0 0; }
-.hud i:nth-child(3) { bottom: 0; left: 0; border-width: 0 0 1px 1px; }
-.hud i:nth-child(4) { bottom: 0; right: 0; border-width: 0 1px 1px 0; }
-.scanline { position: absolute; left: 0; right: 0; height: 2px; background: rgba(255, 255, 255, 0.025); animation: scan 9s linear infinite; z-index: 3; pointer-events: none; }
-@keyframes scan { from { top: 0; } to { top: 100%; } }
-@media (prefers-reduced-motion: reduce) { .scanline { display: none; } }
+/* route swatches drawn like the lines: shortest solid, coolest dashed, indoors dotted */
+.ls-short { background: var(--sun); }
+.ls-cool { background: repeating-linear-gradient(to right, var(--cool) 0 6px, transparent 6px 10px); }
+.ls-indoor { background: radial-gradient(circle, var(--indoor) 1.8px, transparent 2.2px) 0 50% / 6px 4px repeat-x; }
 
 /* ---- form controls */
 input[type=range] { width: 100%; accent-color: var(--cool); }

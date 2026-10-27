@@ -6,9 +6,10 @@
 <title>Route Tool</title>
 <meta name="description" content="Pick two points in University City and compare the shortest and the coolest walk at any summer hour, with and without indoor passages.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500&family=Space+Grotesk:wght@400;500;600&family=Space+Mono&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500&family=Space+Grotesk:wght@500;600&family=Space+Mono&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="vendor/maplibre-gl.css">
-<link rel="stylesheet" href="css/site.css">
+<link rel="stylesheet" href="css/site.css?v=dev">
 <style>
   #map { position: fixed; top: var(--nav-h); left: 0; right: 0; bottom: 0; }
   #side { position: fixed; top: calc(var(--nav-h) + 14px); right: 14px; width: 340px; max-height: calc(100vh - var(--nav-h) - 28px);
@@ -58,8 +59,8 @@
     <table class="cmp">
       <thead><tr><th></th><th>length</th><th>sun</th><th>shade</th><th>indoor</th></tr></thead>
       <tbody>
-        <tr><td><span class="legend-swatch" style="background:var(--sun)"></span>Shortest<small>(outdoors)</small></td><td id="s-len"></td><td id="s-sun"></td><td id="s-sh"></td><td id="s-in"></td></tr>
-        <tr><td><span class="legend-swatch" style="background:var(--cool)"></span>Coolest</td><td id="c-len"></td><td id="c-sun"></td><td id="c-sh"></td><td id="c-in"></td></tr>
+        <tr><td><span class="legend-swatch ls-short"></span>Shortest<small>(outdoors)</small></td><td id="s-len"></td><td id="s-sun"></td><td id="s-sh"></td><td id="s-in"></td></tr>
+        <tr><td><span class="legend-swatch ls-cool"></span>Coolest</td><td id="c-len"></td><td id="c-sun"></td><td id="c-sh"></td><td id="c-in"></td></tr>
       </tbody>
     </table>
     <div class="block"><div class="label">Coolest walk, by surface</div><div class="bar" id="cbar"></div></div>
@@ -78,6 +79,6 @@
   <p class="credits">Basemap © Esri, HERE, Garmin, © OpenStreetMap contributors (ODbL). Shade from NOAA 2022 LiDAR, City of Philadelphia building footprints and PASDA land cover; sidewalks DVRPC; campus footways © OpenStreetMap contributors (ODbL).</p>
 </div>
 <script src="vendor/maplibre-gl.js"></script>
-<script type="module" src="js/tool.js"></script>
+<script type="module" src="js/tool.js?v=dev"></script>
 </body>
 </html>

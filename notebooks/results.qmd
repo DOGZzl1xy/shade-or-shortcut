@@ -3,7 +3,7 @@
 import sys
 from coolpath import ROOT
 sys.path.insert(0, str(ROOT / "notebooks"))
-from _site import table, md, fig, chart, pct, C
+from _site import table, md, fig, chart, pct, num, C
 from coolpath import load_config
 from coolpath.transit import station_display
 import pandas as pd
@@ -50,7 +50,7 @@ Rapid = rapid-transit stations; Bus = high-frequency bus stops. Sun ↓ = sun re
 ```{python}
 #| output: asis
 lo, hi = p6.detour_p95.min(), p6.detour_p95.max()
-print(f"- **The coolest route is rarely more than a few percent longer.** Mean detours stay below 1% in every group, and 95% of "
+print(f"- **The coolest walk is rarely more than a few percent longer.** Mean detours stay below 1% in every group, and 95% of "
       f"coolest walks are at most {pct(lo, 1)}–{pct(hi, 1)} longer than the shortest walk, depending on the group.")
 ```
 
@@ -79,7 +79,7 @@ Morning and evening, when shadows are long, offer the most; around 13:00 the sun
 
 ```{python}
 #| output: asis
-names = {0: "Sunny, no cooler alternative", 1: "Sunny but avoidable", 2: "Cooler, few alternatives"}
+names = {0: "Sunny, no cooler option", 1: "Sunny but avoidable", 2: "Cooler, few alternatives"}
 prof = pd.DataFrame(s7["cluster_profile"]).T
 prof.index = prof.index.astype(int)
 sil = s7["silhouette"]
@@ -102,8 +102,8 @@ md(t)
 #| output: asis
 sp = s7["spearman_features"]
 print(f"Across cells, **sidewalk density** is the strongest correlate of being able to avoid the sun "
-      f"(Spearman ρ = {sp['sun_red']['network_km_per_km2']:.2f} with sun reduction), while **building height** mostly sets how sunny the "
-      f"walk is to begin with (ρ = {sp['sun_share']['bldg_height_mean_m']:.2f} with sun share). Leafy areas start cooler but, with sparser "
+      f"(Spearman ρ = {num(sp['sun_red']['network_km_per_km2'])} with sun reduction), while **building height** mostly sets how sunny the "
+      f"walk is to begin with (ρ = {num(sp['sun_share']['bldg_height_mean_m'])} with sun share). Leafy areas start cooler but, with sparser "
       "streets, rarely offer an alternative. Explore the cells on the [city map](app/map.html).")
 ```
 
@@ -122,23 +122,20 @@ print(f"Stations ranked by sun reduction for walks of 300–800 m, the six large
 ```{python}
 show = pd.concat([st.head(6), st.tail(4)])
 disp = show.station.map(station_display)
-md(pd.DataFrame({"Station": disp.str[0], "Line": disp.str[1], "Walks": show.trips.astype(int).map("{:,}".format).values,
+md(pd.DataFrame({"Station": disp.str[0].str.replace("-", "–"), "Line": disp.str[1], "Walks": show.trips.astype(int).map("{:,}".format).values,
                  "Sun on shortest": [pct(x, 0) for x in show.sun_share], "Sun ↓": [pct(x, 1) for x in show.sun_red],
                  "No cooler option": [pct(x, 0) for x in show.no_alt_share]}))
 ```
 
 ```{python}
 #| output: asis
-bg = small.set_index("station").trips.get("BSL: Broad-Girard")
-print("The five stations with the largest reductions were checked on aerial photos. At Front-Girard and "
-      "Huntingdon (L) the cooler route walks along the elevated L on the side its shadow falls; at Broad–Spring Garden and "
-      "Broad–Girard (B) it simply crosses to the shaded side of the street; at Wyndmoor (Regional Rail) it follows tree-lined streets."
-      + (f" Broad–Girard has only {int(bg)} walks of this length and is not ranked above." if bg is not None else ""))
+print("At Front–Girard and Huntingdon (L) the coolest walk follows the elevated L on the side its shadow falls; at "
+      "Broad–Spring Garden (B) it simply crosses to the shaded side of the street; at Wyndmoor (Regional Rail) it follows "
+      "tree-lined streets.")
 ```
 
 ```{python}
-#| fig-cap: "Front-Girard: one walk (left) and all walks of 300–800 m (right); red = used only by shortest paths, blue = only by coolest paths."
-#| classes: figure-light
+#| fig-cap: "Front–Girard: one walk (left) and all walks of 300–800 m (right). Orange solid = used only by shortest walks, cyan dashed = only by coolest walks."
 fig("phase_07_route_front-girard.png")
 ```
 

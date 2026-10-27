@@ -40,6 +40,9 @@ case "${1:-}" in
     fi
     find "$PAGES" -mindepth 1 -maxdepth 1 ! -name .git -exec rm -rf {} +
     rsync -a "$ROOT/site/_site/" "$PAGES/"
+    # cache key: replace the source's "dev" with the main commit in the published scripts and pages (common.js VERSION)
+    v="$(git -C "$MAIN" rev-parse --short HEAD)"
+    sed -i '' -e "s/v=dev/v=$v/g" -e "s/VERSION = \"dev\"/VERSION = \"$v\"/" "$PAGES"/app/*.html "$PAGES"/app/js/*.js
     touch "$PAGES/.nojekyll"
     git -C "$PAGES" add -A
     git -C "$PAGES" commit -q -m "Website build $(date +%Y-%m-%d)" -m "Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>" || echo "gh-pages: nothing changed"

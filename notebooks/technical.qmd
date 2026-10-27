@@ -3,7 +3,7 @@
 import sys
 from coolpath import ROOT, load_config
 sys.path.insert(0, str(ROOT / "notebooks"))
-from _site import table, md, pct
+from _site import table, md, pct, num
 import pandas as pd
 cfg = load_config()
 q2, s3, s5, s6, s7, s8, dg = (table(n) for n in ("phase_02_qa.json", "phase_03_stats.json", "phase_05_stats.json",
@@ -48,7 +48,7 @@ rows = [
                       f"({hs['rep_date']}); all rapid-transit stations"),
     ("Maximum walk", f"{hs['max_network_m']:,} m along the network"),
     ("Walk-length bands", "under 300 m, 300–800 m, 800–1,200 m"),
-    ("No cooler alternative", f"the coolest walk avoids less than {mt['no_alt_threshold']:.0%} of the sun "
+    ("No cooler option", f"the coolest walk avoids less than {mt['no_alt_threshold']:.0%} of the sun "
                               f"(sensitivity {', '.join(f'{x:.0%}' for x in mt['no_alt_threshold_sensitivity'])})"),
     ("Grid and clusters", f"{mt['grid_m']} m cells with at least {mt['min_trips_per_cell']} walks of 300–800 m; k-means, k = {mt['cluster_k']}"),
     ("Station ranking", f"at least {mt['min_trips_station_rank']} walks of 300–800 m"),
@@ -124,13 +124,12 @@ for t, s in items:
 ```{python}
 #| output: asis
 b, dc = q2["buildings"], s6["direction_check"]
-md = f"{b['median_err_m']:+.1f}".replace("-", "\u2212")   # signed median, LiDAR minus record
 print(f"""- **Synthetic shadows.** Unit tests cast shadows from box buildings and trees on flat ground and check the shadow
   length against height / tan(sun elevation) for several sun positions, no shadow on the sunny side, tree versus building
   priority, terrain shadows and observers on bridge decks.
 - **Building heights.** LiDAR heights agree with the city's recorded heights for {b['compared']:,} buildings
   (Spearman ρ = {b['spearman_r']:.2f}; Pearson r = {b['pearson_r']:.2f}). The median difference (LiDAR minus record) is
-  {md} m, so LiDAR heights are typically {abs(b['median_err_m']):.1f} m {'lower' if b['median_err_m'] < 0 else 'higher'} than the records;
+  {num(b['median_err_m'], '+.1f')} m, so LiDAR heights are typically {abs(b['median_err_m']):.1f} m {'lower' if b['median_err_m'] < 0 else 'higher'} than the records;
   the median absolute difference is {b['median_abs_err_m']:.1f} m.
 - **Routing.** With θ fixed, the search reproduces networkx Dijkstra exactly on {s5['networkx_nodes_checked']:,} nodes
   (largest absolute difference {s5['networkx_fixed_theta_max_abs_err']:g}). Hand-computed small networks check the cost
@@ -140,6 +139,5 @@ print(f"""- **Synthetic shadows.** Unit tests cast shadows from box buildings an
 - **Direction of travel.** Reversing {dc['trips']} walks of at least 400 m (home → stop) changes little: mean sun
   reduction {pct(dc['sun_red_mean_stop_to_home'])} one way and {pct(dc['sun_red_mean_home_to_stop'])} the other,
   correlation {dc['sun_red_corr']:.2f}.
-- **Visual checks.** The five rapid-transit stations with the largest sun reduction were checked route by route on aerial
-  photos, as were the University City entrances and passages.""")
+- **Visual checks.** The University City entrances and passages were checked one by one on aerial photos.""")
 ```

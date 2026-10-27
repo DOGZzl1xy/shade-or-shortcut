@@ -3,9 +3,9 @@
     uv run python -m scripts.phase_07_route_check
 
 For each station: all city-sample trips of 300-800 m are re-routed at 06-21 15:00 (dynamic θ).
-Figure, left: one representative trip (a changed path whose sun reduction is closest to the
-station mean) on the 2025 PASDA orthophoto, sidewalks coloured by their 15:00 state.
-Right: all trips — edges used only by shortest paths vs only by shade paths, width = trips.
+Figure (dark, in the website's route style: shortest = orange solid, coolest = cyan dashed), left: one
+representative trip (a changed path whose sun reduction is closest to the station mean) on the 2025
+PASDA orthophoto. Right: all trips — edges used only by shortest paths vs only by shade paths, width = trips.
 Table: where the extra shade on the shade paths comes from — building vs tree shade gained, and
 the share of the shade-only edge length lying under a building or structure pixel (building_source
 1-2 = footprint, 3 = structure outside footprints such as the El viaduct; D-025), and the share
@@ -22,6 +22,7 @@ import pandas as pd
 import rasterio
 import shapely
 from matplotlib.collections import LineCollection
+from matplotlib.lines import Line2D
 from rasterio.windows import from_bounds
 from scipy.ndimage import maximum_filter
 
@@ -31,6 +32,19 @@ from scripts.phase_02_spotcheck import ortho
 
 LABEL, BIN, TOP = "0621_15", "300-800", 5
 NEAR_M = 15        # "next to a structure": within 15 m of a building_source = 3 pixel
+
+
+SUN, COOL, BG, INK, DIM = "#ff8a3d", "#35d0e0", "#0d0f14", "#e8e6df", "#8b8a84"   # website colours
+DASH = (0, (2.2, 1.6))
+
+
+def route_lines(ax, geoms, color, lw, dashed=False, label=None):
+    """A route as on the website: a dark casing, then the line (solid or dashed)."""
+    segs = segments(geoms)
+    lw = np.broadcast_to(np.asarray(lw, float), (len(segs),))
+    ax.add_collection(LineCollection(segs, colors=BG, lw=lw + 3, alpha=0.9))
+    ax.add_collection(LineCollection(segs, colors=color, lw=lw, linestyles=DASH if dashed else "solid",
+                                     capstyle="butt" if dashed else "round", label=label))
 
 
 def segments(geoms):
@@ -49,7 +63,6 @@ def main():
     zero = np.zeros_like(L)
     e = gpd.read_parquet(proc / "graph_edges.parquet", columns=["edge_id", "geometry"]).set_index("edge_id").loc[g.edge_ids]
     geom = e.geometry.to_numpy()
-    state = np.argmax(np.c_[ls, lt, lb], axis=1)                     # 0 sun, 1 tree, 2 building shade
     par = pd.read_parquet(proc / "trips_city_parcels.parquet")
     par["trip_id"] = "P" + par.index.astype(str)
     m = pd.read_parquet(proc / "trips_metrics.parquet",
@@ -109,13 +122,10 @@ def main():
         h = max(x1 - x0, y1 - y0) / 2
         cx_, cy_ = (x0 + x1) / 2, (y0 + y1) / 2
         view = (cx_ - h, cy_ - h, cx_ + h, cy_ + h)
-        fig, ax = plt.subplots(1, 2, figsize=(20, 10))
+        fig, ax = plt.subplots(1, 2, figsize=(20, 11.5), facecolor=BG)
         ax[0].imshow(ortho(2025, view, 900, layers="show:3"), extent=(view[0], view[2], view[1], view[3]))
-        near = np.where(shapely.intersects(geom, shapely.box(*view)))[0]
-        cols = np.array(["#ffd000", "#2ca02c", "#3b4cc0"])
-        ax[0].add_collection(LineCollection(segments(geom[near]), colors=cols[state[near]], lw=1.6, alpha=0.9))
-        ax[0].add_collection(LineCollection(segments(geom[a]), colors="#e41a1c", lw=5, alpha=0.75))
-        ax[0].add_collection(LineCollection(segments(geom[c]), colors="#00e5ff", lw=3, alpha=0.95))
+        route_lines(ax[0], geom[a], SUN, 4.5)
+        route_lines(ax[0], geom[c], COOL, 4.5, dashed=True)
         o = np.array([g.x[int(r.stop_node)], g.y[int(r.stop_node)]])
         d = np.array([g.x[int(r.node)], g.y[int(r.node)]])
         ax[0].scatter(*o, s=120, c="white", edgecolors="k", zorder=5, marker="s")
@@ -123,31 +133,33 @@ def main():
         ax[0].set_xlim(view[0], view[2])
         ax[0].set_ylim(view[1], view[3])
         ax[0].set_axis_off()
-        ax[0].set_title(f"{name}: representative trip {r.trip_id}, 06-21 15:00\n"
-                        f"red = shortest ({L[a].sum():.0f} m, sun {ls[a].sum():.0f} m), "
-                        f"cyan = shade path ({L[c].sum():.0f} m, sun {ls[c].sum():.0f} m); "
-                        "thin lines: sidewalk state yellow sun / green tree / blue building shade", fontsize=10)
+        ax[0].legend(handles=[Line2D([], [], color=SUN, lw=4, label=f"shortest: {L[a].sum():.0f} m, {ls[a].sum():.0f} m in sun"),
+                              Line2D([], [], color=COOL, lw=4, ls=DASH, label=f"coolest: {L[c].sum():.0f} m, {ls[c].sum():.0f} m in sun"),
+                              Line2D([], [], color="white", marker="s", ls="", mec="k", ms=9, label="station"),
+                              Line2D([], [], color="white", marker="o", ls="", mec="k", ms=9, label="home")],
+                     loc="upper center", bbox_to_anchor=(0.5, -0.01), ncol=2, fontsize=19, facecolor=BG, edgecolor=DIM, labelcolor=INK, framealpha=0.85)
+        ax[0].set_title(f"{name.split(': ')[1].replace('-', '–')}: one walk home, June 21, 15:00", fontsize=21, color=INK)
         b = shapely.union_all(geom[np.r_[only_c, only_s, np.where(use_c > 0)[0]]]).buffer(80).bounds
         near = np.where(shapely.intersects(geom, shapely.box(*b)))[0]
-        ax[1].add_collection(LineCollection(segments(geom[near]), colors="#cccccc", lw=0.6))
+        ax[1].set_facecolor(BG)
+        ax[1].add_collection(LineCollection(segments(geom[near]), colors="#3a3d45", lw=0.7))
         common = np.where((use_s > 0) & (use_c > 0))[0]
-        for idx, colr, lab in ((common, "#888888", "used by both"), (only_s, "#e41a1c", "shortest paths only"),
-                               (only_c, "#1f78b4", "shade paths only")):
-            u = np.maximum(use_s, use_c)[idx]
-            ax[1].add_collection(LineCollection(segments(geom[idx]), colors=colr, lw=0.6 + 4 * np.sqrt(u / u.max()) if idx.size else 1,
-                                                label=lab))
-        ax[1].scatter(g.x[t.stop_node.unique()], g.y[t.stop_node.unique()], s=80, c="k", marker="s", zorder=5, label="station platforms")
+        umax = np.maximum(use_s, use_c).max()
+        width = lambda idx: 0.8 + 4 * np.sqrt(np.maximum(use_s, use_c)[idx] / umax)
+        ax[1].add_collection(LineCollection(segments(geom[common]), colors="#9a988f", lw=width(common), label="both"))
+        route_lines(ax[1], geom[only_s], SUN, width(only_s), label="shortest walks only")
+        route_lines(ax[1], geom[only_c], COOL, width(only_c), dashed=True, label="coolest walks only")
+        ax[1].scatter(g.x[t.stop_node.unique()], g.y[t.stop_node.unique()], s=80, c="white", edgecolors="k", marker="s", zorder=5,
+                      label="station")
         ax[1].set_xlim(b[0], b[2])
         ax[1].set_ylim(b[1], b[3])
         ax[1].set_aspect("equal")
-        ax[1].legend(loc="lower left", fontsize=9)
+        ax[1].legend(loc="upper center", bbox_to_anchor=(0.5, -0.01), ncol=2, fontsize=19, facecolor=BG, edgecolor=DIM, labelcolor=INK, framealpha=0.85)
         ax[1].set_axis_off()
-        ax[1].set_title(f"All {len(paths)} trips of 300–800 m (width ∝ trips); mean sun reduction {rec['sun_red_mean']:.0%}\n"
-                        f"shade-only edges: {rec['shade_only_within_15m_of_structure_share']:.0%} within 15 m of structures (e.g. El viaduct), "
-                        f"building shade {rec['shade_only_bldg_shade_share']:.0%} of their length", fontsize=10)
+        ax[1].set_title(f"All {len(paths)} walks of 300–800 m (line width = number of walks)", fontsize=21, color=INK)
         plt.tight_layout()
         slug = name.split(": ")[1].lower().replace(" ", "_").replace("/", "_")
-        plt.savefig(figs / f"phase_07_route_{slug}.png", dpi=90)
+        plt.savefig(figs / f"phase_07_route_{slug}.png", dpi=90, facecolor=BG)
         plt.close(fig)
         print(rec, flush=True)
     (rep / "phase_07_route_check.json").write_text(json.dumps(out, indent=2))

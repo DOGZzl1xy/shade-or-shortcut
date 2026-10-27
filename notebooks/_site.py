@@ -59,5 +59,10 @@ def chart(f, dpi=150):
     return Image(data=out.getvalue(), format="png", width=round(f.get_figwidth() * 96))
 
 
+def num(x, fmt=".2f"):
+    """A number for text, with a true minus sign (U+2212) instead of a hyphen."""
+    return format(x, fmt).replace("-", "\u2212")
+
+
 def pct(x, d=1):
-    return f"{100 * x:.{d}f}%"
+    return num(100 * x, f".{d}f") + "%"

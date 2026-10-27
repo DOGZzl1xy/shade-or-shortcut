@@ -1,5 +1,5 @@
 // City map: sidewalk shade by hour (PMTiles), 500 m grid indicators and clusters (bus walks), rapid-transit stations.
-import { nav, collapsible, baseStyle, getJSON, shadeRamp, pmtilesProtocol, COLORS, CLUSTERS, ATTR, pct, timeControl, newMap } from "./common.js";
+import { VERSION, nav, collapsible, baseStyle, getJSON, shadeRamp, pmtilesProtocol, COLORS, CLUSTERS, GRID_RAMPS, ATTR, pct, timeControl, newMap } from "./common.js?v=dev";
 
 nav("map.html");
 pmtilesProtocol();
@@ -10,18 +10,13 @@ const DATA = Promise.all([getJSON("data/grid.geojson"), getJSON("data/stations.g
 const EMPTY = { type: "FeatureCollection", features: [] };
 let summary;                                   // filled with the station data
 
-const RAMPS = {
-  sun_red: { stops: [0, "#1d2733", 0.1, "#2f6f7a", 0.25, COLORS.cool], fmt: (v) => pct(v, 0), lo: "0%", hi: "25%+" },
-  no_alt_share: { stops: [0.2, COLORS.cool, 0.6, "#c9a36a", 1, COLORS.sun], fmt: (v) => pct(v, 0), lo: "20%", hi: "100%" },
-  sun_share: { stops: [0.4, COLORS.cool, 0.7, "#c9a36a", 0.95, COLORS.sun], fmt: (v) => pct(v, 0), lo: "40%", hi: "95%" },
-  network_km_km2: { stops: [10, "#1d2733", 30, "#4b6b8a", 55, "#cfe3ff"], fmt: (v) => v.toFixed(0), lo: "10", hi: "55 km/km²" },
-};
+const RAMPS = GRID_RAMPS;
 const stColor = ["interpolate", ["linear"], ["coalesce", ["get", "sun_red_300-800"], 0], 0, "#1d2733", 0.15, "#2f8f9a", 0.4, COLORS.cool];
 
 const map = newMap({
   container: "map", center: [-75.135, 39.995], zoom: 10.6,
   style: baseStyle({
-    city: { type: "vector", url: "pmtiles://data/city_shade.pmtiles", attribution: `${ATTR.shade}; ${ATTR.chm}` },
+    city: { type: "vector", url: `pmtiles://data/city_shade.pmtiles?v=${VERSION}`, attribution: `${ATTR.shade}; ${ATTR.chm}` },
     grid: { type: "geojson", data: EMPTY, attribution: "Transit: SEPTA GTFS (fall 2026)" },
     st: { type: "geojson", data: EMPTY },
   }, [
@@ -85,7 +80,7 @@ map.on("click", "st", (e) => {
   const row = (b) => p[`trips_${b}`] ? `<tr><td>${b} m</td><td>${Math.round(p[`trips_${b}`])}</td><td>${pct(p[`sun_red_${b}`] ?? 0, 0)}</td><td>${pct(p[`no_alt_share_${b}`] ?? 0, 0)}</td></tr>` : "";
   const small = p.small === true || p.small === "true";
   popup.setLngLat(e.lngLat).setHTML(`<b>${p.name}</b> <span class="label">${p.line}</span>
-    <table style="width:100%;font-size:11px;margin-top:6px"><tr class="label"><td>walk</td><td>walks</td><td>less sun</td><td>no cooler</td></tr>${row("<300")}${row("300-800")}${row("800-1200")}</table>
+    <table style="width:100%;font-size:11px;margin-top:6px"><tr class="label"><td>walk</td><td>walks</td><td>less sun</td><td>no cooler option</td></tr>${row("<300")}${row("300-800")}${row("800-1200")}</table>
     ${small ? `<div style="font-size:11px;color:var(--sun-soft);margin-top:4px">Fewer than ${summary.min_trips_station_rank} walks of 300–800 m: small sample.</div>` : ""}`).addTo(map);
 });
 map.on("click", "grid", (e) => {
@@ -93,7 +88,7 @@ map.on("click", "grid", (e) => {
   const p = e.features[0].properties;
   popup.setLngLat(e.lngLat).setHTML(`<b>${p.cluster_name}</b><div style="margin-top:6px;font-size:12px">
     ${p.trips} walks home from high-frequency bus stops (300–800 m) · sun on shortest ${pct(p.sun_share, 0)} · achievable reduction ${pct(p.sun_red, 0)} ·
-    no cooler alternative ${pct(p.no_alt_share, 0)}<br>building height ${p.bldg_height_m} m · canopy ${pct(p.canopy, 0)} · sidewalks ${p.network_km_km2} km/km²</div>`).addTo(map);
+    no cooler option ${pct(p.no_alt_share, 0)}<br>building height ${p.bldg_height_m} m · canopy ${pct(p.canopy, 0)} · sidewalks ${p.network_km_km2} km/km²</div>`).addTo(map);
 });
 for (const l of ["st", "grid"]) {
   map.on("mouseenter", l, () => { map.getCanvas().style.cursor = "pointer"; });

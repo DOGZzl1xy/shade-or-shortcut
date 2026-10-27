@@ -40,7 +40,7 @@ ax.set(xlabel="distance already walked (m)", ylabel="θ", ylim=(0, 0.65))
 chart(f)
 ```
 
-Because θ stays near 0.2 for the first 500 m, a short walk only takes a cooler route when it costs almost no extra distance.
+Because θ stays near 0.2 for the first 500 m, the coolest walk on a short trip only leaves the shortest one when that costs almost no extra distance.
 
 ## Walks home from transit
 
@@ -63,7 +63,7 @@ print(f"\nWalking the other way (home to stop) gives the same answer: for 500 wa
 | Sun reduction | (sun on shortest − sun on coolest) ÷ sun on shortest |
 | Detour | (coolest length − shortest length) ÷ shortest length |
 | Weighted exposure reduction | (C of shortest − C of coolest) ÷ C of shortest |
-| No cooler alternative | sun reduction below 2% (the break after the spike at 0 in the distribution of 300–1,200 m walks) |
+| No cooler option | sun reduction below 2% (the break after the spike at 0 in the distribution of 300–1,200 m walks) |
 | Indoor Contribution Index | (1 − L<sub>coolest</sub> ÷ L<sub>shortest, outdoor</sub>) × indoor share of the coolest path's shade (Wen et al. 2025) |
 
 Sun reduction and weighted exposure answer different questions: the first is how much sun you can avoid, the second how much the walk's heat burden falls when shade is valued at θ. With θ around 0.2, avoiding one metre of sun lowers C by only about 0.15–0.2 m, so weighted exposure falls roughly a tenth as much as sun.

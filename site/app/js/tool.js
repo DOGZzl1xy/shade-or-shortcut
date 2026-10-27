@@ -1,6 +1,7 @@
 // Route tool: two clicks -> shortest walk (outdoor network) and coolest walk (selected scenario), recomputed in the browser.
-import { nav, collapsible, baseStyle, getJSON, shadeRamp, COLORS, DEMO_CENTER, ATTR, pct, timeControl, newMap, edgeCoords, pathCoords } from "./common.js";
-import { route } from "./router.js";
+import { nav, collapsible, baseStyle, getJSON, shadeRamp, COLORS, DEMO_CENTER, ATTR, pct, timeControl, newMap, edgeCoords, pathCoords,
+  routeLayers } from "./common.js?v=dev";
+import { route } from "./router.js?v=dev";
 
 nav("tool.html");
 const $ = (id) => document.getElementById(id);
@@ -56,10 +57,7 @@ const map = newMap({
       paint: { "line-color": shadeRamp("s7"), "line-width": ["interpolate", ["linear"], ["zoom"], 14, 0.7, 17, 2.4], "line-opacity": 0.75 } },
     { id: "indoor", type: "line", source: "net", filter: ["==", ["get", "kind"], 2],
       paint: { "line-color": COLORS.indoor, "line-width": 1.6, "line-dasharray": [2, 1.5], "line-opacity": 0.8 } },
-    { id: "paths-glow", type: "line", source: "paths", layout: { "line-cap": "round", "line-join": "round" },
-      paint: { "line-color": ["get", "color"], "line-width": 13, "line-opacity": 0.2, "line-blur": 5 } },
-    { id: "paths", type: "line", source: "paths", layout: { "line-cap": "round", "line-join": "round" },
-      paint: { "line-color": ["get", "color"], "line-width": ["get", "w"] } },
+    ...routeLayers("paths"),
   ]),
 });
 map.addControl(new maplibregl.NavigationControl({ showCompass: false }), "top-left");
@@ -94,10 +92,14 @@ function render() {
     if (pts[i] === undefined) mk.remove();
     else mk.setLngLat([net.nodes.lon[pts[i]], net.nodes.lat[pts[i]]]).addTo(map);
   });
+  // the sidewalk shade shares the orange-cyan colours of the walks, so it is dimmed while walks are shown
+  if (map.getLayer("net")) map.setPaintProperty("net", "line-opacity", pts.length < 2 ? 0.75 : 0.4);
   if (pts.length < 2) { map.getSource("paths")?.setData({ type: "FeatureCollection", features: [] }); $("result").hidden = true; return; }
   const r = route(net, scenario, t, pts[0], pts[1], caches);
-  const feat = (p, color, w) => ({ type: "Feature", properties: { color, w }, geometry: { type: "LineString", coordinates: pathCoords(net, p.edges, pts[0]) } });
-  map.getSource("paths").setData({ type: "FeatureCollection", features: [feat(r.shortest, COLORS.sun, 5), feat(r.coolest, COLORS.cool, 3.5)] });
+  const feat = (p, role) => ({ type: "Feature", properties: { role }, geometry: { type: "LineString", coordinates: pathCoords(net, p.edges, pts[0]) } });
+  const indoor = r.coolest.edges.filter((i) => E.kind[i] === 2).map((i) => ({ type: "Feature", properties: { role: "indoor" },
+    geometry: { type: "LineString", coordinates: edgeCoords(net, i) } }));
+  map.getSource("paths").setData({ type: "FeatureCollection", features: [feat(r.shortest, "short"), feat(r.coolest, "cool"), ...indoor] });
   const fill = (p, pre) => {
     $(`${pre}-len`).textContent = `${Math.round(p.length)} m`;
     $(`${pre}-sun`).innerHTML = mp(p.sun, p.length);
@@ -112,7 +114,7 @@ function render() {
   $("verdict").innerHTML = dSun <= 0.05
     ? (c.indoor > 0 && dC > 0.005
       ? `No route with less sun, but the coolest walk spends <b class="indoor">${Math.round(c.indoor)} m</b> indoors: ${pct(dC, 0)} lower heat exposure.`
-      : "No cooler route on this trip.")
+      : "No cooler option on this trip.")
     : `The coolest walk avoids <b class="cool">${Math.round(dSun)} m</b> of sun (${pct(dSun / r.shortest.sun, 0)}) for <b>${dLen >= 0 ? "+" : "−"}${Math.abs(Math.round(dLen))} m</b> of walking.`;
   $("cost").textContent = `Weighted exposure C: ${Math.round(r.shortest.C)} → ${Math.round(c.C)} m-equivalent (${pct((r.shortest.C - c.C) / r.shortest.C, 1)} lower).`;
   $("result").hidden = false;
