@@ -10,6 +10,11 @@
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500&family=Space+Grotesk:wght@500;600&family=Space+Mono&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="vendor/maplibre-gl.css">
 <link rel="stylesheet" href="css/site.css?v=dev">
+<script>
+  // a page cross-fade the browser skips (e.g. in a background tab) rejects its promises; nothing to do about it
+  const quiet = (e) => { const t = e.viewTransition; if (t) [t.ready, t.finished, t.updateCallbackDone].forEach((q) => q.catch(() => {})); };
+  addEventListener("pagereveal", quiet); addEventListener("pageswap", quiet);
+</script>
 <style>
   /* one screen per step: scrolling, Space, PageDown / PageUp, arrows and presentation clickers stop on the next screen */
   html { scroll-snap-type: y mandatory; }
@@ -18,13 +23,16 @@
     background: radial-gradient(ellipse at 50% 55%, rgba(7,8,11,0) 0%, rgba(7,8,11,0.25) 55%, rgba(7,8,11,0.8) 100%); }
   main { position: relative; z-index: 2; pointer-events: none; }
   section { min-height: 100vh; min-height: 100svh; scroll-snap-align: start; scroll-snap-stop: always;
-    display: flex; align-items: center; padding: calc(var(--nav-h) + 24px) 5vw 24px; }
+    display: flex; align-items: center; padding: calc(var(--nav-h) + 24px) 5vw 24px 28px; }
   section .panel { pointer-events: auto; max-width: 420px; }
   .hero { justify-content: center; text-align: center; align-items: flex-end; padding-bottom: 9vh; }
   .hero .title { font-size: clamp(44px, 8vw, 112px); margin: 0; text-shadow: 0 10px 30px rgba(0,0,0,0.6); }
   .hero .title em { font-style: normal; color: var(--cool); }
   .hero .lead { max-width: 560px; margin: 14px auto 0; font-size: clamp(17px, 2vw, 22px); font-weight: 300; text-shadow: 0 2px 12px rgba(0,0,0,0.9); }
   .scroll-cue { margin-top: 22px; }
+  /* emphasis in the one-sentence headlines: heavier, and in the colour of what it names */
+  .step h2 em { font-style: normal; font-weight: 600; }
+  .c-noalt { color: #e58a3a; } .c-choice { color: #6aaee0; }
   .step h2 { font-family: var(--display); font-weight: 500; font-size: clamp(26px, 3vw, 38px); line-height: 1.12; margin: 6px 0 4px; }
   .step .stat { display: flex; gap: 40px; margin: 16px 0 2px; flex-wrap: wrap; }
   .step .stat .big { font-size: clamp(34px, 4vw, 48px); }
@@ -66,6 +74,9 @@
   .ls-open { height: 10px; background: #c9b6f2; }
   /* line-end labels on the walks */
   .tagwrap { width: 0; height: 0; pointer-events: none; }
+  .pill { font: 12px/1.3 var(--mono); padding: 3px 8px; border-radius: 10px; background: rgba(7,8,11,0.85); border: 1px solid currentColor;
+    white-space: nowrap; pointer-events: none; opacity: 0; transition: opacity 0.6s 0.8s; }
+  .pill.on { opacity: 1; }
   .tag { position: absolute; top: 0; transform: translateY(-50%); font: 12px/1.3 var(--mono); white-space: pre; padding: 3px 7px;
     border-radius: 5px; background: rgba(7,8,11,0.82); border: 1px solid currentColor; opacity: 0; transition: opacity 0.4s; }
   .tagwrap.l .tag { right: 12px; }
@@ -109,7 +120,7 @@
   <section id="stage-1" data-step="heat">
     <div class="panel step">
       <div class="label">Philadelphia · June 21 · 15:00</div>
-      <h2>Summer afternoons in Philadelphia are hot and bright.</h2>
+      <h2>Summer afternoons in Philadelphia are <em class="sun">hot and bright</em>.</h2>
       <div class="stat">
         <div><div class="big num sun" id="s-elev">–</div><div class="cap">sun height</div></div>
         <div><div class="big num sun" id="s-sunny">–</div><div class="cap">of sidewalks in the sun</div></div>
@@ -121,7 +132,7 @@
   <section id="stage-2" data-step="sources">
     <div class="panel step wide">
       <div class="label">Shadows drawn for June 21, 15:00 · sun <span class="n-elev">60°</span> high</div>
-      <h2>Shade comes from trees, from buildings, and from walking indoors.</h2>
+      <h2>Shade comes from <em class="t-tree">trees</em>, from <em class="t-bldg">buildings</em>, and from walking <em class="t-indoor">indoors</em>.</h2>
       <div class="diagrams">
         <figure>
           <svg viewBox="0 0 160 112" role="img" aria-label="A tree casting a shadow on a walker">
@@ -165,7 +176,7 @@
   <section id="stage-3" data-step="types">
     <div class="panel step">
       <div class="label">University City · June 21 · 15:00</div>
-      <h2>On the map, every sidewalk is in sun, tree shade or building shade, or runs indoors.</h2>
+      <h2>Mapped on every sidewalk: <em class="sun">sun</em>, <em class="t-tree">tree shade</em>, <em class="t-bldg">building shade</em> or <em class="t-indoor">indoors</em>.</h2>
       <div class="legend-row"><span><span class="legend-swatch" style="background:var(--sun)"></span>sun</span><span><span class="legend-swatch" style="background:var(--tree)"></span>tree shade</span><span><span class="legend-swatch" style="background:var(--bldg)"></span>building shade</span><span><span class="legend-swatch ls-indoor"></span>indoors</span></div>
     </div>
   </section>
@@ -173,7 +184,7 @@
   <section id="stage-4" data-step="question">
     <div class="panel step">
       <div class="label">The question</div>
-      <h2>So how much sun can a walk home from transit avoid, and what does it cost?</h2>
+      <h2>So how much sun can a walk home from transit <em class="cool">avoid</em>, and <em>what does it cost</em>?</h2>
       <div class="stat"><div><div class="big num" id="n-trips">–</div><div class="cap">walks home from stations and frequent bus stops, each as the shortest and the coolest walk</div></div></div>
     </div>
   </section>
@@ -181,14 +192,14 @@
   <section id="stage-5" data-step="example">
     <div class="panel step">
       <div class="label" id="h-case">&nbsp;</div>
-      <h2>Same station, same door: two ways to walk it.</h2>
+      <h2>Same station, same door: the <em class="sun">shortest</em> and the <em class="cool">coolest</em> walk.</h2>
     </div>
   </section>
 
   <section id="stage-6" data-step="shade">
     <div class="panel step">
       <div class="label">Center City · June 21</div>
-      <h2>Every sidewalk, every hour.</h2>
+      <h2>Every sidewalk, <em>every hour</em>.</h2>
       <div class="stat">
         <div><div class="big num" id="h-hour">15:00</div><div class="cap">hour of the day</div></div>
         <div><div class="big num" id="n-km">–</div><div class="cap">km of sidewalks</div></div>
@@ -201,7 +212,7 @@
   <section id="stage-7" data-step="sunny">
     <div class="panel step">
       <div class="label">Frequent bus stops · 300–800 m · 15:00</div>
-      <h2>The shortest walk home from a frequent bus stop is mostly in the sun.</h2>
+      <h2>The shortest walk home from a frequent bus stop is <em class="sun">mostly in the sun</em>.</h2>
       <div class="stat"><div><div class="big num sun" id="s-sun">–</div><div class="cap">in the sun</div></div></div>
       <div class="ramp" id="r-sunny"></div><div class="ends" id="e-sunny"></div>
     </div>
@@ -210,7 +221,7 @@
   <section id="stage-8" data-step="cooler">
     <div class="panel step">
       <div class="label">Frequent bus stops · 300–800 m · 15:00</div>
-      <h2>The coolest walk avoids <span id="s-red-words">some</span> of the sun for almost no extra distance.</h2>
+      <h2>The <em class="cool">coolest walk</em> avoids <em id="s-red-words">some</em> of the sun for <em>almost no extra distance</em>.</h2>
       <div class="stat">
         <div><div class="big num cool" id="s-red">–</div><div class="cap">sun</div></div>
         <div><div class="big num" id="s-det">–</div><div class="cap">distance</div></div>
@@ -222,7 +233,7 @@
   <section id="stage-9" data-step="grid">
     <div class="panel step">
       <div class="label">Frequent bus stops · 500 m cells</div>
-      <h2><span id="s-noalt-words">Many</span> have no cooler option. Dense street grids give a choice.</h2>
+      <h2><span id="s-noalt-words">Many</span> have <em class="c-noalt">no cooler option</em>. <em class="c-choice">Dense street grids</em> give a choice.</h2>
       <div class="stat"><div><div class="big num" id="s-noalt">–</div><div class="cap">no cooler option</div></div></div>
       <div class="legend-row" id="clusters"></div>
     </div>
@@ -231,14 +242,14 @@
   <section id="stage-10" data-step="indoor">
     <div class="panel step">
       <div class="label">University City campus · June 21, 15:00</div>
-      <h2>On campus, <span id="s-ind-words">some</span> coolest walks go indoors.</h2>
+      <h2>On campus, <em id="s-ind-words">some</em> <em class="cool">coolest walks</em> go <em class="t-indoor">indoors</em>.</h2>
       <div class="legend-row"><span><span class="legend-swatch ls-short"></span>shortest</span><span><span class="legend-swatch ls-cool"></span>coolest</span><span><span class="legend-swatch ls-indoor"></span>indoors</span><span><span class="legend-swatch ls-open"></span>open to walkers</span></div>
     </div>
   </section>
 
   <section id="stage-11" data-step="end">
     <div class="panel step cta">
-      <h2>Find your own shade.</h2>
+      <h2>Find your own <em class="cool">shade</em>.</h2>
       <a href="tool.html"><button class="ghost">Open the route tool</button></a>
       <a href="map.html"><button class="ghost">City shade map</button></a>
     </div>

@@ -1,5 +1,5 @@
 // Route tool: two clicks -> shortest walk (outdoor network) and coolest walk (selected scenario), recomputed in the browser.
-import { nav, collapsible, baseStyle, getJSON, shadeRamp, COLORS, DEMO_CENTER, ATTR, pct, timeControl, newMap, edgeCoords, pathCoords,
+import { handoff, nav, collapsible, baseStyle, getJSON, shadeRamp, COLORS, DEMO_CENTER, ATTR, pct, timeControl, newMap, edgeCoords, pathCoords,
   routeLayers } from "./common.js?v=dev";
 import { route } from "./router.js?v=dev";
 
@@ -42,8 +42,9 @@ function snap(lng, lat) {
 let lon0 = Infinity, lon1 = -Infinity, lat0 = Infinity, lat1 = -Infinity;
 net.nodes.lon.forEach((x, i) => { lon0 = Math.min(lon0, x); lon1 = Math.max(lon1, x); lat0 = Math.min(lat0, net.nodes.lat[i]); lat1 = Math.max(lat1, net.nodes.lat[i]); });
 
+const start = handoff();                // arriving from the story: open on its last view, then move to the walk
 const map = newMap({
-  container: "map", center: DEMO_CENTER, zoom: 15.3,
+  container: "map", ...(start ? { bounds: start } : { center: DEMO_CENTER, zoom: 15.3 }),
   style: baseStyle({
     net: { type: "geojson", data: network, attribution: `${ATTR.shade}; ${ATTR.osm}` },
     bld: { type: "geojson", data: layers.buildings },
@@ -60,7 +61,7 @@ const map = newMap({
     ...routeLayers("paths"),
   ]),
 });
-map.addControl(new maplibregl.NavigationControl({ showCompass: false }), "top-left");
+map.addControl(new maplibregl.NavigationControl({ showCompass: false }), "bottom-right");
 
 const msg = (s) => { $("msg").textContent = s; };
 
@@ -97,8 +98,14 @@ function render() {
   if (pts.length < 2) { map.getSource("paths")?.setData({ type: "FeatureCollection", features: [] }); $("result").hidden = true; return; }
   const r = route(net, scenario, t, pts[0], pts[1], caches);
   const feat = (p, role) => ({ type: "Feature", properties: { role }, geometry: { type: "LineString", coordinates: pathCoords(net, p.edges, pts[0]) } });
-  const indoor = r.coolest.edges.filter((i) => E.kind[i] === 2).map((i) => ({ type: "Feature", properties: { role: "indoor" },
-    geometry: { type: "LineString", coordinates: edgeCoords(net, i) } }));
+  // indoor edges of the coolest walk, each in the walking direction (the line offset depends on it)
+  const indoor = [];
+  let node = pts[0];
+  for (const i of r.coolest.edges) {
+    const fwd = E.u[i] === node, c = edgeCoords(net, i);
+    if (E.kind[i] === 2) indoor.push({ type: "Feature", properties: { role: "indoor" }, geometry: { type: "LineString", coordinates: fwd ? c : c.reverse() } });
+    node = fwd ? E.v[i] : E.u[i];
+  }
   map.getSource("paths").setData({ type: "FeatureCollection", features: [feat(r.shortest, "short"), feat(r.coolest, "cool"), ...indoor] });
   const fill = (p, pre) => {
     $(`${pre}-len`).textContent = `${Math.round(p.length)} m`;
@@ -116,7 +123,6 @@ function render() {
       ? `No route with less sun, but the coolest walk spends <b class="indoor">${Math.round(c.indoor)} m</b> indoors: ${pct(dC, 0)} lower heat exposure.`
       : "No cooler option on this trip.")
     : `The coolest walk avoids <b class="cool">${Math.round(dSun)} m</b> of sun (${pct(dSun / r.shortest.sun, 0)}) for <b>${dLen >= 0 ? "+" : "−"}${Math.abs(Math.round(dLen))} m</b> of walking.`;
-  $("cost").textContent = `Weighted exposure C: ${Math.round(r.shortest.C)} → ${Math.round(c.C)} m-equivalent (${pct((r.shortest.C - c.C) / r.shortest.C, 1)} lower).`;
   $("result").hidden = false;
 }
 
@@ -128,9 +134,9 @@ map.once("style.load", () => {            // sources exist from here; no need to
   // frame the first walk in the part of the map the panel leaves free
   const all = [...p.shortest.coords, ...p.coolest.coords], side = $("side").getBoundingClientRect();
   const lons = all.map((c) => c[0]), lats = all.map((c) => c[1]), narrow = window.innerWidth <= 760;
-  map.fitBounds([[Math.min(...lons), Math.min(...lats)], [Math.max(...lons), Math.max(...lats)]], { duration: 0, maxZoom: 16.5,
+  map.fitBounds([[Math.min(...lons), Math.min(...lats)], [Math.max(...lons), Math.max(...lats)]], { duration: start ? 1600 : 0, maxZoom: 16.5,
     padding: narrow ? { top: 40, left: 30, right: 30, bottom: window.innerHeight - side.top + 20 }
-      : { top: 50, bottom: 50, left: 60, right: window.innerWidth - side.left + 40 } });
+      : { top: 50, bottom: 50, left: side.right + 40, right: 60 } });
 });
 map.on("click", (e) => {
   const { lng, lat } = e.lngLat;

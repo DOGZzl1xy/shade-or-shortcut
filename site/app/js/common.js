@@ -19,6 +19,13 @@ export const ATTR = {
   osm: "Campus footways © OpenStreetMap contributors (ODbL)",
 };
 
+// the view handed over from the story page ("#b=west,south,east,north"), so the next page opens where the story ended
+export function handoff() {
+  const m = location.hash.match(/b=([-\d.,]+)/);
+  const b = m && m[1].split(",").map(Number);
+  return b && b.length === 4 && b.every(Number.isFinite) ? [[b[0], b[1]], [b[2], b[3]]] : null;
+}
+
 export function timeName(label) {          // "0621_15" -> "June 21, 15:00"
   const m = { "0621": "June 21", "0801": "Aug 1" };
   return `${m[label.slice(0, 4)]}, ${label.slice(5)}:00`;
@@ -127,27 +134,26 @@ export const GRID_RAMPS = {
   network_km_km2: { stops: [10, "#1d2733", 30, "#4b6b8a", 55, "#cfe3ff"], lo: "10", hi: "55 km/km²" },
 };
 
-// route lines: a light grey casing under every route (it also fills the gaps between the dashes), shortest = sun-orange
-// solid, coolest = cyan dashes drawn on top
-// (overlapping stretches read as orange and cyan), indoor stretches = violet dots. Features carry role = short | cool | indoor.
-const CASING = "#d4d6db";
+// route lines: shortest = sun-orange solid, coolest = cyan dashes over a dim cyan track, indoor stretches = violet dots
+// over a dim violet track. Where the two walks share a street they run side by side (offset to either side of the
+// sidewalk, like lines on a transit map), so neither hides the other. A thin dark casing sets them off the map.
+// Features carry role = short | cool | indoor; all three run from the walk's start, so the offsets stay on their side.
+const DIM = { cool: "#1d6b73", indoor: "#4b3d73" };
 export function routeLayers(source, w = 4) {
-  const role = (r) => ["==", ["get", "role"], r];
+  const role = (r) => ["==", ["get", "role"], r], off = w * 0.65, round = { "line-cap": "round", "line-join": "round" };
+  const line = (id, r, color, width, o, extra = {}) => ({ id: `${source}-${id}`, type: "line", source, filter: role(r),
+    layout: { ...round, ...(extra.layout || {}) }, paint: { "line-color": color, "line-width": width, "line-offset": o, ...(extra.paint || {}) } });
   return [
-    { id: `${source}-case`, type: "line", source, layout: { "line-cap": "round", "line-join": "round" },
-      paint: { "line-color": CASING, "line-width": w + 3 } },
-    { id: `${source}-short`, type: "line", source, filter: role("short"), layout: { "line-cap": "round", "line-join": "round" },
-      paint: { "line-color": COLORS.sun, "line-width": w } },
-    { id: `${source}-cool`, type: "line", source, filter: role("cool"), layout: { "line-cap": "butt", "line-join": "round" },
-      paint: { "line-color": COLORS.cool, "line-width": w, "line-dasharray": [1.6, 1.2] } },
-    // indoor stretches lie on the coolest line: the casing colour hides its dashes there before the dots are drawn
-    { id: `${source}-incase`, type: "line", source, filter: role("indoor"), layout: { "line-cap": "round", "line-join": "round" },
-      paint: { "line-color": CASING, "line-width": w + 3 } },
-    { id: `${source}-indoor`, type: "line", source, filter: role("indoor"), layout: { "line-cap": "round", "line-join": "round" },
-      paint: { "line-color": COLORS.indoor, "line-width": w, "line-dasharray": [0, 1.6] } },
+    line("case-s", "short", "#07080b", w + 2.5, -off, { paint: { "line-opacity": 0.85 } }),
+    line("case-c", "cool", "#07080b", w + 2.5, off, { paint: { "line-opacity": 0.85 } }),
+    line("short", "short", COLORS.sun, w, -off),
+    line("track", "cool", DIM.cool, w, off),
+    line("cool", "cool", COLORS.cool, w, off, { layout: { "line-cap": "butt" }, paint: { "line-dasharray": [1.6, 1.2] } }),
+    line("incase", "indoor", DIM.indoor, w, off),
+    line("indoor", "indoor", COLORS.indoor, w, off, { paint: { "line-dasharray": [0, 1.6] } }),
   ];
 }
-export const ROUTE_LAYERS = (source) => ["case", "short", "cool", "incase", "indoor"].map((k) => `${source}-${k}`);
+export const ROUTE_LAYERS = (source) => ["case-s", "case-c", "short", "track", "cool", "incase", "indoor"].map((k) => `${source}-${k}`);
 export const m = (x) => `${Math.round(x).toLocaleString()} m`;
 
 // add pmtiles:// protocol once (vendor/pmtiles.js exposes a global `pmtiles`)

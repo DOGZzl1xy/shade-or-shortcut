@@ -170,6 +170,23 @@ def main():
     mid = [np.asarray(geom[i]).reshape(-1, 2).mean(axis=0) for i in range(len(kind))]
     c0 = np.mean([mid[i] for i in np.where(kind == 2)[0]], axis=0)
     win = [i for i in np.where(kind != 1)[0] if abs(mid[i][0] - c0[0]) < 0.0078 and abs(mid[i][1] - c0[1]) < 0.0058]
+    # close-up for the home page: the indoor edge with the most tree- and building-shaded sidewalk within 120 m, and
+    # one labelled example of each state near it (the longest such edge within 110 m, at least 60 m from the others)
+    M = np.asarray(mid)
+    def near(c, r):
+        d = np.hypot((M[:, 0] - c[0]) * 85_000, (M[:, 1] - c[1]) * 111_000)       # metres at 40 deg N
+        return d < r, d
+    best = max(np.where(kind == 2)[0], key=lambda i: min(((typ == t) & near(M[i], 120)[0]).sum() for t in ("tree", "bldg")))
+    focus, picked = M[best], []
+    for t in ("indoor", "tree", "bldg", "sun"):
+        ok, _ = near(focus, 110)
+        cand = [i for i in np.where(ok & (typ == t) & (kind != 1))[0]
+                if all(near(M[j], 60)[1][i] >= 60 for j in picked)]
+        if cand:
+            picked.append(max(cand, key=lambda i: net["len"][i]))
+    hero["types_focus"] = {"center": np.round(focus, 6).tolist(),
+                           "labels": [{"t": str(typ[i]), "at": np.round(M[i], 6).tolist()} for i in picked]}
+    sizes["hero.json"] = write("hero.json", hero)
     sizes["shade_types.geojson"] = write("shade_types.geojson", {"type": "FeatureCollection", "features": [
         {"type": "Feature", "properties": {"t": str(typ[i])},
          "geometry": {"type": "LineString", "coordinates": np.round(np.asarray(geom[i]).reshape(-1, 2), 5).tolist()}}
