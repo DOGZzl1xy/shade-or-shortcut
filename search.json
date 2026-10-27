@@ -1,0 +1,177 @@
+[
+  {
+    "objectID": "technical.html",
+    "href": "technical.html",
+    "title": "Technical notes",
+    "section": "",
+    "text": "This page is for readers who want to check how the numbers on the other pages were produced. The code, every parameter and the stored result tables are in the project repository."
+  },
+  {
+    "objectID": "technical.html#processing-pipeline",
+    "href": "technical.html#processing-pipeline",
+    "title": "Technical notes",
+    "section": "Processing pipeline",
+    "text": "Processing pipeline\n\n\n\n\n\n\n\n\n\n\nStep\nInput\nOutput\nMethod\n\n\n\n\n1. LiDAR\n2022 airborne LiDAR, streamed tile by tile\n1 m ground (DEM) and surface (DSM) grids\nground returns → DEM; highest returns → DSM; each tile is downloaded, rasterised and deleted\n\n\n2. Surface model\nDEM, DSM, footprints, 2018 land cover, CHMv2\n1 m building and tree heights\nheight above ground (nDSM) split into buildings (inside footprints), structures (bridges, viaducts) and trees (canopy mask)\n\n\n3. Shadow casting\nsurface model, sun positions\nsun / tree shade / building shade at every sample point and hour\na ray from each point (1.5 m above the ground) towards the sun, marched 1 m at a time for up to 1 km\n\n\n4. Edge attributes\nDVRPC sidewalks and crossings, OSM bridges and covered walkways\nmetres of sun, tree shade and building shade per edge and hour\nsample points summed per edge; covered walkways always in building shade\n\n\n5. Routing\nedge table\nshortest and coolest path per walk\nDijkstra on length, and on the cost of Wen et al. (2025) with θ growing with distance walked\n\n\n6. Walk samples\nSEPTA timetable, residential parcels\none walk per home, stop → home\nnearest frequent stop along the network, within 1.2 km\n\n\n7. Summaries\nwalk metrics\ntables by mode and walk length; stations; 500 m grid clusters\nmeans within length bands; k-means on grid cells"
+  },
+  {
+    "objectID": "technical.html#key-parameters",
+    "href": "technical.html#key-parameters",
+    "title": "Technical notes",
+    "section": "Key parameters",
+    "text": "Key parameters\n\n\n\n\n\n\n\n\n\nParameter\nValue\n\n\n\n\nDates and hours\nJune 21 and August 1, 8:00–19:00 local time, every hour (24 sun positions)\n\n\nGrid resolution\n1 m\n\n\nSample spacing along sidewalks\n2 m\n\n\nObserver height\n1.5 m above the ground (above the deck on bridges)\n\n\nRay step and maximum length\n1 m, 1,000 m\n\n\nMinimum tree height\n2 m\n\n\nCost function\nC = L_sun + (1 − 0.5θ) L_tree + (1 − θ) L_building + (1 − 1.5θ) L_indoor\n\n\nθ curve (distance walked l, in m)\nθ(l) = 0.3961 / (1 + exp(−0.0111 (l − 859.6))) + 0.1958\n\n\nFrequent stop\n≥ 6 departures per hour on one route and direction, weekday 15:00–19:00 (2026-10-28); all rapid-transit stations\n\n\nMaximum walk\n1,200 m along the network\n\n\nWalk-length bands\nunder 300 m, 300–800 m, 800–1,200 m\n\n\nNo cooler alternative\nthe coolest walk avoids less than 2% of the sun (sensitivity 1%, 5%, 10%)\n\n\nGrid and clusters\n500 m cells with at least 20 walks of 300–800 m; k-means, k = 3\n\n\nStation ranking\nat least 50 walks of 300–800 m\n\n\nRandom seed\n42"
+  },
+  {
+    "objectID": "technical.html#processing-decisions",
+    "href": "technical.html#processing-decisions",
+    "title": "Technical notes",
+    "section": "Processing decisions",
+    "text": "Processing decisions\n\nStreaming the LiDAR. The point cloud is far larger than the available disk, so each tile is downloaded, rasterised and deleted in turn. The horizontal coordinates are used as they are; the datum difference is about 1 m and matches the vector layers.\nRoof holes. Dark or glassy roofs return no points, and filling them from the ground would make buildings disappear. Holes inside a footprint take the median height of the same building; buildings with less than 20% valid pixels use the recorded height.\nSpikes and outliers. Isolated high returns (fewer than 2 neighbours within 10 m in a 5 × 5 window) are removed, and anything more than 400 m above the ground is treated as noise; one stray return near the TV masts otherwise cast kilometre-long shadows.\nHoles outside buildings. Over water the surface takes the ground height; other holes are interpolated up to 10 px and otherwise take the ground, so river surfaces do not grow false structures.\nGround under bridges. Ground gaps are filled first from NOAA’s bare-earth model (bridges removed) and only then by interpolation, so bridge decks stay above the ground instead of being merged with it.\nLeaf-off LiDAR. The survey was flown in March, so canopies have gaps. Inside the 2018 canopy mask, pixels below 2 m take the median of taller pixels in a 3 × 3 m window; a maximum filter was rejected because it raised the median tree height by about 5 m.\nTrees outside the city. The land-cover layer stops at the city limit, so trees in the 1 km buffer come from CHMv2 (≥ 2 m); they only cast shadows onto city sidewalks.\nStructures without footprints. Bridges and rail viaducts are kept as structures: areas at least 3 m high outside footprints and the canopy, cut where the surface jumps by more than 2 m, and kept if a piece covers at least 50 m² with a height spread of at most 3 m. Parked trains can pass this test too.\nFlat-roof extrusion. Footprints with almost no LiDAR height (median below 2 m) but a recorded height of at least 3 m are built after the survey; they are extruded to the recorded height. Footprints where 30%–50% of pixels are tall overlap a neighbour and are skipped. In University City every extruded building was checked on 2025 aerial photos.\nBridge decks. A sidewalk segment is on a bridge when at least 80% of it lies within 15 m of an OSM road bridge and the two run within 20° of each other; its observer then stands on the deck. A plain intersection test would put every underpass on the bridge above it.\nTerrain shadows. Bare ground also blocks the sun, which matters in steep valleys such as the Wissahickon at low sun.\nCovered walkways. OpenStreetMap covered walkways and passages through buildings are added and counted as building shade at every hour.\nCost function kept as published. The coolest path sometimes has more sun than the shortest, when it trades tree shade for building shade (0.8% of test walks). The cost was kept unchanged, and the weighted exposure C is reported next to the sun share.\nWhich stops. Using every stop gave a median walk of 113 m, too short for any choice of route. Rapid transit plus frequent buses gives a median of 407 m and still reaches 82% of homes within 1.2 km.\nThreshold for no cooler option. Sun reduction has a spike at exactly 0 (the coolest walk is the shortest) and is continuous from about 2% on, so the cut is placed where the spike ends.\nClusters. Clustering uses only 300–800 m walks so that cells are compared at the same walk length. Silhouette scores for k = 3–6 are 0.33–0.35, so k = 3 is a summary of a continuum rather than natural types.\nCampus footways. The regional sidewalk data lack most campus paths, so University City adds OpenStreetMap footways (36 km), leaving out sidewalks, crossings, private and indoor ways. Each mapped entrance is linked to the nearest sidewalk point without crossing a building; links over 30 m were checked by hand and the ones that are not walkable removed.\nIndoor baseline. In the indoor scenarios the shortest walk is always the outdoor one, so every scenario is compared against the same baseline."
+  },
+  {
+    "objectID": "technical.html#validation",
+    "href": "technical.html#validation",
+    "title": "Technical notes",
+    "section": "Validation",
+    "text": "Validation\n\nSynthetic shadows. Unit tests cast shadows from box buildings and trees on flat ground and check the shadow length against height / tan(sun elevation) for several sun positions, no shadow on the sunny side, tree versus building priority, terrain shadows and observers on bridge decks.\nBuilding heights. LiDAR heights agree with the city’s recorded heights for 541,222 buildings (Spearman ρ = 0.84, median absolute difference 0.5 m).\nRouting. With θ fixed, the search reproduces networkx Dijkstra exactly on 9,094 nodes (largest absolute difference 0). Hand-computed small networks check the cost rule, tree versus building shade and the indoor term.\nBrowser and analysis agree. The route tool’s JavaScript router returns the same shortest and coolest paths as the Python analysis for 100 random walks, scenarios and hours.\nDirection of travel. Reversing 500 walks of at least 400 m (home → stop) changes little: mean sun reduction 14.2% one way and 14.2% the other, correlation 0.99.\nVisual checks. The five rapid-transit stations with the largest sun reduction were checked route by route on aerial photos, as were the University City entrances and passages."
+  },
+  {
+    "objectID": "methods.html",
+    "href": "methods.html",
+    "title": "Methods",
+    "section": "",
+    "text": "Heights. The 2022 LiDAR survey gives the height of the ground, every building and every tree at 1 m.\nShadows. For 24 sun positions (June 21 and August 1, 8:00–19:00), we look from a point every 2 m along each sidewalk towards the sun. The point is in building shade if a building, bridge or the terrain is in the way, in tree shade if only trees are, and otherwise in the sun.\nSidewalks. Each stretch of sidewalk gets its metres of sun, tree shade and building shade for every hour.\nRoutes. For every walk we find two routes: the shortest, and the coolest, which has the lowest shade-weighted cost below."
+  },
+  {
+    "objectID": "methods.html#pipeline",
+    "href": "methods.html#pipeline",
+    "title": "Methods",
+    "section": "",
+    "text": "Heights. The 2022 LiDAR survey gives the height of the ground, every building and every tree at 1 m.\nShadows. For 24 sun positions (June 21 and August 1, 8:00–19:00), we look from a point every 2 m along each sidewalk towards the sun. The point is in building shade if a building, bridge or the terrain is in the way, in tree shade if only trees are, and otherwise in the sun.\nSidewalks. Each stretch of sidewalk gets its metres of sun, tree shade and building shade for every hour.\nRoutes. For every walk we find two routes: the shortest, and the coolest, which has the lowest shade-weighted cost below."
+  },
+  {
+    "objectID": "methods.html#the-cost-of-a-sunny-metre",
+    "href": "methods.html#the-cost-of-a-sunny-metre",
+    "title": "Methods",
+    "section": "The cost of a sunny metre",
+    "text": "The cost of a sunny metre\nWe use the cost function of Wen et al. (2025):\n\\[C = L_{\\text{sun}} + (1 - 0.5\\,\\theta)\\,L_{\\text{tree}} + (1 - \\theta)\\,L_{\\text{building}} + (1 - 1.5\\,\\theta)\\,L_{\\text{indoor}}\\]\nA metre in the sun costs 1. A metre in tree shade costs a little less (1 − 0.5θ), a metre in building shade less again (1 − θ), and an air-conditioned indoor metre the least (1 − 1.5θ): tree shade sits between sun and building shade. The reward θ grows with the distance already walked, so shade matters more the longer you have been in the heat:\n\n\n\n\n\nθ as a function of distance already walked.\n\n\n\n\nBecause θ stays near 0.2 for the first 500 m, a short walk only takes a cooler route when it costs almost no extra distance."
+  },
+  {
+    "objectID": "methods.html#walks-home-from-transit",
+    "href": "methods.html#walks-home-from-transit",
+    "title": "Methods",
+    "section": "Walks home from transit",
+    "text": "Walks home from transit\nEvery home within 1.2 km of a frequent stop is one walk, from the stop to the home (431,100 walks). Results are always reported by trip length (under 300 m, 300–800 m, 800–1,200 m), and places are only compared within one length band, because short walks rarely have any alternative. Rapid transit and high-frequency bus are reported separately.\nWalking the other way (home to stop) gives the same answer: for 500 walks of at least 400 m, the mean sun reduction is 14.2% one way and 14.2% the other (correlation 0.990)."
+  },
+  {
+    "objectID": "methods.html#metrics",
+    "href": "methods.html#metrics",
+    "title": "Methods",
+    "section": "Metrics",
+    "text": "Metrics\n\n\n\n\n\n\n\nMetric\nDefinition\n\n\n\n\nSun share\nmetres in the sun on the shortest path ÷ its length\n\n\nSun reduction\n(sun on shortest − sun on coolest) ÷ sun on shortest\n\n\nDetour\n(coolest length − shortest length) ÷ shortest length\n\n\nWeighted exposure reduction\n(C of shortest − C of coolest) ÷ C of shortest\n\n\nNo cooler alternative\nsun reduction below 2% (the break after the spike at 0 in the distribution of 300–1,200 m walks)\n\n\nIndoor Contribution Index\n(1 − Lcoolest ÷ Lshortest, outdoor) × indoor share of the coolest path’s shade (Wen et al. 2025)\n\n\n\nSun reduction and weighted exposure answer different questions: the first is how much sun you can avoid, the second how much the walk’s heat burden falls when shade is valued at θ. With θ around 0.2, avoiding one metre of sun lowers C by only about 0.15–0.2 m, so weighted exposure falls roughly a tenth as much as sun."
+  },
+  {
+    "objectID": "methods.html#indoor-scenarios-university-city",
+    "href": "methods.html#indoor-scenarios-university-city",
+    "title": "Methods",
+    "section": "Indoor scenarios (University City)",
+    "text": "Indoor scenarios (University City)\nEach mapped entrance is linked to the nearest sidewalk, and passages through a building count as indoor, air-conditioned walking. Three cases are compared: outdoor only, adding the buildings open without a Penn ID, and adding all mapped buildings. The shortest route is always the outdoor one."
+  },
+  {
+    "objectID": "methods.html#how-we-checked",
+    "href": "methods.html#how-we-checked",
+    "title": "Methods",
+    "section": "How we checked",
+    "text": "How we checked\nThe five rapid-transit stations with the largest sun reduction were checked by eye on aerial photos (see Results)."
+  },
+  {
+    "objectID": "index.html",
+    "href": "index.html",
+    "title": "Shade or Shortcut",
+    "section": "",
+    "text": "The story page opens automatically. If it does not, continue to the story."
+  },
+  {
+    "objectID": "data.html",
+    "href": "data.html",
+    "title": "Data",
+    "section": "",
+    "text": "All inputs are public data.\n\n\n\n\n\n\n\n\nLayer\nSource\nUsed for\n\n\n\n\nAirborne LiDAR, March 2022\nCity of Philadelphia, via NOAA Digital Coast and PASDA\nground, building and tree heights at 1 m\n\n\nBuilding footprints\nCity of Philadelphia (OpenDataPhilly)\nbuilding outlines\n\n\nLand cover 2018\nPASDA\ntree canopy\n\n\nCanopy height (CHMv2)\nMeta / WRI, CC BY 4.0\ntrees just outside the city\n\n\nPedestrian network\nDVRPC\nsidewalks and crosswalks\n\n\nOpenStreetMap\nOSM contributors, ODbL\nbridges, covered walkways, campus footways\n\n\nTransit\nSEPTA, fall 2026 timetable\nrapid-transit stations and frequent bus stops\n\n\nProperties\nCity of Philadelphia (OPA)\nresidential parcels, where walks end"
+  },
+  {
+    "objectID": "data.html#sources",
+    "href": "data.html#sources",
+    "title": "Data",
+    "section": "",
+    "text": "All inputs are public data.\n\n\n\n\n\n\n\n\nLayer\nSource\nUsed for\n\n\n\n\nAirborne LiDAR, March 2022\nCity of Philadelphia, via NOAA Digital Coast and PASDA\nground, building and tree heights at 1 m\n\n\nBuilding footprints\nCity of Philadelphia (OpenDataPhilly)\nbuilding outlines\n\n\nLand cover 2018\nPASDA\ntree canopy\n\n\nCanopy height (CHMv2)\nMeta / WRI, CC BY 4.0\ntrees just outside the city\n\n\nPedestrian network\nDVRPC\nsidewalks and crosswalks\n\n\nOpenStreetMap\nOSM contributors, ODbL\nbridges, covered walkways, campus footways\n\n\nTransit\nSEPTA, fall 2026 timetable\nrapid-transit stations and frequent bus stops\n\n\nProperties\nCity of Philadelphia (OPA)\nresidential parcels, where walks end"
+  },
+  {
+    "objectID": "data.html#the-shade-map",
+    "href": "data.html#the-shade-map",
+    "title": "Data",
+    "section": "The shade map",
+    "text": "The shade map\n\n\n\n7,237 km\n\n\nsidewalks and crossings\n\n\n\n\n3.6 M\n\n\npoints checked for shade, every 2 m\n\n\n\n\n24\n\n\nhours: June 21 and Aug 1, 8:00–19:00\n\n\n\n\n1 m\n\n\nheight model of buildings and trees\n\n\n\nBuilding and tree heights come from the 2022 LiDAR survey, flown before the leaves came out. Building heights agree closely with the city’s own records (median difference 0.5 m over 541,222 buildings); bridges and elevated rail lines are included, so they cast shadows too. Trees cover 17% of the city in the model (the median tree is 15 m tall). Covered walkways and passages through buildings (4.2 km) are always in shade.\n\n\n\n\n\nUniversity City in the height model: buildings (blue and pink), bridges and other structures (orange) and trees (green)."
+  },
+  {
+    "objectID": "data.html#whose-walks",
+    "href": "data.html#whose-walks",
+    "title": "Data",
+    "section": "Whose walks",
+    "text": "Whose walks\nEach walk starts at a stop: any rapid-transit station (Regional Rail, L (Market-Frankford), B (Broad Street) or the T trolley tunnel) or a bus stop with at least 6 buses an hour in one direction between 15:00 and 19:00. Every home within 1.2 km walking distance of such a stop is one walk, 431,100 in all. The other 91,649 homes (17.5%), mostly in the Northeast and Roxborough, have no frequent stop that close.\n\n\n\n\n\nHomes without a frequent stop within 1.2 km (red)."
+  },
+  {
+    "objectID": "data.html#university-city",
+    "href": "data.html#university-city",
+    "title": "Data",
+    "section": "University City",
+    "text": "University City\nFor University City we mapped the entrances and indoor passages of 41 buildings (4.4 km of passages); 10 of them can be entered without a Penn ID. Campus footpaths from OpenStreetMap are added to the sidewalk network there."
+  },
+  {
+    "objectID": "data.html#known-gaps",
+    "href": "data.html#known-gaps",
+    "title": "Data",
+    "section": "Known gaps",
+    "text": "Known gaps\n\nOutside University City, campus and park paths are missing, so cooler options inside campuses and parks are understated.\nShadows assume clear skies on two summer days; trees are mapped from leaf-off LiDAR and 2018 land cover, buildings from 2022.\nMissing or misplaced footprints, newer buildings and temporary objects (parked trains, scaffolding) affect shade locally.\nThe timetable is one weekday in fall 2026; summer service may differ."
+  },
+  {
+    "objectID": "results.html",
+    "href": "results.html",
+    "title": "Results",
+    "section": "",
+    "text": "All numbers are for 15:00 (June 21 and August 1 pooled) with the dynamic θ, unless stated."
+  },
+  {
+    "objectID": "results.html#how-much-sun-can-a-walk-home-avoid",
+    "href": "results.html#how-much-sun-can-a-walk-home-avoid",
+    "title": "Results",
+    "section": "How much sun can a walk home avoid?",
+    "text": "How much sun can a walk home avoid?\n\n\n\n66%\n\n\nof the shortest walk is sunny (rapid transit, 300–800 m)\n\n\n\n\n−16%\n\n\nsun on the coolest walk\n\n\n\n\n+0.64%\n\n\nextra distance\n\n\n\n\n50%\n\n\nof walks have no cooler option\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nMode\nWalk\nWalks\nSun on shortest\nSun ↓\nDetour (mean / 95th pct.)\nExposure ↓\nNo cooler option\n\n\n\n\nBus\n&lt;300 m\n185,224\n75%\n4.0%\n0.2% / 0.9%\n0.48%\n87%\n\n\nBus\n300–800 m\n135,384\n74%\n9.7%\n0.4% / 3.0%\n1.08%\n61%\n\n\nBus\n800–1200 m\n33,147\n75%\n9.7%\n0.5% / 2.3%\n1.41%\n51%\n\n\nRapid\n&lt;300 m\n17,074\n62%\n6.1%\n0.2% / 1.5%\n0.73%\n83%\n\n\nRapid\n300–800 m\n45,388\n66%\n16.0%\n0.6% / 3.5%\n1.90%\n50%\n\n\nRapid\n800–1200 m\n14,883\n68%\n16.0%\n0.5% / 2.2%\n2.66%\n45%\n\n\n\n\n\nRapid = rapid-transit stations; Bus = high-frequency bus stops. Sun ↓ = sun reduction of the coolest walk; Exposure ↓ = weighted exposure reduction.\n\nThe coolest route is rarely more than a few percent longer. Mean detours stay below 1% in every group, and 95% of coolest walks are at most 0.9%–3.5% longer than the shortest walk, depending on the group.\nRapid-transit walks gain more than bus walks of the same length: stations sit in denser, taller parts of the city where a parallel street in building shade is usually available.\nShort walks have no choice. Under 300 m, more than four in five walks have no cooler option.\nWeighted exposure falls much less than sun. With θ near 0.2, a metre moved from sun into shade lowers the cost by only 0.2 m; the remaining heat burden of shaded walking is still counted.\n\n\n\n\n\n\nSun reduction by hour, walks of 300–800 m (dynamic θ).\n\n\n\n\nMorning and evening, when shadows are long, offer the most; around 13:00 the sun is high and little shade is left to choose."
+  },
+  {
+    "objectID": "results.html#where-can-walkers-find-shade",
+    "href": "results.html#where-can-walkers-find-shade",
+    "title": "Results",
+    "section": "Where can walkers find shade?",
+    "text": "Where can walkers find shade?\nWalks home from frequent bus stops are summarised on a 500 m grid by where people live, and the cells are grouped into three types by how sunny their 300–800 m walks are and how much of that sun can be avoided. Cells vary gradually, so the types are a convenient summary rather than sharp classes.\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nCluster\nCells\nSun on shortest\nSun reduction\nNo cooler option\nBuilding height (m)\nCanopy\nSidewalk km/km²\n\n\n\n\nSunny, no cooler alternative\n269\n83%\n2.5%\n80%\n7.4\n9%\n31\n\n\nSunny but avoidable\n92\n67%\n25.0%\n26%\n8.6\n7%\n41\n\n\nCooler, few alternatives\n149\n61%\n5.6%\n70%\n8.1\n11%\n32\n\n\n\n\n\nAcross cells, sidewalk density is the strongest correlate of being able to avoid the sun (Spearman ρ = 0.44 with sun reduction), while building height mostly sets how sunny the walk is to begin with (ρ = -0.47 with sun share). Leafy areas start cooler but, with sparser streets, rarely offer an alternative. Explore the cells on the city map."
+  },
+  {
+    "objectID": "results.html#rapid-transit-stations",
+    "href": "results.html#rapid-transit-stations",
+    "title": "Results",
+    "section": "Rapid-transit stations",
+    "text": "Rapid-transit stations\nStations ranked by sun reduction for walks of 300–800 m, the six largest and four smallest. Only the 65 stations with at least 50 such walks are ranked; 6 with fewer walks are shown as hollow circles on the city map.\n\n\n\n\n\n\n\n\n\n\n\n\n\nStation\nLine\nWalks\nSun on shortest\nSun ↓\nNo cooler option\n\n\n\n\nBroad-Spring Garden\nB (Broad Street)\n297\n59%\n58.7%\n0%\n\n\nFront-Girard\nL (Market-Frankford)\n139\n61%\n53.4%\n20%\n\n\nHuntingdon\nL (Market-Frankford)\n1,658\n68%\n40.4%\n20%\n\n\nWyndmoor\nRegional Rail\n51\n62%\n37.7%\n0%\n\n\nTasker-Morris\nB (Broad Street)\n3,190\n65%\n31.8%\n12%\n\n\nEllsworth-Federal\nB (Broad Street)\n3,081\n57%\n31.1%\n28%\n\n\nForest Hills\nRegional Rail\n355\n78%\n0.0%\n100%\n\n\nChestnut Hill East\nRegional Rail\n53\n27%\n0.0%\n100%\n\n\nWalnut-Locust\nB (Broad Street)\n206\n19%\n0.0%\n100%\n\n\nNRG Station\nB (Broad Street)\n125\n67%\n-0.1%\n100%\n\n\n\n\n\nThe five stations with the largest reductions were checked on aerial photos. At Front-Girard and Huntingdon (L) the cooler route walks along the elevated L on the side its shadow falls; at Broad–Spring Garden and Broad–Girard (B) it simply crosses to the shaded side of the street; at Wyndmoor (Regional Rail) it follows tree-lined streets. Broad–Girard has only 16 walks of this length and is not ranked above.\n\n\n\n\n\nFront-Girard: one walk (left) and all walks of 300–800 m (right); red = used only by shortest paths, blue = only by coolest paths."
+  },
+  {
+    "objectID": "results.html#through-buildings-university-city",
+    "href": "results.html#through-buildings-university-city",
+    "title": "Results",
+    "section": "Through buildings (University City)",
+    "text": "Through buildings (University City)\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nSample\nScenario\nWalks\nCoolest uses indoors\nSun ↓*\nExposure ↓*\nLength*\n\n\n\n\nCampus\nOutdoor only\n3,000\n0%\n11.6%\n1.4%\n+0.76%\n\n\nCampus\n+ no-PennCard buildings\n3,000\n5%\n12.2%\n1.7%\n+0.64%\n\n\nCampus\n+ all annotated buildings\n3,000\n18%\n12.8%\n2.1%\n+0.71%\n\n\nStation\nOutdoor only\n5,202\n0%\n16.5%\n1.7%\n+0.98%\n\n\nStation\n+ no-PennCard buildings\n5,202\n4%\n17.1%\n2.0%\n+0.87%\n\n\nStation\n+ all annotated buildings\n5,202\n19%\n18.9%\n2.6%\n+0.74%\n\n\n\n\n\nCampus = building to building; Station = rapid-transit station to building. * compared with the shortest walk on the outdoor-only network.\nOpening the annotated buildings puts about one in five coolest walks indoors and removes another 1.2–2.4 points of sun, without making walks longer. The Indoor Contribution Index stays close to zero (median below 0.001 in absolute value): indoor passages here offer an equally long but cooler option, not a shortcut. This differs from the Dubai stations of Wen et al. (2025), where indoor networks through malls and connected towers make indoor routes real shortcuts. With θ near 0.2–0.3 for most of a 300–1,200 m walk, an indoor metre beats building shade by only about 0.1 m of cost, so indoor routes are chosen mainly when they are already on the way; walks of 800–1,200 m use them about three times as often as walks of 300–800 m.\n\n\n\n\n\nUniversity City at 15:00: share of the sun avoided compared with the shortest outdoor walk, and share of coolest walks that go indoors."
+  },
+  {
+    "objectID": "results.html#limitations",
+    "href": "results.html#limitations",
+    "title": "Results",
+    "section": "Limitations",
+    "text": "Limitations\n\nOutside University City, campus and park walkways are missing, so cooler options there are understated.\n“No cooler option” mixes two cases: no cooler street exists, or one exists but is not worth the detour at the default shade preference.\nShadows are for clear-sky June 21 and August 1; trees from leaf-off LiDAR and 2018 land cover; buildings from 2022.\nIndoor passages assume buildings are open and air-conditioned; opening hours and security are not modelled."
+  }
+]
