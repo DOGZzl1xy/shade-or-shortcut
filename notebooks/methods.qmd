@@ -49,7 +49,7 @@ Because θ stays near 0.2 for the first 500 m, the coolest walk on a short trip 
 c = s6["city"]
 print(f"Every home within 1.2 km of a frequent stop is one walk, from the stop to the home ({c['trips']:,} walks). "
       "Results are always reported by trip length (under 300 m, 300–800 m, 800–1,200 m), and places are only compared within one "
-      "length band, because short walks rarely have any alternative. Rapid transit and high-frequency bus are reported separately.")
+      "length band, because short walks rarely have any alternative. Rapid transit and frequent buses are reported separately.")
 d = s6["direction_check"]
 print(f"\nWalking the other way (home to stop) gives the same answer: for 500 walks of at least 400 m, the mean sun reduction is "
       f"{pct(d['sun_red_mean_stop_to_home'])} one way and {pct(d['sun_red_mean_home_to_stop'])} the other (correlation {d['sun_red_corr']:.3f}).")

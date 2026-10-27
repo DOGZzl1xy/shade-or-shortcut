@@ -32,7 +32,7 @@ n, p = s3["net"], s3["points"]
 print(f"""::: {{.stat-row}}
 <div><div class="v">{n['km']:,.0f} km</div><div class="label">sidewalks and crossings</div></div>
 <div><div class="v">{p['points'] / 1e6:.1f} M</div><div class="label">points checked for shade, every 2 m</div></div>
-<div><div class="v">24</div><div class="label">hours: June 21 and Aug 1, 8:00–19:00</div></div>
+<div><div class="v">24</div><div class="label">hours: June 21 and August 1, 8:00–19:00</div></div>
 <div><div class="v">1 m</div><div class="label">height model of buildings and trees</div></div>
 :::""")
 ```

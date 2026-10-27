@@ -20,9 +20,31 @@ $code-color: #ffc078;
 
 /*-- scss:rules --*/
 body { font-weight: 300; }
-.navbar { border-bottom: 1px solid rgba(255, 255, 255, 0.10); }
-.navbar-title { font-family: "Space Grotesk", sans-serif; font-weight: 600; }
-.navbar .nav-link { font-family: "Space Mono", monospace; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.12em; }
+/* navigation bar: the same as on the story, route tool and city map pages (app/css/site.css .nav): 52 px high, 16 px
+   title with a cyan "or", 12 px mono links on the right, the current page in white */
+.navbar { border-bottom: 1px solid rgba(255, 255, 255, 0.10); min-height: 52px; padding: 0 20px;
+  background: linear-gradient(to bottom, rgba(7, 8, 11, 0.92), rgba(7, 8, 11, 0.55)) !important; backdrop-filter: blur(6px); }
+.navbar > .navbar-container, .navbar .container-fluid { padding: 0; min-height: 52px; }
+.navbar-brand { padding: 0; margin: 0 auto 0 3px; }
+.navbar-title { font-family: "Space Grotesk", sans-serif; font-weight: 600; font-size: 16px; letter-spacing: 0.02em; }
+.navbar-title .or { color: #35d0e0; }
+.navbar .navbar-nav .nav-link { font-family: "Space Mono", monospace; font-size: 12px; font-weight: 400; text-transform: uppercase;
+  letter-spacing: 0.12em; color: #8b8a84; padding: 0 11px; }
+.navbar .navbar-nav .nav-item:last-child .nav-link { padding-right: 3px; }
+.navbar .navbar-nav .nav-link:hover, .navbar .navbar-nav .nav-link.active { color: #e8e6df; }
+.navbar-toggler { border: 1px solid rgba(255, 255, 255, 0.22); border-radius: 6px; padding: 6px 10px; box-shadow: none !important;
+  font: 11px "Space Mono", monospace; text-transform: uppercase; letter-spacing: 0.12em; color: #e8e6df; }
+.navbar-toggler-icon { display: none; }
+.navbar-toggler::after { content: "Menu"; }
+@media (max-width: 991.98px) {
+  .navbar { padding: 0 14px; }
+  /* title on the left, Menu on the right, as on the hand-written pages */
+  .navbar .navbar-container .navbar-brand-container { order: 1 !important; margin-right: auto !important; margin-left: 0 !important; }
+  .navbar .navbar-container .navbar-toggler { order: 2 !important; margin-right: 0; }
+  .navbar-brand { margin-left: 0; }
+  .navbar-collapse { margin: 0 -14px; background: rgba(7, 8, 11, 0.97); }
+  .navbar .navbar-nav .nav-link { padding: 13px 16px; border-top: 1px solid rgba(255, 255, 255, 0.10); }
+}
 h1.title { font-size: clamp(2.2rem, 4vw, 3.2rem); letter-spacing: -0.02em; }
 h2 { margin-top: 2.6rem; padding-bottom: 0.3rem; border-bottom: 1px solid rgba(255, 255, 255, 0.10); }
 .subtitle, .description { color: #8b8a84; }

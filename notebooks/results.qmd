@@ -22,8 +22,10 @@ All numbers are for 15:00 (June 21 and August 1 pooled) with the dynamic θ, unl
 
 ```{python}
 #| output: asis
-print(f"""::: {{.stat-row}}
-<div><div class="v sun">{pct(r.short_sun_share, 0)}</div><div class="label">of the shortest walk is sunny (rapid transit, 300–800 m)</div></div>
+print(f"""<div class="label">Walks of 300–800 m from rapid-transit stations, 15:00 (the Story shows frequent bus stops; both are in the table)</div>
+
+::: {{.stat-row}}
+<div><div class="v sun">{pct(r.short_sun_share, 0)}</div><div class="label">of the shortest walk is sunny</div></div>
 <div><div class="v">−{pct(r.sun_red_mean, 0)}</div><div class="label">sun on the coolest walk</div></div>
 <div><div class="v">+{pct(r.detour_mean, 2)}</div><div class="label">extra distance</div></div>
 <div><div class="v">{pct(p7.loc[('rapid', '300-800')].no_alt_share, 0)}</div><div class="label">of walks have no cooler option</div></div>
@@ -45,7 +47,7 @@ t = pd.DataFrame({
 md(t)
 ```
 
-Rapid = rapid-transit stations; Bus = high-frequency bus stops. Sun ↓ = sun reduction of the coolest walk; Exposure ↓ = weighted exposure reduction.
+Rapid = rapid-transit stations; Bus = frequent bus stops. Sun ↓ = sun reduction of the coolest walk; Exposure ↓ = weighted exposure reduction.
 
 ```{python}
 #| output: asis
@@ -67,7 +69,7 @@ for (mode, day), g in bt.assign(day=bt.time.str[:4]).groupby(["mode", "day"]):
     g = g.sort_values("time")
     ax.plot(g.time.str[5:].astype(int), 100 * g.sun_red_mean, marker="o", ms=3,
             color=C["sun"] if mode == "rapid" else C["cool"], ls="-" if day == "0621" else "--",
-            label=f"{'rapid transit' if mode == 'rapid' else 'bus'}, {'June 21' if day == '0621' else 'Aug 1'}")
+            label=f"{'rapid transit' if mode == 'rapid' else 'bus'}, {'June 21' if day == '0621' else 'August 1'}")
 ax.set(xlabel="hour", ylabel="sun reduction (%)", xticks=range(8, 20))
 ax.legend(fontsize=9, ncol=2)
 chart(f)
@@ -145,7 +147,7 @@ fig("phase_07_route_front-girard.png")
 #| column: page-inset-right
 d = pd.DataFrame(s8["at_15h"])
 d = d[d.set != "home"]
-lab = {"outdoor": "Outdoor only", "no_penncard": "+ no-PennCard buildings", "all": "+ all annotated buildings"}
+lab = {"outdoor": "Outdoor only", "no_penncard": "+ buildings open without a Penn ID", "all": "+ all mapped buildings"}
 order = ["outdoor", "no_penncard", "all"]
 d["o"] = d.scenario.map(order.index)
 d = d.sort_values(["set", "o"])
@@ -174,7 +176,7 @@ print(f"Opening the annotated buildings puts about one in five coolest walks ind
 
 ```{python}
 #| fig-cap: "University City at 15:00: share of the sun avoided compared with the shortest outdoor walk, and share of coolest walks that go indoors."
-lab2 = {"outdoor": "Outdoor only", "no_penncard": "+ no-PennCard buildings", "all": "+ all mapped buildings"}
+lab2 = {"outdoor": "Outdoor only", "no_penncard": "+ buildings open without a Penn ID", "all": "+ all mapped buildings"}
 cols = {"outdoor": C["dim"], "no_penncard": "#8f78c9", "all": C["indoor"]}
 f, axes = plt.subplots(1, 2, figsize=(7.2, 2.9), sharey=True)
 sets = [("campus", "Campus walks"), ("station", "Station walks")]

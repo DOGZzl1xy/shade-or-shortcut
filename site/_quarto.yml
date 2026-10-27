@@ -17,10 +17,11 @@ execute:
 
 website:
   title: "Shade or Shortcut"
+  search: false          # the hand-written pages have no search box; keep the bars identical
   navbar:
     background: "#07080b"
     foreground: "#e8e6df"
-    left:
+    right:
       - href: app/index.html
         text: Story
       - href: app/tool.html
@@ -44,5 +45,6 @@ format:
     theme: [darkly, theme.scss]
     toc: true
     toc-depth: 2
+    include-after-body: brand.html   # the cyan "or" in the site title, as on the hand-written pages
     fig-responsive: true
     page-layout: article
