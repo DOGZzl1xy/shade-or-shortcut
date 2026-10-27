@@ -2,7 +2,9 @@
   "sizes_mb": {
     "demo_network.json": 3.46,
     "demo_layers.json": 0.09,
+    "massing.geojson": 0.8,
     "hero.json": 0.01,
+    "shade_types.geojson": 0.3,
     "city_shade.pmtiles": 22.95,
     "grid.geojson": 0.25,
     "stations.geojson": 0.04,
@@ -10,19 +12,19 @@
   },
   "opener": [
     {
-      "station": "36th-Sansom",
+      "station": "36th St Portal",
       "line": "T (trolley tunnel)",
-      "top_share": 0.0027
+      "top_share": 0.0031
     },
     {
       "station": "34th St",
       "line": "L (Market-Frankford)",
-      "top_share": 0.0092
+      "top_share": 0.0083
     },
     {
       "station": "Penn Medicine Station",
       "line": "Regional Rail",
-      "top_share": 0.0425
+      "top_share": 0.019
     }
   ]
 }

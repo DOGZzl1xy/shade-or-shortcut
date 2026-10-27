@@ -86,7 +86,7 @@ export function collapsible(panel) {
 }
 
 // labels: false drops the Esri place-name layer; base: opacity of the dark basemap (a number or a zoom expression)
-export function baseStyle(extraSources = {}, extraLayers = [], { labels = true, base = 0.85 } = {}) {
+export function baseStyle(extraSources = {}, extraLayers = [], { labels = true, base = 0.85, labelOpacity = 0.55 } = {}) {
   return {
     version: 8,
     sources: {
@@ -101,7 +101,7 @@ export function baseStyle(extraSources = {}, extraLayers = [], { labels = true, 
       { id: "bg", type: "background", paint: { "background-color": "#07080b" } },
       { id: "dark", type: "raster", source: "dark", paint: { "raster-opacity": base } },
       ...extraLayers,
-      ...(labels ? [{ id: "ref", type: "raster", source: "ref", paint: { "raster-opacity": 0.55 } }] : []),
+      ...(labels ? [{ id: "ref", type: "raster", source: "ref", paint: { "raster-opacity": labelOpacity } }] : []),
     ],
   };
 }
@@ -127,20 +127,22 @@ export const GRID_RAMPS = {
   network_km_km2: { stops: [10, "#1d2733", 30, "#4b6b8a", 55, "#cfe3ff"], lo: "10", hi: "55 km/km²" },
 };
 
-// route lines: a dark casing under every route, shortest = sun-orange solid, coolest = cyan dashes drawn on top
+// route lines: a light grey casing under every route (it also fills the gaps between the dashes), shortest = sun-orange
+// solid, coolest = cyan dashes drawn on top
 // (overlapping stretches read as orange and cyan), indoor stretches = violet dots. Features carry role = short | cool | indoor.
+const CASING = "#d4d6db";
 export function routeLayers(source, w = 4) {
   const role = (r) => ["==", ["get", "role"], r];
   return [
     { id: `${source}-case`, type: "line", source, layout: { "line-cap": "round", "line-join": "round" },
-      paint: { "line-color": "#07080b", "line-width": w + 3.5, "line-opacity": 0.9 } },
+      paint: { "line-color": CASING, "line-width": w + 3 } },
     { id: `${source}-short`, type: "line", source, filter: role("short"), layout: { "line-cap": "round", "line-join": "round" },
       paint: { "line-color": COLORS.sun, "line-width": w } },
     { id: `${source}-cool`, type: "line", source, filter: role("cool"), layout: { "line-cap": "butt", "line-join": "round" },
       paint: { "line-color": COLORS.cool, "line-width": w, "line-dasharray": [1.6, 1.2] } },
-    // indoor stretches lie on the coolest line: a casing hides its dashes there before the dots are drawn
+    // indoor stretches lie on the coolest line: the casing colour hides its dashes there before the dots are drawn
     { id: `${source}-incase`, type: "line", source, filter: role("indoor"), layout: { "line-cap": "round", "line-join": "round" },
-      paint: { "line-color": "#07080b", "line-width": w + 3.5 } },
+      paint: { "line-color": CASING, "line-width": w + 3 } },
     { id: `${source}-indoor`, type: "line", source, filter: role("indoor"), layout: { "line-cap": "round", "line-join": "round" },
       paint: { "line-color": COLORS.indoor, "line-width": w, "line-dasharray": [0, 1.6] } },
   ];

@@ -35,14 +35,15 @@ NEAR_M = 15        # "next to a structure": within 15 m of a building_source = 3
 
 
 SUN, COOL, BG, INK, DIM = "#ff8a3d", "#35d0e0", "#0d0f14", "#e8e6df", "#8b8a84"   # website colours
+CASING = "#d4d6db"
 DASH = (0, (2.2, 1.6))
 
 
 def route_lines(ax, geoms, color, lw, dashed=False, label=None):
-    """A route as on the website: a dark casing, then the line (solid or dashed)."""
+    """A route as on the website: a light grey casing, then the line (solid or dashed)."""
     segs = segments(geoms)
     lw = np.broadcast_to(np.asarray(lw, float), (len(segs),))
-    ax.add_collection(LineCollection(segs, colors=BG, lw=lw + 3, alpha=0.9))
+    ax.add_collection(LineCollection(segs, colors=CASING, lw=lw + 3))
     ax.add_collection(LineCollection(segs, colors=color, lw=lw, linestyles=DASH if dashed else "solid",
                                      capstyle="butt" if dashed else "round", label=label))
 
