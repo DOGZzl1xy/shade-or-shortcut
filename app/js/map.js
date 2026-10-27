@@ -1,5 +1,5 @@
 // City map: sidewalk shade by hour (PMTiles), 500 m grid indicators and clusters (bus walks), rapid-transit stations.
-import { VERSION, handoff, nav, collapsible, baseStyle, getJSON, shadeRamp, pmtilesProtocol, COLORS, CLUSTERS, GRID_RAMPS, ATTR, pct, timeControl, newMap } from "./common.js?v=510bf10";
+import { VERSION, handoff, nav, collapsible, baseStyle, getJSON, shadeRamp, pmtilesProtocol, COLORS, CLUSTERS, GRID_RAMPS, ATTR, pct, timeControl, newMap } from "./common.js?v=94fd121";
 
 nav("map.html");
 pmtilesProtocol();
@@ -20,6 +20,8 @@ const map = newMap({
     city: { type: "vector", url: `pmtiles://data/city_shade.pmtiles?v=${VERSION}`, attribution: `${ATTR.shade}; ${ATTR.chm}` },
     grid: { type: "geojson", data: EMPTY, attribution: "Transit: SEPTA GTFS (fall 2026)" },
     st: { type: "geojson", data: EMPTY },
+    mask: { type: "geojson", data: EMPTY },
+    ring: { type: "geojson", data: EMPTY },
   }, [
     { id: "grid", type: "fill", source: "grid", paint: { "fill-opacity": ["interpolate", ["linear"], ["zoom"], 12, 0.7, 13.5, 0.15] } },
     { id: "city", type: "line", source: "city", "source-layer": "sidewalks", minzoom: 13, layout: { "line-cap": "round" },
@@ -28,6 +30,9 @@ const map = newMap({
       paint: { "circle-radius": ["interpolate", ["linear"], ["zoom"], 10, 3.5, 15, 8],
         "circle-color": stColor, "circle-opacity": ["case", ["get", "small"], 0, 1],
         "circle-stroke-color": ["case", ["get", "small"], stColor, "#e8e6df"], "circle-stroke-width": ["case", ["get", "small"], 1.6, 1] } },
+    // station focus: everything beyond 1.2 km of the clicked station is masked, the circle drawn as a thin dashed line
+    { id: "mask", type: "fill", source: "mask", paint: { "fill-color": "#07080b", "fill-opacity": 0.85 } },
+    { id: "ring", type: "line", source: "ring", paint: { "line-color": "#ffffff", "line-width": 1.2, "line-dasharray": [3, 3], "line-opacity": 0.9 } },
   ]),
 });
 map.addControl(new maplibregl.NavigationControl({ showCompass: false }), "bottom-right");
@@ -80,12 +85,13 @@ map.on("click", "st", (e) => {
   const p = e.features[0].properties;
   const row = (b) => p[`trips_${b}`] ? `<tr><td>${b} m</td><td>${Math.round(p[`trips_${b}`])}</td><td>${pct(p[`sun_red_${b}`] ?? 0, 0)}</td><td>${pct(p[`no_alt_share_${b}`] ?? 0, 0)}</td></tr>` : "";
   const small = p.small === true || p.small === "true";
-  popup.setLngLat(e.lngLat).setHTML(`<b>${p.name}</b> <span class="label">${p.line}</span>
+  // the station's numbers go into the panel, so nothing covers its 1.2 km circle
+  $("focus-info").innerHTML = (`<b>${p.name}</b> <span class="label">${p.line}</span>
     <table style="width:100%;font-size:11px;margin-top:6px"><tr class="label"><td>walk</td><td>walks</td><td>less sun</td><td>no cooler option</td></tr>${row("<300")}${row("300-800")}${row("800-1200")}</table>
-    ${small ? `<div style="font-size:11px;color:var(--sun-soft);margin-top:4px">Fewer than ${summary.min_trips_station_rank} walks of 300–800 m: small sample.</div>` : ""}`).addTo(map);
+    ${small ? `<div style="font-size:11px;color:var(--sun-soft);margin-top:4px">Fewer than ${summary.min_trips_station_rank} walks of 300–800 m: small sample.</div>` : ""}`);
 });
 map.on("click", "grid", (e) => {
-  if (map.queryRenderedFeatures(e.point, { layers: ["st"] }).length) return;
+  if (map.queryRenderedFeatures(e.point, { layers: ["st"] }).length || outside(e.lngLat)) return;
   const p = e.features[0].properties;
   popup.setLngLat(e.lngLat).setHTML(`<b>${p.cluster_name}</b><div style="margin-top:6px;font-size:12px">
     ${p.trips} walks home from high-frequency bus stops (300–800 m) · sun on shortest ${pct(p.sun_share, 0)} · achievable reduction ${pct(p.sun_red, 0)} ·
@@ -95,3 +101,42 @@ for (const l of ["st", "grid"]) {
   map.on("mouseenter", l, () => { map.getCanvas().style.cursor = "pointer"; });
   map.on("mouseleave", l, () => { map.getCanvas().style.cursor = ""; });
 }
+
+// ---- station focus: click a station to see what lies within 1.2 km of it (the longest walk home in the study, about
+// 15 minutes on foot at 4.8 km/h). The circle is straight-line distance, so it bounds the walks, which follow sidewalks.
+const R = 1200;
+let focus = null, before = null;
+function circle([lon, lat], n = 96) {
+  const ky = 111320, kx = ky * Math.cos((lat * Math.PI) / 180), out = [];
+  for (let i = 0; i <= n; i++) { const a = (2 * Math.PI * i) / n; out.push([lon + (R * Math.sin(a)) / kx, lat + (R * Math.cos(a)) / ky]); }
+  return out;
+}
+const outside = (ll) => focus && Math.hypot((ll.lng - focus[0]) * 111320 * Math.cos((focus[1] * Math.PI) / 180), (ll.lat - focus[1]) * 111320) > R;
+const ringEl = document.createElement("div");
+ringEl.innerHTML = '<div class="ringlabel">1.2 km · about 15 min walk</div>';
+const ringLabel = new maplibregl.Marker({ element: ringEl, anchor: "bottom" });
+function focusOn(c) {
+  if (!focus) before = { center: map.getCenter(), zoom: map.getZoom() };
+  focus = c;
+  const ring = circle(c);
+  map.getSource("ring").setData({ type: "Feature", properties: {}, geometry: { type: "LineString", coordinates: ring } });
+  map.getSource("mask").setData({ type: "Feature", properties: {}, geometry: { type: "Polygon",
+    coordinates: [[[-180, -85], [180, -85], [180, 85], [-180, 85], [-180, -85]], ring] } });
+  ringLabel.setLngLat(ring[0]).addTo(map);
+  popup.remove(); map.setLayoutProperty("grid", "visibility", "none");     // only the sidewalks inside the circle
+  const lons = ring.map((q) => q[0]), lats = ring.map((q) => q[1]), side = $("side").getBoundingClientRect(), narrow = window.innerWidth <= 760;
+  map.fitBounds([[Math.min(...lons), Math.min(...lats)], [Math.max(...lons), Math.max(...lats)]], { duration: 1400,
+    padding: narrow ? { top: 60, left: 20, right: 20, bottom: window.innerHeight - side.top + 20 } : { top: 60, bottom: 40, left: side.right + 40, right: 40 } });
+  $("focus").hidden = false;
+}
+function unfocus() {
+  if (!focus) return;
+  focus = null;
+  map.getSource("ring").setData(EMPTY); map.getSource("mask").setData(EMPTY); ringLabel.remove(); popup.remove(); gridStyle();
+  $("focus").hidden = true;
+  if (before) map.flyTo({ ...before, duration: 1200 });
+}
+map.on("click", "st", (e) => focusOn(e.features[0].geometry.coordinates));
+map.on("click", (e) => { if (outside(e.lngLat) && !map.queryRenderedFeatures(e.point, { layers: ["st"] }).length) unfocus(); });
+$("unfocus").addEventListener("click", unfocus);
+addEventListener("keydown", (e) => { if (e.key === "Escape") unfocus(); });

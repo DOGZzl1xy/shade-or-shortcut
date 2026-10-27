@@ -1,6 +1,6 @@
 // Home page: a scroll story over one fixed map; each screen sets the map view and layers for its one sentence.
 import { VERSION, nav, baseStyle, getJSON, shadeRamp, pmtilesProtocol, COLORS, CLUSTERS, GRID_RAMPS, ATTR, DEMO_CENTER, pct, newMap,
-  routeLayers, ROUTE_LAYERS } from "./common.js?v=510bf10";
+  routeLayers, ROUTE_LAYERS } from "./common.js?v=94fd121";
 
 nav("index.html");
 pmtilesProtocol();
