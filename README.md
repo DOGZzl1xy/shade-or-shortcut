@@ -176,6 +176,7 @@ committed in `annotate/`.
 
 ```bash
 uv run python -m scripts.phase_09_export                    # site/app/data: demo network JSON, city PMTiles, layers
+uv run python -m scripts.phase_09_heat                      # site/app/data: Landsat surface temperature PNG, airport heat numbers
 cd site && QUARTO_PYTHON=../.venv/bin/python quarto render  # site/_site (analysis pages are frozen in site/_freeze)
 uv run python -m scripts.serve_site                         # local preview at http://127.0.0.1:8770 (supports Range requests)
 uv run pytest tests/test_js_consistency.py                  # browser router == Python router on 100 random trips
@@ -206,6 +207,8 @@ footways and is therefore available under the ODbL.
 | Bridges, covered walkways, building passages, campus footways | © [OpenStreetMap](https://www.openstreetmap.org/copyright) contributors | [ODbL 1.0](https://opendatacommons.org/licenses/odbl/) |
 | Transit stops and timetable (GTFS, fall 2026) | [SEPTA](https://www3.septa.org/developer/) | public feed; no licence specified in the OpenDataPhilly listing |
 | City boundary (TIGER/Line 2024), ACS | U.S. Census Bureau | public domain |
+| Land surface temperature, Landsat 8 Collection 2 Level-2, 2024-07-17 (Story page only) | [USGS](https://www.usgs.gov/landsat-missions), read through [Microsoft Planetary Computer](https://planetarycomputer.microsoft.com/dataset/landsat-c2-l2) | public domain; credit USGS |
+| Daily maximum air temperature, Philadelphia International Airport (Story page only) | NOAA Regional Climate Centers, [ACIS](https://www.rcc-acis.org/) | public domain |
 | Website basemap (World Dark Gray) | Esri | Esri terms of use, attribution shown on every map |
 
 Bundled web libraries: MapLibre GL JS 4.7.1 and PMTiles 3.2.1 (both BSD-3-Clause, in `site/app/vendor/`).

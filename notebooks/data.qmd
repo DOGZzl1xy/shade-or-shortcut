@@ -23,6 +23,8 @@ All inputs are public data.
 | OpenStreetMap | OSM contributors, ODbL | bridges, covered walkways, campus footways |
 | Transit | SEPTA, fall 2026 timetable | rapid-transit stations and frequent bus stops |
 | Properties | City of Philadelphia (OPA) | residential parcels, where walks end |
+| Land surface temperature | USGS Landsat 8 (July 17, 2024) | the summer heat map on the Story page (Landsat surface temperature, as used for Philadelphia by Li, Chakraborty & Wang 2023, *Urban Climate*) |
+| Air temperature | NOAA ACIS, Philadelphia International Airport | summer heat figures on the Story page |
 
 ## The shade map
 

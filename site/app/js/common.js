@@ -17,6 +17,7 @@ export const ATTR = {
     '<a href="https://www.pasda.psu.edu/">PASDA</a> land cover and DVRPC sidewalks',
   chm: "Canopy outside the city: Meta / WRI CHMv2 (CC BY 4.0)",
   osm: "Campus footways © OpenStreetMap contributors (ODbL)",
+  heat: "Surface temperature: USGS Landsat 8; air temperature: NOAA ACIS",
 };
 
 // the view handed over from the story page ("#b=west,south,east,north"), so the next page opens where the story ended
