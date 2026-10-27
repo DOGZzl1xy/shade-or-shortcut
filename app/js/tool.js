@@ -1,7 +1,7 @@
 // Route tool: two clicks -> shortest walk (outdoor network) and coolest walk (selected scenario), recomputed in the browser.
 import { nav, collapsible, baseStyle, getJSON, shadeRamp, COLORS, DEMO_CENTER, ATTR, pct, timeControl, newMap, edgeCoords, pathCoords,
-  routeLayers } from "./common.js?v=15a08dc";
-import { route } from "./router.js?v=15a08dc";
+  routeLayers } from "./common.js?v=1e22d72";
+import { route } from "./router.js?v=1e22d72";
 
 nav("tool.html");
 const $ = (id) => document.getElementById(id);
