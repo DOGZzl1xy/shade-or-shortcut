@@ -1,0 +1,57 @@
+[
+  {
+    "station": "MFL: 34th St",
+    "platforms": 2,
+    "buildings": 588
+  },
+  {
+    "station": "MFL: 40th St",
+    "platforms": 2,
+    "buildings": 537
+  },
+  {
+    "station": "MFL: Drexel Station at 30th St",
+    "platforms": 2,
+    "buildings": 298
+  },
+  {
+    "station": "Regional Rail: Gray 30th St Station",
+    "platforms": 1,
+    "buildings": 123
+  },
+  {
+    "station": "Regional Rail: Penn Medicine Station",
+    "platforms": 1,
+    "buildings": 359
+  },
+  {
+    "station": "Trolley tunnel: 33rd St",
+    "platforms": 2,
+    "buildings": 507
+  },
+  {
+    "station": "Trolley tunnel: 36th St Portal",
+    "platforms": 2,
+    "buildings": 683
+  },
+  {
+    "station": "Trolley tunnel: 36th-Sansom",
+    "platforms": 2,
+    "buildings": 725
+  },
+  {
+    "station": "Trolley tunnel: 37th-Spruce",
+    "platforms": 2,
+    "buildings": 641
+  },
+  {
+    "station": "Trolley tunnel: 40th St Portal",
+    "platforms": 2,
+    "buildings": 425
+  },
+  {
+    "station": "Trolley tunnel: Drexel Station at 30th St",
+    "platforms": 2,
+    "buildings": 318
+  }
+]

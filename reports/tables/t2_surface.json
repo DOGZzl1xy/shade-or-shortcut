@@ -1,0 +1,42 @@
+{
+  "grid_shape": [
+    2888,
+    4601
+  ],
+  "grid_bounds": [
+    480708.0,
+    4421249.0,
+    485309.0,
+    4424137.0
+  ],
+  "non_noise_points": 520374846,
+  "rasterise_s": 65.4242901802063,
+  "fill_s": 4.769689083099365,
+  "points_per_s": 7953847.792106977,
+  "dsm_hole_share_test_area": 0.034990842235923185,
+  "dsm_hole_count": 394,
+  "dsm_largest_hole_m2": 54581,
+  "dsm_holes_ge_100m2": 17,
+  "dem_ground_px_share_test_area": 0.6656703412872788,
+  "dem_vs_noaa_median_m": 0.0016040802001953125,
+  "dem_vs_noaa_mad_m": 0.01381683349609375,
+  "dem_vs_noaa_p95_abs_m": 0.5848775506019592,
+  "roof_hole_buildings_median": 442,
+  "roof_hole_buildings_approx_hgt": 6326,
+  "n_buildings_total": 51861,
+  "n_buildings_compared": 6199,
+  "approx_hgt_units": "feet (metadata: 'All measurements are in feet'; confirmed by fit below)",
+  "median_error_m_ft_assumption": -0.5784466631531249,
+  "mae_m": 0.602559818734278,
+  "median_error_if_metres": -25.403972625732422,
+  "pearson_r_median": 0.8572024000812384,
+  "pearson_r_p90": 0.8420011031556625,
+  "spearman_r_median": 0.9145724433179028,
+  "ols_slope_lidar_on_approx": 0.6517068598099766,
+  "max_building_height_m": 218.42919921875,
+  "ta_buildings": 6277,
+  "ta_roof_fill_approx_hgt": 0,
+  "ta_roof_fill_median": 34,
+  "n_large_mismatch": 41,
+  "pearson_r_excl_mismatch": 0.9643834771848975
+}

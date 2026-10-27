@@ -1,0 +1,15 @@
+{
+  "dem_diff_median": 0.0,
+  "dem_absdiff_p99": 1.9073486328125e-06,
+  "bldg_lidar_px_agree_r": 0.9999999977492537,
+  "bldg_lidar_px_absdiff_median": 0.0,
+  "px_share_footprint_lidar": 0.2662422445761922,
+  "px_share_footprint_approx": 0.002507191553056842,
+  "px_share_unmapped": 0.019565853899034185,
+  "tree_share_phase0": 0.11116646873196243,
+  "tree_share_phase2": 0.12273868963312934,
+  "tree_height_median_p0": 12.399999618530273,
+  "tree_height_median_p2": 15.0,
+  "ta_buildings": 6277,
+  "ta_extruded": 22
+}

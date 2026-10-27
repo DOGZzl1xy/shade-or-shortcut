@@ -1,0 +1,27 @@
+                            OLS Regression Results                            
+==============================================================================
+Dep. Variable:      sun_share_300-800   R-squared:                       0.400
+Model:                            OLS   Adj. R-squared:                  0.397
+Method:                 Least Squares   F-statistic:                     75.03
+Date:                Sun, 25 Oct 2026   Prob (F-statistic):           3.69e-40
+Time:                        16:31:09   Log-Likelihood:                 391.09
+No. Observations:                 510   AIC:                            -774.2
+Df Residuals:                     506   BIC:                            -757.2
+Df Model:                           3                                         
+Covariance Type:                  HC3                                         
+======================================================================================
+                         coef    std err          z      P>|z|      [0.025      0.975]
+--------------------------------------------------------------------------------------
+const                  0.7409      0.005    147.041      0.000       0.731       0.751
+bldg_height_mean_m    -0.0785      0.007    -12.060      0.000      -0.091      -0.066
+canopy_cover          -0.0456      0.009     -5.211      0.000      -0.063      -0.028
+network_km_per_km2    -0.0347      0.007     -5.206      0.000      -0.048      -0.022
+==============================================================================
+Omnibus:                       10.445   Durbin-Watson:                   1.559
+Prob(Omnibus):                  0.005   Jarque-Bera (JB):               10.711
+Skew:                          -0.355   Prob(JB):                      0.00472
+Kurtosis:                       3.007   Cond. No.                         1.74
+==============================================================================
+
+Notes:
+[1] Standard Errors are heteroscedasticity robust (HC3)

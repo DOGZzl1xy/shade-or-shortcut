@@ -1,0 +1,10 @@
+---
+title: "Shade or Shortcut"
+format:
+  html:
+    toc: false
+    include-in-header:
+      text: '<script>location.replace("app/index.html");</script>'
+---
+
+The story page opens automatically. If it does not, [continue to the story](app/index.html).

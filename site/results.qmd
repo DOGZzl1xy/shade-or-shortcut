@@ -1,0 +1,7 @@
+---
+title: "Results"
+subtitle: "How much sun a walk home can avoid, where, and what buildings add."
+jupyter: python3
+---
+
+{{< include ../notebooks/results.qmd >}}

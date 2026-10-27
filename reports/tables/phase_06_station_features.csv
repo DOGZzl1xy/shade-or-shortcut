@@ -1,0 +1,99 @@
+stop_name,mode,stop_lat,stop_lon,stop_ids,bldg_height_mean_m,canopy_cover,bldg_coverage,sun_share_1500,network_km_500m,eligible,candidate_rank,selected
+Gray 30th St Station,Regional Rail,39.957,-75.182,90004,23.025,0.023,0.306,0.601,12.973,True,,False
+49th St,Regional Rail,39.944,-75.217,90314,9.284,0.123,0.328,0.682,27.062,True,,False
+Angora,Regional Rail,39.945,-75.239,90313,7.745,0.195,0.285,0.757,24.448,True,,False
+Allegheny,Regional Rail,40.004,-75.165,90218,8.521,0.072,0.320,0.796,26.248,True,,False
+Richard Allen Ln,Regional Rail,40.057,-75.195,90804,8.349,0.367,0.202,0.471,16.444,True,,False
+Bridesburg,Regional Rail,40.011,-75.070,90710,7.268,0.049,0.232,0.850,21.033,True,,False
+Carpenter,Regional Rail,40.051,-75.191,90805,9.135,0.283,0.203,0.562,20.581,True,6.000,True
+Chestnut Hill East,Regional Rail,40.081,-75.207,90720,8.794,0.453,0.141,0.443,8.502,True,,False
+Chelten Av,Regional Rail,40.030,-75.181,90808,10.087,0.235,0.258,0.607,18.188,True,,False
+Cheltenham,Regional Rail,40.058,-75.093,90813,7.119,0.312,0.158,0.777,9.678,True,,False
+Chestnut Hill West,Regional Rail,40.076,-75.208,90801,8.736,0.323,0.212,0.443,16.154,True,,False
+East Falls,Regional Rail,40.011,-75.192,90219,9.452,0.201,0.267,0.636,20.983,True,,False
+Jefferson Station,Regional Rail,39.953,-75.158,90006,32.233,0.020,0.609,0.352,28.292,True,,False
+Eastwick,Regional Rail,39.893,-75.244,90405,8.008,0.285,0.038,0.789,3.892,True,8.000,False
+Fox Chase,Regional Rail,40.076,-75.083,90815,6.758,0.147,0.195,0.778,18.998,True,,False
+Forest Hills,Regional Rail,40.128,-75.021,90320,6.986,0.205,0.151,0.802,8.300,True,,False
+Fern Rock Transit Center,Regional Rail,40.041,-75.135,90407,7.647,0.160,0.245,0.772,18.845,True,,False
+Germantown,Regional Rail,40.038,-75.172,90713,9.461,0.209,0.260,0.646,20.802,True,,False
+Gravers,Regional Rail,40.078,-75.202,90719,7.956,0.375,0.168,0.477,11.854,True,,False
+Highland,Regional Rail,40.071,-75.211,90802,9.192,0.474,0.089,0.316,6.999,True,3.000,True
+Holmesburg Junction,Regional Rail,40.033,-75.024,90708,7.572,0.151,0.257,0.774,10.499,True,,False
+Ivy Ridge,Regional Rail,40.034,-75.236,90222,9.036,0.312,0.156,0.637,5.927,True,,False
+Lawndale,Regional Rail,40.051,-75.103,90812,7.342,0.297,0.122,0.801,12.235,True,,False
+Manayunk,Regional Rail,40.027,-75.225,90221,9.658,0.164,0.252,0.704,22.094,True,,False
+Mount Airy,Regional Rail,40.065,-75.191,90717,8.577,0.344,0.172,0.523,14.422,True,,False
+North Broad,Regional Rail,39.992,-75.154,90008,9.627,0.073,0.319,0.739,33.818,True,,False
+North Philadelphia Amtrak,Regional Rail,39.997,-75.155,90711,9.293,0.058,0.280,0.797,26.613,True,,False
+North Philadelphia Septa,Regional Rail,39.998,-75.156,90810,9.376,0.057,0.269,0.793,25.382,True,,False
+Olney,Regional Rail,40.033,-75.123,90811,7.354,0.111,0.246,0.804,23.306,True,,False
+Overbrook,Regional Rail,39.989,-75.249,90522,10.425,0.332,0.142,0.564,10.308,True,,False
+Queen Ln,Regional Rail,40.023,-75.178,90809,9.816,0.200,0.202,0.637,15.868,True,,False
+Ryers,Regional Rail,40.064,-75.086,90814,6.754,0.149,0.191,0.854,14.578,True,10.000,True
+Sedgwick,Regional Rail,40.063,-75.185,90716,8.356,0.280,0.205,0.500,21.500,True,,False
+Somerton,Regional Rail,40.131,-75.012,90321,6.736,0.194,0.156,0.810,5.276,True,,False
+Suburban Station,Regional Rail,39.954,-75.168,90005,54.229,0.032,0.488,0.328,30.361,True,,False
+St. Martins,Regional Rail,40.066,-75.204,90803,8.573,0.424,0.112,0.354,11.365,True,,False
+Stenton,Regional Rail,40.061,-75.179,90715,7.675,0.236,0.198,0.619,22.262,True,,False
+Tacony,Regional Rail,40.023,-75.039,90709,7.690,0.070,0.256,0.807,18.384,True,,False
+Torresdale,Regional Rail,40.054,-74.984,90707,7.912,0.293,0.084,0.786,3.625,True,,False
+Temple University,Regional Rail,39.981,-75.149,90007,13.108,0.083,0.311,0.655,28.372,True,,False
+Tulpehocken,Regional Rail,40.035,-75.187,90807,10.311,0.444,0.150,0.499,13.133,True,,False
+Penn Medicine Station,Regional Rail,39.948,-75.190,90406,30.011,0.056,0.288,0.630,8.797,True,4.000,True
+Upsal,Regional Rail,40.042,-75.190,90806,10.809,0.311,0.184,0.543,17.267,True,,False
+Washington Ln,Regional Rail,40.051,-75.171,90714,8.238,0.349,0.147,0.678,14.284,True,,False
+Wister,Regional Rail,40.036,-75.161,90712,8.685,0.320,0.174,0.744,16.325,True,,False
+Wayne Junction,Regional Rail,40.022,-75.160,90009,8.064,0.111,0.274,0.762,21.825,True,,False
+Wissahickon,Regional Rail,40.017,-75.210,90220,8.937,0.201,0.188,0.729,14.014,True,,False
+Wyndmoor,Regional Rail,40.073,-75.197,90718,7.937,0.246,0.209,0.568,14.931,True,,False
+Wynnefield Av,Regional Rail,39.990,-75.226,90003,8.831,0.309,0.159,0.651,13.998,True,,False
+13th St,MFL,39.952,-75.161,2455 32174,39.247,0.018,0.603,0.272,29.282,True,,False
+15th St/City Hall,BSL,39.952,-75.164,1281 32141 33029 33030,49.577,0.017,0.569,0.249,29.450,True,,False
+15th St/City Hall,MFL,39.953,-75.165,1392 32175,52.437,0.020,0.547,0.254,31.100,True,2.000,True
+2nd St,MFL,39.950,-75.144,428 32170,16.081,0.098,0.413,0.485,22.798,True,9.000,True
+34th St,MFL,39.956,-75.191,2453 32177,21.118,0.092,0.379,0.554,21.396,True,,False
+40th St,MFL,39.957,-75.202,2452 32178,15.328,0.082,0.367,0.667,26.816,True,,False
+46th St,MFL,39.959,-75.214,2451 32179,10.999,0.103,0.262,0.690,20.525,True,,False
+52nd St,MFL,39.960,-75.225,2450 32180,8.041,0.066,0.438,0.739,31.755,True,,False
+56th St,MFL,39.961,-75.233,2449 32181,7.761,0.049,0.394,0.799,30.842,True,,False
+5th St/Independence Hall,MFL,39.951,-75.149,2458 32171,25.404,0.130,0.439,0.454,25.569,True,,False
+60th St,MFL,39.962,-75.241,2448 32182,7.870,0.054,0.443,0.775,32.202,True,,False
+63rd St,MFL,39.963,-75.247,2447 32183,8.198,0.235,0.301,0.754,18.328,True,11.000,True
+8th-Market,BSL,39.951,-75.154,21531 32144,30.816,0.082,0.482,0.426,26.451,True,,False
+8th-Market,MFL,39.951,-75.154,2457 32172,30.816,0.082,0.482,0.426,26.451,True,,False
+Arrott Transit Center,MFL,40.017,-75.084,217 32159,7.879,0.087,0.359,0.773,28.382,True,,False
+Berks,MFL,39.979,-75.134,2460 32167,9.452,0.052,0.387,0.617,37.302,True,12.000,False
+Broad-Allegheny,BSL,40.002,-75.153,142 32151,10.739,0.081,0.305,0.761,27.526,True,,False
+Broad-Girard,BSL,39.971,-75.159,20966 32147,11.337,0.064,0.297,0.698,32.748,True,,False
+Broad-Spring Garden,BSL,39.962,-75.161,1279 32143,19.726,0.039,0.419,0.604,30.967,True,,False
+Cecil B. Moore,BSL,39.979,-75.158,1277 32148,15.024,0.074,0.354,0.642,23.373,True,,False
+Chinatown,BSL,39.955,-75.153,2440 32145,21.542,0.065,0.375,0.576,25.311,True,,False
+Church,MFL,40.011,-75.089,2464 32160,7.407,0.090,0.351,0.769,27.302,True,,False
+Drexel Station at 30th St,MFL,39.955,-75.183,21532 32176,24.457,0.021,0.346,0.672,14.259,True,,False
+Ellsworth-Federal,BSL,39.936,-75.167,1284 32138,9.858,0.050,0.424,0.646,34.168,True,,False
+Erie,BSL,40.009,-75.151,140 32152,10.618,0.075,0.367,0.760,29.893,True,,False
+Erie-Torresdale,MFL,40.006,-75.096,838 32161,7.772,0.054,0.317,0.867,22.521,True,,False
+Fairmount,BSL,39.967,-75.160,1278 32146,13.119,0.054,0.353,0.647,35.103,True,,False
+Fern Rock Transit Center,BSL,40.042,-75.137,20965,7.853,0.161,0.248,0.790,19.371,True,,False
+Frankford Transit Center,MFL,40.023,-75.078,61 32158,8.092,0.094,0.286,0.758,25.139,True,,False
+Front-Girard,MFL,39.969,-75.136,353 32168,10.741,0.041,0.422,0.601,33.628,True,,False
+Hunting Park,BSL,40.017,-75.150,1274 32153,7.582,0.123,0.234,0.756,24.599,True,,False
+Huntingdon,MFL,39.989,-75.127,2462 32165,8.902,0.041,0.342,0.718,31.498,True,,False
+Kensington-Allegheny,MFL,39.997,-75.113,60 32163,7.856,0.037,0.444,0.769,35.052,True,,False
+Logan,BSL,40.031,-75.147,1272 32155,9.028,0.130,0.310,0.751,27.567,True,,False
+Lombard-South,BSL,39.944,-75.165,1283 32139,18.519,0.064,0.471,0.431,42.241,True,,False
+NRG Station,BSL,39.905,-75.174,152 32134,12.570,0.113,0.070,0.819,9.213,True,5.000,True
+North Philadelphia,BSL,39.994,-75.155,2439 32150,9.421,0.050,0.312,0.763,30.867,True,,False
+Olney Transit Center,BSL,40.039,-75.145,82 32156 33027 33028,9.279,0.110,0.282,0.781,22.747,True,,False
+Oregon,BSL,39.917,-75.171,20967 32135,7.523,0.069,0.364,0.663,35.771,True,,False
+Race-Vine,BSL,39.957,-75.163,1280 32142,30.768,0.029,0.456,0.484,28.005,True,,False
+Snyder,BSL,39.924,-75.170,1286 32136,8.511,0.024,0.495,0.642,40.320,True,7.000,True
+Somerset,MFL,39.991,-75.123,797 32164,7.654,0.043,0.343,0.774,32.786,True,,False
+Spring Garden,MFL,39.961,-75.140,2459 32169,10.068,0.035,0.357,0.636,20.445,True,,False
+Susquehanna-Dauphin,BSL,39.987,-75.156,1276 32149,9.470,0.103,0.300,0.673,31.567,True,1.000,True
+Tasker-Morris,BSL,39.930,-75.169,1285 32137,8.273,0.039,0.486,0.606,41.568,True,,False
+Tioga,MFL,40.000,-75.106,2463 32162,7.595,0.051,0.370,0.796,25.730,True,,False
+Walnut-Locust,BSL,39.949,-75.164,1282 32140,38.718,0.035,0.582,0.232,36.732,True,,False
+Wyoming,BSL,40.025,-75.148,1273 32154,8.003,0.089,0.327,0.784,28.887,True,,False
+York-Dauphin,MFL,39.986,-75.132,2461 32166,9.134,0.059,0.373,0.675,37.980,True,,False

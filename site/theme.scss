@@ -1,0 +1,38 @@
+/*-- scss:defaults --*/
+@import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500&family=Space+Grotesk:wght@400;500;600&family=Space+Mono&display=swap");
+
+$body-bg: #07080b;
+$body-color: #e8e6df;
+$link-color: #35d0e0;
+$primary: #35d0e0;
+$secondary: #8b8a84;
+$border-color: rgba(255, 255, 255, 0.10);
+$font-family-sans-serif: "IBM Plex Sans", "Helvetica Neue", Arial, sans-serif;
+$font-family-monospace: "Space Mono", ui-monospace, Menlo, monospace;
+$headings-font-family: "Space Grotesk", "Helvetica Neue", Arial, sans-serif;
+$headings-font-weight: 500;
+$font-size-base: 1rem;
+$line-height-base: 1.65;
+$navbar-bg: #07080b;
+$table-color: #e8e6df;
+$table-border-color: rgba(255, 255, 255, 0.10);
+$code-color: #ffc078;
+
+/*-- scss:rules --*/
+body { font-weight: 300; }
+.navbar { border-bottom: 1px solid rgba(255, 255, 255, 0.10); }
+.navbar-title { font-family: "Space Grotesk", sans-serif; font-weight: 600; }
+.navbar .nav-link { font-family: "Space Mono", monospace; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.12em; }
+h1.title { font-size: clamp(2.2rem, 4vw, 3.2rem); letter-spacing: -0.02em; }
+h2 { margin-top: 2.6rem; padding-bottom: 0.3rem; border-bottom: 1px solid rgba(255, 255, 255, 0.10); }
+.subtitle, .description { color: #8b8a84; }
+.label, .kicker { font-family: "Space Mono", monospace; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.14em; color: #8b8a84; }
+.stat-row { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1.4rem; margin: 1.2rem 0 1.6rem; align-items: start; }
+@media (max-width: 760px) { .stat-row { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.stat-row .v { font-family: "Space Mono", monospace; font-size: 2rem; line-height: 1.1; color: #35d0e0; }
+.stat-row .v.sun { color: #ff8a3d; }
+table { font-size: 0.9rem; }
+table td, table th { font-variant-numeric: tabular-nums; }
+.callout { background: rgba(255, 255, 255, 0.04); }
+figure img, .cell-output-display img { border-radius: 6px; max-width: 100%; height: auto; }
+.figure-light img { background: #fff; padding: 6px; }

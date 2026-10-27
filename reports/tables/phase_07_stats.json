@@ -1,0 +1,652 @@
+{
+  "threshold": 0.02,
+  "sensitivity": [
+    0.01,
+    0.05,
+    0.1
+  ],
+  "by_mode_bin_15h": [
+    {
+      "mode": "bus",
+      "length_bin": "<300",
+      "trips": 185224.0,
+      "sun_share": 0.7546,
+      "sun_red": 0.0402,
+      "detour": 0.0018,
+      "no_alt_share": 0.8661,
+      "exposure_red": 0.0048,
+      "no_alt_share_0.01": 0.8643,
+      "no_alt_share_0.05": 0.8723,
+      "no_alt_share_0.1": 0.8869
+    },
+    {
+      "mode": "bus",
+      "length_bin": "300-800",
+      "trips": 135384.0,
+      "sun_share": 0.7359,
+      "sun_red": 0.0974,
+      "detour": 0.0044,
+      "no_alt_share": 0.6117,
+      "exposure_red": 0.0108,
+      "no_alt_share_0.01": 0.602,
+      "no_alt_share_0.05": 0.6478,
+      "no_alt_share_0.1": 0.7052
+    },
+    {
+      "mode": "bus",
+      "length_bin": "800-1200",
+      "trips": 33147.0,
+      "sun_share": 0.7539,
+      "sun_red": 0.0969,
+      "detour": 0.0054,
+      "no_alt_share": 0.5111,
+      "exposure_red": 0.0141,
+      "no_alt_share_0.01": 0.4817,
+      "no_alt_share_0.05": 0.5697,
+      "no_alt_share_0.1": 0.688
+    },
+    {
+      "mode": "rapid",
+      "length_bin": "<300",
+      "trips": 17074.0,
+      "sun_share": 0.6193,
+      "sun_red": 0.0611,
+      "detour": 0.0024,
+      "no_alt_share": 0.8304,
+      "exposure_red": 0.0073,
+      "no_alt_share_0.01": 0.8274,
+      "no_alt_share_0.05": 0.8388,
+      "no_alt_share_0.1": 0.8515
+    },
+    {
+      "mode": "rapid",
+      "length_bin": "300-800",
+      "trips": 45388.0,
+      "sun_share": 0.6627,
+      "sun_red": 0.1603,
+      "detour": 0.0064,
+      "no_alt_share": 0.5005,
+      "exposure_red": 0.019,
+      "no_alt_share_0.01": 0.4931,
+      "no_alt_share_0.05": 0.5243,
+      "no_alt_share_0.1": 0.5699
+    },
+    {
+      "mode": "rapid",
+      "length_bin": "800-1200",
+      "trips": 14883.0,
+      "sun_share": 0.6779,
+      "sun_red": 0.1604,
+      "detour": 0.0052,
+      "no_alt_share": 0.4508,
+      "exposure_red": 0.0266,
+      "no_alt_share_0.01": 0.4359,
+      "no_alt_share_0.05": 0.4872,
+      "no_alt_share_0.1": 0.5847
+    }
+  ],
+  "by_mode_bin_alltimes": [
+    {
+      "mode": "bus",
+      "length_bin": "<300",
+      "trips": 185224.0,
+      "sun_share": 0.6664,
+      "sun_red": 0.053,
+      "detour": 0.0024,
+      "no_alt_share": 0.8563,
+      "exposure_red": 0.0056
+    },
+    {
+      "mode": "bus",
+      "length_bin": "300-800",
+      "trips": 135384.0,
+      "sun_share": 0.6474,
+      "sun_red": 0.1243,
+      "detour": 0.0052,
+      "no_alt_share": 0.5808,
+      "exposure_red": 0.0127
+    },
+    {
+      "mode": "bus",
+      "length_bin": "800-1200",
+      "trips": 33147.0,
+      "sun_share": 0.6679,
+      "sun_red": 0.1333,
+      "detour": 0.0064,
+      "no_alt_share": 0.454,
+      "exposure_red": 0.0179
+    },
+    {
+      "mode": "rapid",
+      "length_bin": "<300",
+      "trips": 17074.0,
+      "sun_share": 0.5515,
+      "sun_red": 0.0724,
+      "detour": 0.0031,
+      "no_alt_share": 0.8224,
+      "exposure_red": 0.0065
+    },
+    {
+      "mode": "rapid",
+      "length_bin": "300-800",
+      "trips": 45388.0,
+      "sun_share": 0.5821,
+      "sun_red": 0.1624,
+      "detour": 0.0058,
+      "no_alt_share": 0.5139,
+      "exposure_red": 0.0159
+    },
+    {
+      "mode": "rapid",
+      "length_bin": "800-1200",
+      "trips": 14883.0,
+      "sun_share": 0.601,
+      "sun_red": 0.1704,
+      "detour": 0.0062,
+      "no_alt_share": 0.4283,
+      "exposure_red": 0.0234
+    }
+  ],
+  "rapid_stations": {
+    "<300": {
+      "stations": 82,
+      "sun_share": {
+        "min": 0.0062,
+        "50%": 0.6368,
+        "max": 1.0
+      },
+      "sun_red": {
+        "min": -0.0027,
+        "50%": 0.0121,
+        "max": 0.2983
+      },
+      "detour": {
+        "min": 0.0,
+        "50%": 0.0004,
+        "max": 0.0171
+      },
+      "no_alt_share": {
+        "min": 0.3,
+        "50%": 0.9304,
+        "max": 1.0
+      }
+    },
+    "300-800": {
+      "stations": 71,
+      "sun_share": {
+        "min": 0.1866,
+        "50%": 0.6821,
+        "max": 0.9426
+      },
+      "sun_red": {
+        "min": -0.0008,
+        "50%": 0.0542,
+        "max": 0.5872
+      },
+      "detour": {
+        "min": 0.0,
+        "50%": 0.0024,
+        "max": 0.0228
+      },
+      "no_alt_share": {
+        "min": 0.0,
+        "50%": 0.6979,
+        "max": 1.0
+      }
+    },
+    "800-1200": {
+      "stations": 38,
+      "sun_share": {
+        "min": 0.3817,
+        "50%": 0.6989,
+        "max": 0.9083
+      },
+      "sun_red": {
+        "min": 0.0,
+        "50%": 0.0485,
+        "max": 0.4931
+      },
+      "detour": {
+        "min": 0.0,
+        "50%": 0.0024,
+        "max": 0.0285
+      },
+      "no_alt_share": {
+        "min": 0.0,
+        "50%": 0.5704,
+        "max": 1.0
+      }
+    }
+  },
+  "grid": {
+    "cells_with_bus_trips": 754,
+    "cells_clustered": 510,
+    "cluster_bin": "300-800",
+    "min_trips_per_cell": 20
+  },
+  "silhouette": {
+    "3": 0.3319159017930991,
+    "4": 0.34625761791504445,
+    "5": 0.34596209694750607,
+    "6": 0.32860299368802687
+  },
+  "k": 3,
+  "cluster_profile": {
+    "0": {
+      "cells": 269,
+      "trips": 66772.0,
+      "sun_share": 0.834,
+      "sun_red": 0.0246,
+      "detour": 0.0012,
+      "no_alt_share": 0.8022,
+      "exposure_red": 0.0025,
+      "bldg_height_mean_m": 7.4472,
+      "canopy_cover": 0.0868,
+      "network_km_per_km2": 31.4743,
+      "bldg_coverage": 0.2627
+    },
+    "1": {
+      "cells": 92,
+      "trips": 33371.0,
+      "sun_share": 0.6737,
+      "sun_red": 0.2497,
+      "detour": 0.011,
+      "no_alt_share": 0.2579,
+      "exposure_red": 0.0286,
+      "bldg_height_mean_m": 8.6427,
+      "canopy_cover": 0.0743,
+      "network_km_per_km2": 41.321,
+      "bldg_coverage": 0.3566
+    },
+    "2": {
+      "cells": 149,
+      "trips": 34410.0,
+      "sun_share": 0.6142,
+      "sun_red": 0.0556,
+      "detour": 0.0018,
+      "no_alt_share": 0.702,
+      "exposure_red": 0.0058,
+      "bldg_height_mean_m": 8.1464,
+      "canopy_cover": 0.1117,
+      "network_km_per_km2": 31.5532,
+      "bldg_coverage": 0.268
+    }
+  },
+  "spearman_features": {
+    "sun_share": {
+      "bldg_height_mean_m": -0.47358994301491086,
+      "canopy_cover": -0.21736879570163758,
+      "network_km_per_km2": -0.10541257706624378
+    },
+    "sun_red": {
+      "bldg_height_mean_m": 0.2339718631639843,
+      "canopy_cover": -0.19785306713109316,
+      "network_km_per_km2": 0.4395566695312954
+    },
+    "detour": {
+      "bldg_height_mean_m": 0.20594345759539157,
+      "canopy_cover": -0.2223082297932418,
+      "network_km_per_km2": 0.4156860101651666
+    },
+    "no_alt_share": {
+      "bldg_height_mean_m": -0.14033451107180947,
+      "canopy_cover": 0.1777820390489063,
+      "network_km_per_km2": -0.3744016586448919
+    }
+  },
+  "ols_features": {
+    "sun_share": {
+      "n": 510,
+      "r2": 0.40006343541428113,
+      "coef": {
+        "const": 0.74089,
+        "bldg_height_mean_m": -0.07846,
+        "canopy_cover": -0.04561,
+        "network_km_per_km2": -0.03472
+      },
+      "p": {
+        "const": 0.0,
+        "bldg_height_mean_m": 0.0,
+        "canopy_cover": 0.0,
+        "network_km_per_km2": 0.0
+      }
+    },
+    "sun_red": {
+      "n": 510,
+      "r2": 0.22929811770458408,
+      "coef": {
+        "const": 0.07428,
+        "bldg_height_mean_m": 0.02879,
+        "canopy_cover": -0.0005,
+        "network_km_per_km2": 0.03494
+      },
+      "p": {
+        "const": 0.0,
+        "bldg_height_mean_m": 0.0005,
+        "canopy_cover": 0.9155,
+        "network_km_per_km2": 0.0
+      }
+    },
+    "detour": {
+      "n": 510,
+      "r2": 0.1957057104352472,
+      "coef": {
+        "const": 0.00315,
+        "bldg_height_mean_m": 0.00109,
+        "canopy_cover": -1e-05,
+        "network_km_per_km2": 0.00174
+      },
+      "p": {
+        "const": 0.0,
+        "bldg_height_mean_m": 0.0048,
+        "canopy_cover": 0.9465,
+        "network_km_per_km2": 0.0
+      }
+    },
+    "no_alt_share": {
+      "n": 510,
+      "r2": 0.13586312218031815,
+      "coef": {
+        "const": 0.67473,
+        "bldg_height_mean_m": -0.03797,
+        "canopy_cover": -0.00426,
+        "network_km_per_km2": -0.09227
+      },
+      "p": {
+        "const": 0.0,
+        "bldg_height_mean_m": 0.0405,
+        "canopy_cover": 0.7922,
+        "network_km_per_km2": 0.0
+      }
+    }
+  },
+  "feature_corr": {
+    "bldg_height_mean_m": {
+      "bldg_height_mean_m": 1.0,
+      "canopy_cover": 0.104,
+      "network_km_per_km2": 0.125
+    },
+    "canopy_cover": {
+      "bldg_height_mean_m": 0.104,
+      "canopy_cover": 1.0,
+      "network_km_per_km2": -0.502
+    },
+    "network_km_per_km2": {
+      "bldg_height_mean_m": 0.125,
+      "canopy_cover": -0.502,
+      "network_km_per_km2": 1.0
+    }
+  },
+  "cp1_cases": [
+    {
+      "origin": "15th St/City Hall (MFL)",
+      "length_bin": "300-800",
+      "trips": 28.0,
+      "sun_share": 0.2726,
+      "sun_red": 0.2831,
+      "detour": 0.0107,
+      "no_alt_share": 0.375,
+      "exposure_red": 0.0093
+    },
+    {
+      "origin": "15th St/City Hall (MFL)",
+      "length_bin": "800-1200",
+      "trips": 32.0,
+      "sun_share": 0.219,
+      "sun_red": 0.3918,
+      "detour": 0.01,
+      "no_alt_share": 0.1875,
+      "exposure_red": 0.0171
+    },
+    {
+      "origin": "2nd St (MFL)",
+      "length_bin": "<300",
+      "trips": 7.0,
+      "sun_share": 0.7185,
+      "sun_red": 0.0,
+      "detour": 0.0,
+      "no_alt_share": 1.0,
+      "exposure_red": 0.0
+    },
+    {
+      "origin": "2nd St (MFL)",
+      "length_bin": "300-800",
+      "trips": 28.0,
+      "sun_share": 0.5127,
+      "sun_red": 0.2429,
+      "detour": 0.0132,
+      "no_alt_share": 0.3571,
+      "exposure_red": 0.0168
+    },
+    {
+      "origin": "2nd St (MFL)",
+      "length_bin": "800-1200",
+      "trips": 25.0,
+      "sun_share": 0.5014,
+      "sun_red": 0.3958,
+      "detour": 0.0272,
+      "no_alt_share": 0.04,
+      "exposure_red": 0.0279
+    },
+    {
+      "origin": "63rd St (MFL)",
+      "length_bin": "<300",
+      "trips": 4.0,
+      "sun_share": 0.782,
+      "sun_red": 0.0164,
+      "detour": 0.0025,
+      "no_alt_share": 0.75,
+      "exposure_red": 0.0011
+    },
+    {
+      "origin": "63rd St (MFL)",
+      "length_bin": "300-800",
+      "trips": 25.0,
+      "sun_share": 0.782,
+      "sun_red": 0.1654,
+      "detour": 0.0075,
+      "no_alt_share": 0.36,
+      "exposure_red": 0.0182
+    },
+    {
+      "origin": "63rd St (MFL)",
+      "length_bin": "800-1200",
+      "trips": 31.0,
+      "sun_share": 0.7831,
+      "sun_red": 0.1858,
+      "detour": 0.0097,
+      "no_alt_share": 0.1935,
+      "exposure_red": 0.0248
+    },
+    {
+      "origin": "Carpenter (Regional Rail)",
+      "length_bin": "300-800",
+      "trips": 33.0,
+      "sun_share": 0.6202,
+      "sun_red": 0.0444,
+      "detour": 0.0012,
+      "no_alt_share": 0.7879,
+      "exposure_red": 0.0021
+    },
+    {
+      "origin": "Carpenter (Regional Rail)",
+      "length_bin": "800-1200",
+      "trips": 27.0,
+      "sun_share": 0.6013,
+      "sun_red": 0.0657,
+      "detour": 0.0018,
+      "no_alt_share": 0.5,
+      "exposure_red": 0.0058
+    },
+    {
+      "origin": "Highland (Regional Rail)",
+      "length_bin": "<300",
+      "trips": 6.0,
+      "sun_share": 0.419,
+      "sun_red": 0.0,
+      "detour": 0.0,
+      "no_alt_share": 1.0,
+      "exposure_red": 0.0
+    },
+    {
+      "origin": "Highland (Regional Rail)",
+      "length_bin": "300-800",
+      "trips": 19.0,
+      "sun_share": 0.4659,
+      "sun_red": 0.0,
+      "detour": 0.0,
+      "no_alt_share": 1.0,
+      "exposure_red": 0.0
+    },
+    {
+      "origin": "Highland (Regional Rail)",
+      "length_bin": "800-1200",
+      "trips": 35.0,
+      "sun_share": 0.4458,
+      "sun_red": 0.0208,
+      "detour": 0.0015,
+      "no_alt_share": 0.7714,
+      "exposure_red": 0.002
+    },
+    {
+      "origin": "NRG Station (BSL)",
+      "length_bin": "300-800",
+      "trips": 22.0,
+      "sun_share": 0.7324,
+      "sun_red": 0.0053,
+      "detour": 0.0002,
+      "no_alt_share": 0.9091,
+      "exposure_red": 0.0003
+    },
+    {
+      "origin": "NRG Station (BSL)",
+      "length_bin": "800-1200",
+      "trips": 38.0,
+      "sun_share": 0.7235,
+      "sun_red": 0.0023,
+      "detour": 0.0002,
+      "no_alt_share": 0.9474,
+      "exposure_red": 0.0001
+    },
+    {
+      "origin": "Penn Medicine Station (Regional Rail)",
+      "length_bin": "<300",
+      "trips": 1.0,
+      "sun_share": NaN,
+      "sun_red": NaN,
+      "detour": NaN,
+      "no_alt_share": NaN,
+      "exposure_red": NaN
+    },
+    {
+      "origin": "Penn Medicine Station (Regional Rail)",
+      "length_bin": "300-800",
+      "trips": 25.0,
+      "sun_share": 0.7733,
+      "sun_red": 0.1738,
+      "detour": 0.0077,
+      "no_alt_share": 0.6,
+      "exposure_red": 0.0196
+    },
+    {
+      "origin": "Penn Medicine Station (Regional Rail)",
+      "length_bin": "800-1200",
+      "trips": 34.0,
+      "sun_share": 0.7454,
+      "sun_red": 0.0672,
+      "detour": 0.0053,
+      "no_alt_share": 0.5,
+      "exposure_red": 0.0102
+    },
+    {
+      "origin": "Ryers (Regional Rail)",
+      "length_bin": "<300",
+      "trips": 5.0,
+      "sun_share": 0.9538,
+      "sun_red": 0.0222,
+      "detour": 0.0004,
+      "no_alt_share": 0.8,
+      "exposure_red": 0.0018
+    },
+    {
+      "origin": "Ryers (Regional Rail)",
+      "length_bin": "300-800",
+      "trips": 35.0,
+      "sun_share": 0.9078,
+      "sun_red": 0.0113,
+      "detour": 0.0006,
+      "no_alt_share": 0.7714,
+      "exposure_red": 0.001
+    },
+    {
+      "origin": "Ryers (Regional Rail)",
+      "length_bin": "800-1200",
+      "trips": 20.0,
+      "sun_share": 0.8688,
+      "sun_red": 0.0337,
+      "detour": 0.0007,
+      "no_alt_share": 0.3,
+      "exposure_red": 0.0034
+    },
+    {
+      "origin": "Snyder (BSL)",
+      "length_bin": "<300",
+      "trips": 1.0,
+      "sun_share": 0.6829,
+      "sun_red": 0.0,
+      "detour": 0.0,
+      "no_alt_share": 1.0,
+      "exposure_red": 0.0
+    },
+    {
+      "origin": "Snyder (BSL)",
+      "length_bin": "300-800",
+      "trips": 33.0,
+      "sun_share": 0.6062,
+      "sun_red": 0.2062,
+      "detour": 0.0077,
+      "no_alt_share": 0.3788,
+      "exposure_red": 0.0216
+    },
+    {
+      "origin": "Snyder (BSL)",
+      "length_bin": "800-1200",
+      "trips": 26.0,
+      "sun_share": 0.6885,
+      "sun_red": 0.2796,
+      "detour": 0.0089,
+      "no_alt_share": 0.25,
+      "exposure_red": 0.0426
+    },
+    {
+      "origin": "Susquehanna-Dauphin (BSL)",
+      "length_bin": "<300",
+      "trips": 5.0,
+      "sun_share": 0.5652,
+      "sun_red": 0.1155,
+      "detour": 0.0078,
+      "no_alt_share": 0.6,
+      "exposure_red": 0.0133
+    },
+    {
+      "origin": "Susquehanna-Dauphin (BSL)",
+      "length_bin": "300-800",
+      "trips": 36.0,
+      "sun_share": 0.572,
+      "sun_red": 0.1097,
+      "detour": 0.0066,
+      "no_alt_share": 0.2639,
+      "exposure_red": 0.0107
+    },
+    {
+      "origin": "Susquehanna-Dauphin (BSL)",
+      "length_bin": "800-1200",
+      "trips": 19.0,
+      "sun_share": 0.5857,
+      "sun_red": 0.1666,
+      "detour": 0.0056,
+      "no_alt_share": 0.1842,
+      "exposure_red": 0.0248
+    }
+  ]
+}

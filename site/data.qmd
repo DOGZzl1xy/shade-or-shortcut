@@ -1,0 +1,7 @@
+---
+title: "Data"
+subtitle: "Where the shade map comes from, and who we follow home."
+jupyter: python3
+---
+
+{{< include ../notebooks/data.qmd >}}

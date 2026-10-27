@@ -1,0 +1,195 @@
+{
+  "stations": [
+    {
+      "station": "Susquehanna-Dauphin",
+      "mode": "BSL",
+      "snap_m": 66.46300913501155,
+      "osm_entrances_available": 0,
+      "osm_entrances_used": 0,
+      "footprint_centroids_used": 60,
+      "destinations": 60,
+      "median_network_dist_m": 739.5908687454144
+    },
+    {
+      "station": "15th St/City Hall",
+      "mode": "MFL",
+      "snap_m": 14.796582454603582,
+      "osm_entrances_available": 26,
+      "osm_entrances_used": 26,
+      "footprint_centroids_used": 34,
+      "destinations": 60,
+      "median_network_dist_m": 811.0982799032627
+    },
+    {
+      "station": "Highland",
+      "mode": "Regional Rail",
+      "snap_m": 7.894451841492248,
+      "osm_entrances_available": 0,
+      "osm_entrances_used": 0,
+      "footprint_centroids_used": 60,
+      "destinations": 60,
+      "median_network_dist_m": 848.3790694419931
+    },
+    {
+      "station": "Penn Medicine Station",
+      "mode": "Regional Rail",
+      "snap_m": 15.822284775996536,
+      "osm_entrances_available": 11,
+      "osm_entrances_used": 11,
+      "footprint_centroids_used": 49,
+      "destinations": 60,
+      "median_network_dist_m": 829.5820410907406
+    },
+    {
+      "station": "NRG Station",
+      "mode": "BSL",
+      "snap_m": 14.549329495960817,
+      "osm_entrances_available": 0,
+      "osm_entrances_used": 0,
+      "footprint_centroids_used": 60,
+      "destinations": 60,
+      "median_network_dist_m": 839.1575656373
+    },
+    {
+      "station": "Carpenter",
+      "mode": "Regional Rail",
+      "snap_m": 45.903063521850605,
+      "osm_entrances_available": 0,
+      "osm_entrances_used": 0,
+      "footprint_centroids_used": 60,
+      "destinations": 60,
+      "median_network_dist_m": 750.2151702252497
+    },
+    {
+      "station": "Snyder",
+      "mode": "BSL",
+      "snap_m": 13.687575152582264,
+      "osm_entrances_available": 2,
+      "osm_entrances_used": 2,
+      "footprint_centroids_used": 58,
+      "destinations": 60,
+      "median_network_dist_m": 764.5724847310147
+    },
+    {
+      "station": "63rd St",
+      "mode": "MFL",
+      "snap_m": 10.029899870195687,
+      "osm_entrances_available": 1,
+      "osm_entrances_used": 1,
+      "footprint_centroids_used": 59,
+      "destinations": 60,
+      "median_network_dist_m": 808.3098050761859
+    },
+    {
+      "station": "2nd St",
+      "mode": "MFL",
+      "snap_m": 3.7854291999775143,
+      "osm_entrances_available": 12,
+      "osm_entrances_used": 12,
+      "footprint_centroids_used": 48,
+      "destinations": 60,
+      "median_network_dist_m": 763.1395091993635
+    },
+    {
+      "station": "Ryers",
+      "mode": "Regional Rail",
+      "snap_m": 110.91989552119307,
+      "osm_entrances_available": 0,
+      "osm_entrances_used": 0,
+      "footprint_centroids_used": 60,
+      "destinations": 60,
+      "median_network_dist_m": 711.2769873301913
+    }
+  ],
+  "city": {
+    "gtfs": "SEPTA GTFS fall 2026 timetable (v202609271)",
+    "rep_date": "2026-10-28",
+    "window": [
+      "15:00:00",
+      "19:00:00"
+    ],
+    "min_per_hour": 6,
+    "home_stops": 1784,
+    "home_stops_by_kind": {
+      "surface": 1605,
+      "Regional Rail": 55,
+      "MFL": 54,
+      "BSL": 51,
+      "trolley tunnel": 19
+    },
+    "stations_by_mode": {
+      "bus": 1605,
+      "rapid": 116
+    },
+    "stop_snap_m_median": 4.839394687265162,
+    "parcels_residential": 522749,
+    "parcel_snap_m_median": 37.262697718652504,
+    "parcels_within_1200m": 431100,
+    "parcels_uncovered": 91649,
+    "parcels_uncovered_share": 0.1753212344739062,
+    "stations_with_parcels": 1568,
+    "parcels_per_station_quantiles": {
+      "0.1": 12.0,
+      "0.5": 145.0,
+      "0.9": 643.0,
+      "1.0": 5888.0
+    },
+    "trips": 431100,
+    "trips_by_mode": {
+      "bus": 353755,
+      "rapid": 77345
+    },
+    "trips_by_length_bin": {
+      "<300": 202298,
+      "300-800": 180772,
+      "800-1200": 48030
+    },
+    "trips_by_mode_and_bin": {
+      "bus": {
+        "<300": 185224,
+        "300-800": 135384,
+        "800-1200": 33147
+      },
+      "rapid": {
+        "<300": 17074,
+        "300-800": 45388,
+        "800-1200": 14883
+      }
+    },
+    "stop_dist_quantiles_m": {
+      "0.1": 70.5,
+      "0.25": 166.1,
+      "0.5": 321.4,
+      "0.75": 551.8,
+      "0.9": 826.7
+    },
+    "stop_dist_quantiles_all_covered_parcels_m": {
+      "0.1": 70.5,
+      "0.25": 166.1,
+      "0.5": 321.4,
+      "0.75": 551.8,
+      "0.9": 826.7
+    },
+    "origin_stops_used": 1600
+  },
+  "direction_check": {
+    "trips": 500,
+    "pairs": 12000,
+    "sun_red_mean_stop_to_home": 0.14245322583130884,
+    "sun_red_mean_home_to_stop": 0.14190424433734283,
+    "sun_red_mean_abs_diff": 0.004746441810836561,
+    "sun_red_corr": 0.9895986963270668,
+    "detour_mean_stop_to_home": 0.006004741350787703,
+    "detour_mean_home_to_stop": 0.005913172764897526,
+    "same_shortest_length_share": 1.0,
+    "exposure_red_mean_stop_to_home": 0.015322277675479645,
+    "exposure_red_mean_home_to_stop": 0.015125554667540972,
+    "same_shade_path_length_share": 0.9384166666666667,
+    "trip_length_m_quantiles": {
+      "0.1": 439.1,
+      "0.5": 631.7,
+      "0.9": 1021.3
+    }
+  },
+  "wall_s": 78.8974678516388
+}

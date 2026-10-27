@@ -1,0 +1,48 @@
+project:
+  type: website
+  output-dir: _site
+  resources:
+    - app/**
+  render:
+    - index.qmd
+    - data.qmd
+    - methods.qmd
+    - results.qmd
+    - technical.qmd
+
+execute:
+  freeze: auto          # rendered outputs are committed under _freeze/; CI does not rerun the analysis
+  echo: false
+  warning: false
+
+website:
+  title: "Shade or Shortcut"
+  navbar:
+    background: "#07080b"
+    foreground: "#e8e6df"
+    left:
+      - href: app/index.html
+        text: Story
+      - href: app/tool.html
+        text: Route tool
+      - href: app/map.html
+        text: City map
+      - href: data.qmd
+        text: Data
+      - href: methods.qmd
+        text: Methods
+      - href: results.qmd
+        text: Results
+      - href: technical.qmd
+        text: Technical notes
+  page-footer:
+    left: "Shade or Shortcut · MUSA 5500 final project · Xuanyu Zhou"
+    right: "Data: NOAA LiDAR, City of Philadelphia, PASDA, DVRPC, OpenStreetMap, SEPTA, Meta CHMv2 (CC BY 4.0)"
+
+format:
+  html:
+    theme: [darkly, theme.scss]
+    toc: true
+    toc-depth: 2
+    fig-responsive: true
+    page-layout: article

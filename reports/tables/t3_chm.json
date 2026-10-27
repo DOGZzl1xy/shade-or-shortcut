@@ -1,0 +1,46 @@
+{
+  "philly_tiles": [
+    "0320101201",
+    "0320101032",
+    "0320101210",
+    "0320101023"
+  ],
+  "test_tiles": [
+    "0320101032"
+  ],
+  "native": {
+    "crs": "EPSG:3857 (WGS 84 / Pseudo-Mercator)",
+    "res_m": 1.1943285669558747,
+    "dtype": "uint8",
+    "size_px": [
+      32768,
+      32768
+    ],
+    "res_ground_m_at_40N": 0.9155783578068005
+  },
+  "read_s": 2.680177927017212,
+  "acq_dates_test_area": [
+    {
+      "tile": "0320101032",
+      "acq_date": "2019-11-04",
+      "share": 1.0000000000000002
+    }
+  ],
+  "leaf_on_share_may_oct": 0.0,
+  "canopy_share_chm_nonbldg": 0.22013568271355205,
+  "canopy_share_lidar_nonbldg": 0.3683135244409062,
+  "canopy_iou": 0.38487794961120947,
+  "lidar_minus_chm_median_m_on_chm_canopy": -0.8950269222259521,
+  "lidar_minus_chm_mean_m_on_chm_canopy": -0.9663594365119934,
+  "chm_canopy_px_where_lidar_lt2m_share": 0.25710049828872883,
+  "pearson_r_both_canopy": 0.43696412778226673,
+  "chm_median_height_m": 10.0,
+  "lidar_median_height_m": 9.5,
+  "fallback": "LiDAR non-building nDSM >= 2 m AND land cover 2018 class 1 (tree canopy)",
+  "lc2018_canopy_share_nonbldg": 0.19404774835444139,
+  "fallback_canopy_share_nonbldg": 0.16942142529464158,
+  "lc_canopy_covered_by_fallback": 0.8730914258545368,
+  "lidar_ge2m_removed_by_lc_mask": 0.5400075912177799,
+  "fallback_vs_chm_iou": 0.4630344704462931,
+  "fallback_median_height_m": 12.399999618530273
+}

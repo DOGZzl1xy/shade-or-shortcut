@@ -1,0 +1,142 @@
+```{python}
+#| include: false
+import sys
+from coolpath import ROOT, load_config
+sys.path.insert(0, str(ROOT / "notebooks"))
+from _site import table, md, pct
+import pandas as pd
+cfg = load_config()
+q2, s3, s5, s6, s7, s8, dg = (table(n) for n in ("phase_02_qa.json", "phase_03_stats.json", "phase_05_stats.json",
+                                                 "phase_06_stats.json", "phase_07_stats.json", "phase_08_build.json",
+                                                 "diag_home_stops.json"))
+sh, tr, us, fh, sf, bd = (cfg[k] for k in ("shadow", "tree", "unmapped_structures", "footprint_height", "surface", "bridge_deck"))
+th, hs, mt = cfg["routing"]["theta_curve"], cfg["trips"]["home_stops"], cfg["metrics"]
+```
+
+This page is for readers who want to check how the numbers on the other pages were produced. The code, every
+parameter and the stored result tables are in the [project repository](https://github.com/DOGZzl1xy/shade-or-shortcut).
+
+## Processing pipeline
+
+::: {.column-page-inset-right}
+
+| Step | Input | Output | Method |
+| --- | --- | --- | --- |
+| 1. LiDAR | 2022 airborne LiDAR, streamed tile by tile | 1 m ground (DEM) and surface (DSM) grids | ground returns → DEM; highest returns → DSM; each tile is downloaded, rasterised and deleted |
+| 2. Surface model | DEM, DSM, footprints, 2018 land cover, CHMv2 | 1 m building and tree heights | height above ground (nDSM) split into buildings (inside footprints), structures (bridges, viaducts) and trees (canopy mask) |
+| 3. Shadow casting | surface model, sun positions | sun / tree shade / building shade at every sample point and hour | a ray from each point (1.5 m above the ground) towards the sun, marched 1 m at a time for up to 1 km |
+| 4. Edge attributes | DVRPC sidewalks and crossings, OSM bridges and covered walkways | metres of sun, tree shade and building shade per edge and hour | sample points summed per edge; covered walkways always in building shade |
+| 5. Routing | edge table | shortest and coolest path per walk | Dijkstra on length, and on the cost of Wen et al. (2025) with θ growing with distance walked |
+| 6. Walk samples | SEPTA timetable, residential parcels | one walk per home, stop → home | nearest frequent stop along the network, within 1.2 km |
+| 7. Summaries | walk metrics | tables by mode and walk length; stations; 500 m grid clusters | means within length bands; k-means on grid cells |
+
+:::
+
+## Key parameters
+
+```{python}
+rows = [
+    ("Dates and hours", "June 21 and August 1, 8:00–19:00 local time, every hour (24 sun positions)"),
+    ("Grid resolution", f"{cfg['project']['resolution_m']:.0f} m"),
+    ("Sample spacing along sidewalks", f"{sh['sample_spacing_m']:.0f} m"),
+    ("Observer height", f"{sh['observer_height_m']} m above the ground (above the deck on bridges)"),
+    ("Ray step and maximum length", f"{sh['ray_step_m']:.0f} m, {sh['max_ray_m']:,} m"),
+    ("Minimum tree height", f"{tr['min_height_m']:.0f} m"),
+    ("Cost function", "C = L_sun + (1 − 0.5θ) L_tree + (1 − θ) L_building + (1 − 1.5θ) L_indoor"),
+    ("θ curve (distance walked l, in m)", f"θ(l) = {th['a']} / (1 + exp(−{th['k']} (l − {th['x0']:.1f}))) + {th['b']}"),
+    ("Frequent stop", f"≥ {hs['min_per_hour']} departures per hour on one route and direction, weekday 15:00–19:00 "
+                      f"({hs['rep_date']}); all rapid-transit stations"),
+    ("Maximum walk", f"{hs['max_network_m']:,} m along the network"),
+    ("Walk-length bands", "under 300 m, 300–800 m, 800–1,200 m"),
+    ("No cooler alternative", f"the coolest walk avoids less than {mt['no_alt_threshold']:.0%} of the sun "
+                              f"(sensitivity {', '.join(f'{x:.0%}' for x in mt['no_alt_threshold_sensitivity'])})"),
+    ("Grid and clusters", f"{mt['grid_m']} m cells with at least {mt['min_trips_per_cell']} walks of 300–800 m; k-means, k = {mt['cluster_k']}"),
+    ("Station ranking", f"at least {mt['min_trips_station_rank']} walks of 300–800 m"),
+    ("Random seed", str(cfg["project"]["seed"])),
+]
+md(pd.DataFrame(rows, columns=["Parameter", "Value"]))
+```
+
+## Processing decisions
+
+```{python}
+#| output: asis
+d0, d3 = dg["definitions"]["0_all_stops_with_service_on_rep_date"], dg["definitions"]["3_rapid_plus_ge6"]
+sil = s7["silhouette"]
+items = [
+    ("Streaming the LiDAR", "The point cloud is far larger than the available disk, so each tile is downloaded, rasterised and "
+     "deleted in turn. The horizontal coordinates are used as they are; the datum difference is about 1 m and matches the "
+     "vector layers."),
+    ("Roof holes", f"Dark or glassy roofs return no points, and filling them from the ground would make buildings disappear. "
+     f"Holes inside a footprint take the median height of the same building; buildings with less than "
+     f"{fh['roof_fill_min_valid_share']:.0%} valid pixels use the recorded height."),
+    ("Spikes and outliers", f"Isolated high returns (fewer than {sf['despike']['min_support']} neighbours within "
+     f"{sf['despike']['tol_m']:.0f} m in a {sf['despike']['window_px']} × {sf['despike']['window_px']} window) are removed, and "
+     f"anything more than {sf['max_ndsm_m']} m above the ground is treated as noise; one stray return near the TV masts "
+     "otherwise cast kilometre-long shadows."),
+    ("Holes outside buildings", f"Over water the surface takes the ground height; other holes are interpolated up to "
+     f"{sf['dsm_hole_fill_max_px']} px and otherwise take the ground, so river surfaces do not grow false structures."),
+    ("Ground under bridges", "Ground gaps are filled first from NOAA's bare-earth model (bridges removed) and only then by "
+     "interpolation, so bridge decks stay above the ground instead of being merged with it."),
+    ("Leaf-off LiDAR", f"The survey was flown in March, so canopies have gaps. Inside the 2018 canopy mask, pixels below "
+     f"{tr['min_height_m']:.0f} m take the median of taller pixels in a {tr['gap_fill_window_m']} × {tr['gap_fill_window_m']} m "
+     "window; a maximum filter was rejected because it raised the median tree height by about 5 m."),
+    ("Trees outside the city", "The land-cover layer stops at the city limit, so trees in the 1 km buffer come from CHMv2 "
+     "(≥ 2 m); they only cast shadows onto city sidewalks."),
+    ("Structures without footprints", f"Bridges and rail viaducts are kept as structures: areas at least {us['min_height_m']:.0f} m "
+     f"high outside footprints and the canopy, cut where the surface jumps by more than {us['segment_jump_m']:.0f} m, and kept "
+     f"if a piece covers at least {us['min_area_m2']} m² with a height spread of at most {us['max_height_std_m']:.0f} m. "
+     "Parked trains can pass this test too."),
+    ("Flat-roof extrusion", f"Footprints with almost no LiDAR height (median below {fh['lidar_median_max_m']:.0f} m) but a "
+     f"recorded height of at least {fh['approx_hgt_min_m']:.0f} m are built after the survey; they are extruded to the recorded "
+     f"height. Footprints where {fh['skip_share_range'][0]:.0%}–{fh['skip_share_range'][1]:.0%} of pixels are tall overlap a "
+     "neighbour and are skipped. In University City every extruded building was checked on 2025 aerial photos."),
+    ("Bridge decks", f"A sidewalk segment is on a bridge when at least {bd['min_length_share']:.0%} of it lies within "
+     f"{bd['buffer_m']} m of an OSM road bridge and the two run within {bd['max_angle_deg']}° of each other; its observer then "
+     "stands on the deck. A plain intersection test would put every underpass on the bridge above it."),
+    ("Terrain shadows", "Bare ground also blocks the sun, which matters in steep valleys such as the Wissahickon at low sun."),
+    ("Covered walkways", "OpenStreetMap covered walkways and passages through buildings are added and counted as building "
+     "shade at every hour."),
+    ("Cost function kept as published", f"The coolest path sometimes has more sun than the shortest, when it trades tree "
+     f"shade for building shade ({pct(s5['sun_increase_share'], 1)} of test walks). The cost was kept unchanged, and the "
+     "weighted exposure C is reported next to the sun share."),
+    ("Which stops", f"Using every stop gave a median walk of {d0['median_m']:.0f} m, too short for any choice of route. "
+     f"Rapid transit plus frequent buses gives a median of {d3['median_m']:.0f} m and still reaches "
+     f"{pct(d3['share_within_1200m'], 0)} of homes within 1.2 km."),
+    ("Threshold for no cooler option", f"Sun reduction has a spike at exactly 0 (the coolest walk is the shortest) and is "
+     f"continuous from about {mt['no_alt_threshold']:.0%} on, so the cut is placed where the spike ends."),
+    ("Clusters", f"Clustering uses only 300–800 m walks so that cells are compared at the same walk length. Silhouette "
+     f"scores for k = 3–6 are {min(sil.values()):.2f}–{max(sil.values()):.2f}, so k = {mt['cluster_k']} is a summary of a "
+     "continuum rather than natural types."),
+    ("Campus footways", f"The regional sidewalk data lack most campus paths, so University City adds OpenStreetMap footways "
+     f"({s8['connectivity']['osm_km_in_main_component']:.0f} km), leaving out sidewalks, crossings, private and indoor ways. "
+     "Each mapped entrance is linked to the nearest sidewalk point without crossing a building; links over 30 m were checked "
+     "by hand and the ones that are not walkable removed."),
+    ("Indoor baseline", "In the indoor scenarios the shortest walk is always the outdoor one, so every scenario is compared "
+     "against the same baseline."),
+]
+for t, s in items:
+    print(f"- **{t}.** {s}")
+```
+
+## Validation
+
+```{python}
+#| output: asis
+b, dc = q2["buildings"], s6["direction_check"]
+print(f"""- **Synthetic shadows.** Unit tests cast shadows from box buildings and trees on flat ground and check the shadow
+  length against height / tan(sun elevation) for several sun positions, no shadow on the sunny side, tree versus building
+  priority, terrain shadows and observers on bridge decks.
+- **Building heights.** LiDAR heights agree with the city's recorded heights for {b['compared']:,} buildings
+  (Spearman ρ = {b['spearman_r']:.2f}, median absolute difference {b['median_abs_err_m']:.1f} m).
+- **Routing.** With θ fixed, the search reproduces networkx Dijkstra exactly on {s5['networkx_nodes_checked']:,} nodes
+  (largest absolute difference {s5['networkx_fixed_theta_max_abs_err']:g}). Hand-computed small networks check the cost
+  rule, tree versus building shade and the indoor term.
+- **Browser and analysis agree.** The route tool's JavaScript router returns the same shortest and coolest paths as the
+  Python analysis for 100 random walks, scenarios and hours.
+- **Direction of travel.** Reversing {dc['trips']} walks of at least 400 m (home → stop) changes little: mean sun
+  reduction {pct(dc['sun_red_mean_stop_to_home'])} one way and {pct(dc['sun_red_mean_home_to_stop'])} the other,
+  correlation {dc['sun_red_corr']:.2f}.
+- **Visual checks.** The five rapid-transit stations with the largest sun reduction were checked route by route on aerial
+  photos, as were the University City entrances and passages.""")
+```

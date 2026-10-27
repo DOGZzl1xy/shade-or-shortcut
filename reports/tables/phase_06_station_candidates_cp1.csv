@@ -1,0 +1,13 @@
+rank,proposal,stop_name,mode,stop_lat,stop_lon,bldg_height_mean_m,canopy_cover,bldg_coverage,sun_share_1500,network_km_500m,stop_ids
+1,recommended,Susquehanna-Dauphin,BSL,39.987,-75.156,9.470,0.103,0.300,0.673,31.567,1276 32149
+2,recommended,15th St/City Hall,MFL,39.953,-75.165,52.437,0.020,0.547,0.254,31.100,1392 32175
+3,recommended,Highland,Regional Rail,40.071,-75.211,9.192,0.474,0.089,0.316,6.999,90802
+4,recommended,Penn Medicine Station,Regional Rail,39.948,-75.190,29.111,0.056,0.288,0.640,8.797,90406
+5,recommended,NRG Station,BSL,39.905,-75.174,12.570,0.113,0.070,0.819,9.213,152 32134
+6,recommended,Carpenter,Regional Rail,40.051,-75.191,9.135,0.283,0.203,0.562,20.581,90805
+7,recommended,Snyder,BSL,39.924,-75.170,8.511,0.024,0.495,0.642,40.320,1286 32136
+8,recommended,Eastwick,Regional Rail,39.893,-75.244,8.008,0.285,0.038,0.789,3.892,90405
+9,recommended,2nd St,MFL,39.950,-75.144,16.081,0.098,0.413,0.485,22.798,428 32170
+10,recommended,Ryers,Regional Rail,40.064,-75.086,6.754,0.149,0.191,0.854,14.578,90814
+11,alternate,63rd St,MFL,39.963,-75.247,8.198,0.235,0.301,0.754,18.328,2447 32183
+12,alternate,Berks,MFL,39.979,-75.134,9.452,0.052,0.387,0.617,37.302,2460 32167

@@ -1,0 +1,70 @@
+{
+  "candidates": 831,
+  "checked": [
+    {
+      "n": 1,
+      "rail": "Philadelphia Subdivision",
+      "lonlat": [
+        -75.18507389701134,
+        39.95516841762108
+      ],
+      "dem_at_crossing": 11.54117488861084,
+      "dem_minus_trend_at_crossing": 0.09353828430175781,
+      "dsm_minus_dem_at_crossing": 11.146878242492676,
+      "dem_minus_noaa_at_crossing": 0.00030994415283203125,
+      "max_abs_dem_minus_trend_within_15m": 0.21287918090820312
+    },
+    {
+      "n": 2,
+      "rail": "Northeast Corridor",
+      "lonlat": [
+        -74.98413254923341,
+        40.05475510076483
+      ],
+      "dem_at_crossing": 4.26387357711792,
+      "dem_minus_trend_at_crossing": -0.8111100196838379,
+      "dsm_minus_dem_at_crossing": 5.843973636627197,
+      "dem_minus_noaa_at_crossing": 3.719329833984375e-05,
+      "max_abs_dem_minus_trend_within_15m": 0.8764920234680176
+    },
+    {
+      "n": 3,
+      "rail": "Chestnut Hill East Line",
+      "lonlat": [
+        -75.19432906110029,
+        40.070568921732836
+      ],
+      "dem_at_crossing": 105.59477996826172,
+      "dem_minus_trend_at_crossing": 0.29192352294921875,
+      "dsm_minus_dem_at_crossing": 5.77252197265625,
+      "dem_minus_noaa_at_crossing": -5.340576171875e-05,
+      "max_abs_dem_minus_trend_within_15m": 0.524444580078125
+    },
+    {
+      "n": 4,
+      "rail": "Atlantic City Line",
+      "lonlat": [
+        -75.0751459192197,
+        39.986741132177286
+      ],
+      "dem_at_crossing": 2.7539596557617188,
+      "dem_minus_trend_at_crossing": -0.1898738145828247,
+      "dsm_minus_dem_at_crossing": 11.15333366394043,
+      "dem_minus_noaa_at_crossing": 0.008997917175292969,
+      "max_abs_dem_minus_trend_within_15m": 0.29680911571748814
+    },
+    {
+      "n": 5,
+      "rail": "Fox Chase Line",
+      "lonlat": [
+        -75.08697100775174,
+        40.063405656608005
+      ],
+      "dem_at_crossing": 40.76753616333008,
+      "dem_minus_trend_at_crossing": -0.3251170174020217,
+      "dsm_minus_dem_at_crossing": 5.783969879150391,
+      "dem_minus_noaa_at_crossing": 0.000110626220703125,
+      "max_abs_dem_minus_trend_within_15m": 0.436332952780802
+    }
+  ]
+}

@@ -1,0 +1,1755 @@
+{
+ "type": "FeatureCollection",
+ "features": [
+  {
+   "type": "Feature",
+   "properties": {
+    "entrance_id": "E1",
+    "building_id": 492262
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -75.19862588688041,
+     39.94950060932974
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "entrance_id": "E2",
+    "building_id": 492262
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -75.19929517066853,
+     39.949500551710294
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "entrance_id": "E3",
+    "building_id": 492262
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -75.19912894248546,
+     39.94973116550702
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "entrance_id": "E4",
+    "building_id": 492262
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -75.19927966203147,
+     39.9500706144532
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "entrance_id": "E5",
+    "building_id": 492262
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -75.19897870335701,
+     39.95002966113401
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "entrance_id": "E6",
+    "building_id": 490261
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -75.1956014003889,
+     39.95051321301864
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "entrance_id": "E7",
+    "building_id": 490261
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -75.19681081548727,
+     39.950707467544575
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "entrance_id": "E8",
+    "building_id": 490261
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -75.19678955371931,
+     39.95081644354109
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "entrance_id": "E9",
+    "building_id": 490261
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -75.19687276983518,
+     39.950130438235746
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "entrance_id": "E10",
+    "building_id": 490261
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -75.19689868720434,
+     39.95000853911427
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "entrance_id": "E11",
+    "building_id": 490261
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -75.19574464426017,
+     39.94999386697489
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "entrance_id": "E12",
+    "building_id": 490261
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -75.19558808477922,
+     39.94997657001557
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "entrance_id": "E13",
+    "building_id": 490261
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -75.1961429285927,
+     39.95008778401589
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "entrance_id": "E14",
+    "building_id": 490261
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -75.19625064510143,
+     39.95010537069739
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "entrance_id": "E15",
+    "building_id": 490261
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -75.19801136345298,
+     39.95026313903846
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "entrance_id": "E16",
+    "building_id": 490261
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -75.19804368656864,
+     39.950148684688195
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "entrance_id": "E17",
+    "building_id": 305469
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -75.19458511025515,
+     39.95133743735861
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "entrance_id": "E18",
+    "building_id": 305469
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -75.19495611395745,
+     39.9513749636224
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "entrance_id": "E19",
+    "building_id": 490075
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -75.19252521936251,
+     39.95244079547415
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "entrance_id": "E20",
+    "building_id": 490075
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -75.19275140899286,
+     39.952100256513766
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "entrance_id": "E21",
+    "building_id": 14348
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -75.19366458761863,
+     39.95241277255548
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "entrance_id": "E22",
+    "building_id": 14348
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -75.19311205035174,
+     39.95257503209315
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "entrance_id": "E23",
+    "building_id": 14348
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -75.19334522731383,
+     39.95241181474679
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "entrance_id": "E24",
+    "building_id": 490558
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -75.19371453478331,
+     39.95167966548367
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "entrance_id": "E25",
+    "building_id": 490558
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -75.19422147143844,
+     39.951537429256696
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "entrance_id": "E26",
+    "building_id": 490558
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -75.19328620158025,
+     39.95141791895508
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "entrance_id": "E27",
+    "building_id": 490558
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -75.19382018669009,
+     39.951283140987634
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "entrance_id": "E28",
+    "building_id": 490712
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -75.19413998937654,
+     39.95109362316273
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "entrance_id": "E29",
+    "building_id": 490712
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -75.19385084296118,
+     39.95102535513509
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "entrance_id": "E30",
+    "building_id": 490712
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -75.19354477754517,
+     39.95101969870205
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "entrance_id": "E31",
+    "building_id": 490712
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -75.19390664778057,
+     39.950804562268495
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "entrance_id": "E32",
+    "building_id": 318426
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -75.19299765282223,
+     39.95164491429382
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "entrance_id": "E33",
+    "building_id": 318426
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -75.19280617491266,
+     39.951325469006086
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "entrance_id": "E34",
+    "building_id": 391459
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -75.19493176779396,
+     39.95298638620389
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "entrance_id": "E35",
+    "building_id": 391459
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -75.19495553174988,
+     39.9528747274608
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "entrance_id": "E36",
+    "building_id": 391459
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -75.1953359936512,
+     39.9529241015255
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "entrance_id": "E37",
+    "building_id": 421256
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -75.19510805281661,
+     39.95222551313561
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "entrance_id": "E38",
+    "building_id": 421256
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -75.195367385858,
+     39.952136279648165
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "entrance_id": "E39",
+    "building_id": 421256
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -75.19547226951765,
+     39.952155301603035
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "entrance_id": "E40",
+    "building_id": 490664
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -75.1955893632107,
+     39.95394947816102
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "entrance_id": "E41",
+    "building_id": 490664
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -75.19497912602537,
+     39.953273423548495
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "entrance_id": "E42",
+    "building_id": 106423
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -75.19414462997264,
+     39.95570518542667
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "entrance_id": "E43",
+    "building_id": 106423
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -75.19369896523543,
+     39.955651345274205
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "entrance_id": "E44",
+    "building_id": 499139
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -75.19602380900058,
+     39.949586462891205
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "entrance_id": "E45",
+    "building_id": 499139
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -75.19603703330534,
+     39.94947996914311
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "entrance_id": "E46",
+    "building_id": 101169
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -75.1960848,
+     39.9492938
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "entrance_id": "E47",
+    "building_id": 101169
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -75.19574459854255,
+     39.94919249870551
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "entrance_id": "E48",
+    "building_id": 101169
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -75.19556829707311,
+     39.94922291981557
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "entrance_id": "E49",
+    "building_id": 101169
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -75.19649408507551,
+     39.94905944323789
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "entrance_id": "E50",
+    "building_id": 414406
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -75.1970085981336,
+     39.9488497423903
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "entrance_id": "E51",
+    "building_id": 414406
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -75.19673874032384,
+     39.94897127753016
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "entrance_id": "E52",
+    "building_id": 414406
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -75.19668912499824,
+     39.94857978439321
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "entrance_id": "E57",
+    "building_id": 413752
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -75.1966924071342,
+     39.94979991328658
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "entrance_id": "E58",
+    "building_id": 413752
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -75.19692294870185,
+     39.94900984714422
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "entrance_id": "E59",
+    "building_id": 413752
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -75.19701433810927,
+     39.94913464884776
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "entrance_id": "E60",
+    "building_id": 413752
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -75.19657601826837,
+     39.94930129220288
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "entrance_id": "E61",
+    "building_id": 492114
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -75.19902418687282,
+     39.94913282996175
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "entrance_id": "E62",
+    "building_id": 492114
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -75.19883150346583,
+     39.94852729174802
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "entrance_id": "E63",
+    "building_id": 492114
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -75.1985240185588,
+     39.94859087785486
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "entrance_id": "E64",
+    "building_id": 491371
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -75.19813350512378,
+     39.95208043371983
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "entrance_id": "E65",
+    "building_id": 491371
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -75.19765764445394,
+     39.95202516919157
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "entrance_id": "E66",
+    "building_id": 491371
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -75.1979392,
+     39.9518104
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "entrance_id": "E67",
+    "building_id": 124587
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -75.1984979796653,
+     39.9533281077879
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "entrance_id": "E68",
+    "building_id": 124587
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -75.19815489449462,
+     39.95250862714144
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "entrance_id": "E69",
+    "building_id": 124587
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -75.19796812887517,
+     39.95336844766933
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "entrance_id": "E70",
+    "building_id": 421248
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -75.19703450599032,
+     39.95260565753539
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "entrance_id": "E71",
+    "building_id": 421248
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -75.1972591619276,
+     39.95263075249674
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "entrance_id": "E72",
+    "building_id": 491229
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -75.19526886917092,
+     39.951359970835895
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "entrance_id": "E73",
+    "building_id": 491229
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -75.19639442923761,
+     39.95102777969994
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "entrance_id": "E74",
+    "building_id": 491229
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -75.19610260093978,
+     39.95129410968194
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "entrance_id": "E75",
+    "building_id": 108020
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -75.19282495562197,
+     39.95001159374427
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "entrance_id": "E76",
+    "building_id": 108020
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -75.19382108705132,
+     39.95049016211044
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "entrance_id": "E77",
+    "building_id": 108020
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -75.19492318015804,
+     39.950614937348526
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "entrance_id": "E78",
+    "building_id": 108020
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -75.19514711989842,
+     39.949746564723704
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "entrance_id": "E79",
+    "building_id": 108020
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -75.19296973695528,
+     39.94953195146479
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "entrance_id": "E80",
+    "building_id": 307696
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -75.1918179015864,
+     39.95222028958523
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "entrance_id": "E81",
+    "building_id": 307696
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -75.19183508354382,
+     39.9520531
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "entrance_id": "E82",
+    "building_id": 491817
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -75.19213664169408,
+     39.95188196495295
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "entrance_id": "E83",
+    "building_id": 491817
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -75.1919440330597,
+     39.951737734889925
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "entrance_id": "E84",
+    "building_id": 491817
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -75.1918401,
+     39.9519681
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "entrance_id": "E85",
+    "building_id": 545077
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -75.19123948576942,
+     39.952211549958186
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "entrance_id": "E86",
+    "building_id": 545077
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -75.19097223338571,
+     39.95217255284652
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "entrance_id": "E87",
+    "building_id": 491746
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -75.19603128573745,
+     39.95198652137165
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "entrance_id": "E88",
+    "building_id": 491746
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -75.19682007355823,
+     39.951826927202184
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "entrance_id": "E89",
+    "building_id": 491746
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -75.19632656078845,
+     39.95163790517794
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "entrance_id": "E90",
+    "building_id": 491746
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -75.19563540575221,
+     39.95174187652911
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "entrance_id": "E91",
+    "building_id": 413742
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -75.19236584264654,
+     39.948471966617504
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "entrance_id": "E92",
+    "building_id": 413742
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -75.19222656435026,
+     39.947007042656644
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "entrance_id": "E93",
+    "building_id": 106418
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -75.19162953570532,
+     39.94966142727695
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "entrance_id": "E94",
+    "building_id": 106418
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -75.1910777360842,
+     39.9491985730415
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "entrance_id": "E95",
+    "building_id": 106418
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -75.19134670577188,
+     39.948629815697004
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "entrance_id": "E96",
+    "building_id": 106418
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -75.19191951903233,
+     39.949032797707666
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "entrance_id": "E97",
+    "building_id": 106418
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -75.19201058296933,
+     39.94949246825755
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "entrance_id": "E98",
+    "building_id": 106500
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -75.19579962969996,
+     39.94704792760837
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "entrance_id": "E99",
+    "building_id": 106500
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -75.19533353242478,
+     39.94761969509804
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "entrance_id": "E100",
+    "building_id": 106500
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -75.19615534549382,
+     39.94738215177544
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "entrance_id": "E101",
+    "building_id": 115119
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -75.1950427098766,
+     39.94776290629112
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "entrance_id": "E102",
+    "building_id": 115119
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -75.19453077922206,
+     39.948127011745704
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "entrance_id": "E103",
+    "building_id": 414743
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -75.19574324794095,
+     39.948647334386436
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "entrance_id": "E104",
+    "building_id": 414743
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -75.19502806470294,
+     39.94870678901768
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "entrance_id": "E105",
+    "building_id": 414743
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -75.19504283700269,
+     39.94911196014877
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "entrance_id": "E106",
+    "building_id": 490627
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -75.1928016825992,
+     39.95072898952819
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "entrance_id": "E107",
+    "building_id": 490627
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -75.19321491417034,
+     39.951030868448235
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "entrance_id": "E108",
+    "building_id": 490627
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -75.19321545866408,
+     39.95076288412998
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "entrance_id": "E109",
+    "building_id": 309987
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -75.19188713339894,
+     39.95257245701921
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "entrance_id": "E110",
+    "building_id": 309987
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -75.19169303185994,
+     39.952487954940686
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "entrance_id": "E111",
+    "building_id": 16938
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -75.1915168741141,
+     39.951747395199774
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "entrance_id": "E112",
+    "building_id": 16938
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -75.19122277832187,
+     39.95159152864482
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "entrance_id": "E113",
+    "building_id": 16938
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -75.19077191176662,
+     39.95153550397553
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "entrance_id": "E114",
+    "building_id": 16938
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -75.19044036029457,
+     39.95160953407158
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "entrance_id": "E115",
+    "building_id": 16938
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -75.19039460022422,
+     39.95182583296078
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "entrance_id": "E116",
+    "building_id": 496949
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -75.19029807033579,
+     39.95231362454304
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "entrance_id": "E117",
+    "building_id": 496949
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -75.19056749164726,
+     39.952518688536614
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "entrance_id": "E118",
+    "building_id": 545078
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -75.19029507661566,
+     39.95197646846753
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "entrance_id": "E119",
+    "building_id": 545078
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -75.1907430049152,
+     39.952121686899744
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "entrance_id": "E120",
+    "building_id": 490434
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -75.19463173221085,
+     39.95337568788786
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "entrance_id": "E121",
+    "building_id": 490434
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -75.19440120284214,
+     39.953471361387734
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "entrance_id": "E122",
+    "building_id": 490268
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -75.19724297066156,
+     39.95363933667057
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "entrance_id": "E123",
+    "building_id": 490268
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -75.19713569154098,
+     39.95416235628235
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "entrance_id": "E124",
+    "building_id": 490686
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -75.19934364825866,
+     39.95250386126466
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "entrance_id": "E125",
+    "building_id": 490686
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -75.199692045084,
+     39.95200729024279
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "entrance_id": "E126",
+    "building_id": 489802
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -75.2010402835038,
+     39.95377731594075
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "entrance_id": "E127",
+    "building_id": 489802
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -75.2010461108268,
+     39.95364274196807
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "entrance_id": "E128",
+    "building_id": 491987
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -75.20107750306354,
+     39.9521278532739
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "entrance_id": "E129",
+    "building_id": 491987
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -75.20139155301416,
+     39.95189877468875
+    ]
+   }
+  }
+ ]
+}

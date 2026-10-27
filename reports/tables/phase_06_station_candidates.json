@@ -1,0 +1,30 @@
+{
+  "pool": 98,
+  "pool_by_mode": {
+    "Regional Rail": 49,
+    "MFL": 25,
+    "BSL": 24
+  },
+  "pool_feature_ranges": {
+    "bldg_height_mean_m": {
+      "min": 6.736,
+      "50%": 9.085,
+      "max": 54.229
+    },
+    "canopy_cover": {
+      "min": 0.017,
+      "50%": 0.093,
+      "max": 0.474
+    },
+    "bldg_coverage": {
+      "min": 0.038,
+      "50%": 0.299,
+      "max": 0.609
+    },
+    "sun_share_1500": {
+      "min": 0.232,
+      "50%": 0.672,
+      "max": 0.867
+    }
+  }
+}

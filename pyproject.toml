@@ -1,0 +1,52 @@
+[project]
+name = "coolpath"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+authors = [
+    { name = "DOGZzl1xy", email = "87157726+DOGZzl1xy@users.noreply.github.com" }
+]
+requires-python = ">=3.12"
+dependencies = [
+    "boto3>=1.43.118",
+    "census>=0.8.27",
+    "contextily>=1.7.1",
+    "geopandas>=1.2.0",
+    "joblib>=1.6.0",
+    "laspy[lazrs]>=2.7.0",
+    "matplotlib>=3.11.2",
+    "networkx>=3.7",
+    "numba>=0.68.0",
+    "numpy>=2.5.4",
+    "osmnx>=2.1.1",
+    "pandas>=3.1.0",
+    "pvlib>=0.16.1",
+    "pyarrow>=26.0.0",
+    "pygris>=0.2.1",
+    "pyproj>=3.8.0",
+    "pyyaml>=6.0.3",
+    "rasterio>=1.5.2",
+    "requests>=2.34.2",
+    "rioxarray>=0.23.0",
+    "scikit-learn>=1.9.1",
+    "scipy>=1.18.1",
+    "shapely>=2.2.0",
+    "statsmodels>=0.15.0",
+    "xarray>=2026.9.0",
+]
+
+[build-system]
+requires = ["uv_build>=0.11.3,<0.12.0"]
+build-backend = "uv_build"
+
+[dependency-groups]
+dev = [
+    "ipykernel>=7.4.0",
+    "nbclient>=0.11.0",
+    "nbformat>=5.11.1",
+    "pytest>=9.1.1",
+    "tabulate>=0.10.0",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

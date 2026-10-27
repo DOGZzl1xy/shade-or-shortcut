@@ -1,0 +1,40 @@
+{
+  "python": "3.12.2",
+  "modules": {
+    "laspy": "2.7.0",
+    "lazrs": "ok",
+    "rasterio": "1.5.2",
+    "xarray": "2026.9.0",
+    "rioxarray": "0.23.0",
+    "numpy": "2.5.4",
+    "numba": "0.68.0",
+    "geopandas": "1.2.0",
+    "shapely": "2.2.0",
+    "pyproj": "3.8.0",
+    "pyarrow": "26.0.0",
+    "osmnx": "2.1.1",
+    "networkx": "3.7",
+    "pvlib": "0.16.1",
+    "sklearn": "1.9.1",
+    "statsmodels": "0.15.0",
+    "pandas": "3.1.0",
+    "scipy": "1.18.1",
+    "joblib": "1.6.0",
+    "boto3": "1.43.118",
+    "requests": "2.34.2",
+    "census": "ok",
+    "pygris": "0.2.1",
+    "matplotlib": "3.11.2",
+    "contextily": "1.7.1",
+    "yaml": "6.0.3",
+    "pytest": "9.1.1"
+  },
+  "tools": {
+    "quarto": null,
+    "tippecanoe": null
+  },
+  "laz_backends": [
+    "LazBackend.LazrsParallel",
+    "LazBackend.Lazrs"
+  ]
+}

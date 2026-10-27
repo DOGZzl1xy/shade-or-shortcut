@@ -1,0 +1,33 @@
+{
+  "lines": 3176,
+  "lines_by_kind": {
+    "sidewalk": 2098,
+    "crosswalk": 1031,
+    "other": 47
+  },
+  "raw": {
+    "nodes": 2277,
+    "edges": 3174,
+    "components": 13,
+    "lcc_edge_share": 0.9959042218021424,
+    "lcc_length_share": 0.9928293618403198,
+    "dangling_nodes": 222,
+    "crosswalk_nodes": 1892,
+    "crosswalk_nodes_touching_non_crosswalk_share": 0.9899577167019028,
+    "total_length_km": 151.14762864800923
+  },
+  "snapped_1m": {
+    "nodes": 2269,
+    "edges": 3176,
+    "components": 13,
+    "lcc_edge_share": 0.9959068010075567,
+    "lcc_length_share": 0.9928360453231815,
+    "dangling_nodes": 218,
+    "crosswalk_nodes": 1880,
+    "crosswalk_nodes_touching_non_crosswalk_share": 0.9909574468085106,
+    "total_length_km": 151.2886391137731
+  },
+  "build_s": 1.7013640403747559,
+  "pass_raw": true,
+  "pass_snapped": true
+}

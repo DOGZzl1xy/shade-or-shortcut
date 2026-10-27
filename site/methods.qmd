@@ -1,0 +1,7 @@
+---
+title: "Methods"
+subtitle: "Shadows, routes and the cost of a sunny metre."
+jupyter: python3
+---
+
+{{< include ../notebooks/methods.qmd >}}

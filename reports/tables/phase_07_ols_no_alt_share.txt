@@ -1,0 +1,27 @@
+                             OLS Regression Results                             
+================================================================================
+Dep. Variable:     no_alt_share_300-800   R-squared:                       0.136
+Model:                              OLS   Adj. R-squared:                  0.131
+Method:                   Least Squares   F-statistic:                     22.90
+Date:                  Sun, 25 Oct 2026   Prob (F-statistic):           6.51e-14
+Time:                          16:31:09   Log-Likelihood:                -24.237
+No. Observations:                   510   AIC:                             56.47
+Df Residuals:                       506   BIC:                             73.41
+Df Model:                             3                                         
+Covariance Type:                    HC3                                         
+======================================================================================
+                         coef    std err          z      P>|z|      [0.025      0.975]
+--------------------------------------------------------------------------------------
+const                  0.6747      0.011     59.327      0.000       0.652       0.697
+bldg_height_mean_m    -0.0380      0.019     -2.049      0.040      -0.074      -0.002
+canopy_cover          -0.0043      0.016     -0.264      0.792      -0.036       0.027
+network_km_per_km2    -0.0923      0.014     -6.430      0.000      -0.120      -0.064
+==============================================================================
+Omnibus:                       42.241   Durbin-Watson:                   1.674
+Prob(Omnibus):                  0.000   Jarque-Bera (JB):               50.634
+Skew:                          -0.761   Prob(JB):                     1.01e-11
+Kurtosis:                       3.258   Cond. No.                         1.74
+==============================================================================
+
+Notes:
+[1] Standard Errors are heteroscedasticity robust (HC3)

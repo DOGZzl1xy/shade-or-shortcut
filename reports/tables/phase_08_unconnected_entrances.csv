@@ -1,0 +1,17 @@
+entrance_id,building_id,nearest_edge_m,reason,name
+E6,490261,10.1,every link crosses a footprint,The Quadrangle
+E7,490261,21.0,every link crosses a footprint,The Quadrangle
+E9,490261,26.5,every link crosses a footprint,The Quadrangle
+E11,490261,22.7,every link crosses a footprint,The Quadrangle
+E13,490261,31.6,every link crosses a footprint,The Quadrangle
+E14,490261,32.1,every link crosses a footprint,The Quadrangle
+E43,106423,29.3,dropped by user (D-045),Children’s Hospital of Philadelphia: Care Network - Market St.
+E59,413752,21.7,every link crosses a footprint,John Morgan Building/Anatomy Chemistry
+E65,491371,16.6,dropped by user (D-045),McNeil Building
+E86,545077,19.9,every link crosses a footprint,Levine Hall
+E94,106418,46.6,dropped by user (D-045),Penn Museum
+E95,106418,63.3,dropped by user (D-045),Penn Museum
+E102,115119,52.3,dropped by user (D-045),
+E104,414743,47.3,dropped by user (D-045),Clinical Research Building
+E119,545078,40.2,every link crosses a footprint,Skirkanich Hall
+E125,490686,34.9,dropped by user (D-045),Class of 1920 Commons

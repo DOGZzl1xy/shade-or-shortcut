@@ -1,0 +1,89 @@
+```{python}
+#| include: false
+import sys
+from coolpath import ROOT
+sys.path.insert(0, str(ROOT / "notebooks"))
+from _site import table, md, fig, pct
+import pandas as pd
+q2, s3, s4, s6, s8 = (table(n) for n in ("phase_02_qa.json", "phase_03_stats.json", "phase_04_stats.json",
+                                         "phase_06_stats.json", "phase_08_build.json"))
+```
+
+## Sources
+
+All inputs are public data.
+
+| Layer | Source | Used for |
+| --- | --- | --- |
+| Airborne LiDAR, March 2022 | City of Philadelphia, via NOAA Digital Coast and PASDA | ground, building and tree heights at 1 m |
+| Building footprints | City of Philadelphia (OpenDataPhilly) | building outlines |
+| Land cover 2018 | PASDA | tree canopy |
+| Canopy height (CHMv2) | Meta / WRI, CC BY 4.0 | trees just outside the city |
+| Pedestrian network | DVRPC | sidewalks and crosswalks |
+| OpenStreetMap | OSM contributors, ODbL | bridges, covered walkways, campus footways |
+| Transit | SEPTA, fall 2026 timetable | rapid-transit stations and frequent bus stops |
+| Properties | City of Philadelphia (OPA) | residential parcels, where walks end |
+
+## The shade map
+
+```{python}
+#| output: asis
+n, p = s3["net"], s3["points"]
+print(f"""::: {{.stat-row}}
+<div><div class="v">{n['km']:,.0f} km</div><div class="label">sidewalks and crossings</div></div>
+<div><div class="v">{p['points'] / 1e6:.1f} M</div><div class="label">points checked for shade, every 2 m</div></div>
+<div><div class="v">24</div><div class="label">hours: June 21 and Aug 1, 8:00–19:00</div></div>
+<div><div class="v">1 m</div><div class="label">height model of buildings and trees</div></div>
+:::""")
+```
+
+```{python}
+#| output: asis
+b, s = q2["buildings"], q2["shares_in_city"]
+print(f"Building and tree heights come from the 2022 LiDAR survey, flown before the leaves came out. Building heights agree closely "
+      f"with the city's own records (median difference {b['median_abs_err_m']:.1f} m over {b['compared']:,} buildings); bridges and "
+      f"elevated rail lines are included, so they cast shadows too. Trees cover {pct(s['tree_phase2'], 0)} of the city in the model "
+      f"(the median tree is {s['tree_height_median_m']:.0f} m tall). Covered walkways and passages through buildings "
+      f"({s4['covered_km_total']:.1f} km) are always in shade.")
+```
+
+```{python}
+#| fig-cap: "University City in the height model: buildings (blue and pink), bridges and other structures (orange) and trees (green)."
+#| classes: figure-light
+fig("phase_02_ucity.png")
+```
+
+## Whose walks
+
+```{python}
+#| output: asis
+c = s6["city"]
+print(f"Each walk starts at a stop: any rapid-transit station (Regional Rail, L (Market-Frankford), B (Broad Street) or the T trolley "
+      f"tunnel) or a bus stop with at least {c['min_per_hour']} buses an hour in one direction between 15:00 and 19:00. "
+      f"Every home within 1.2 km walking distance of such a stop is one walk, {c['parcels_within_1200m']:,} in all. "
+      f"The other {c['parcels_uncovered']:,} homes ({pct(c['parcels_uncovered_share'], 1)}), mostly in the Northeast and Roxborough, "
+      "have no frequent stop that close.")
+```
+
+```{python}
+#| fig-cap: "Homes without a frequent stop within 1.2 km (red)."
+#| classes: figure-light
+fig("phase_06_uncovered.png", width=640)
+```
+
+## University City
+
+```{python}
+#| output: asis
+b8 = s8
+print(f"For University City we mapped the entrances and indoor passages of {b8['buildings']['total']} buildings "
+      f"({b8['indoor_km']:.1f} km of passages); {b8['buildings']['no_penncard']} of them can be entered without a Penn ID. "
+      "Campus footpaths from OpenStreetMap are added to the sidewalk network there.")
+```
+
+## Known gaps
+
+- Outside University City, campus and park paths are missing, so cooler options inside campuses and parks are understated.
+- Shadows assume clear skies on two summer days; trees are mapped from leaf-off LiDAR and 2018 land cover, buildings from 2022.
+- Missing or misplaced footprints, newer buildings and temporary objects (parked trains, scaffolding) affect shade locally.
+- The timetable is one weekday in fall 2026; summer service may differ.

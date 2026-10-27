@@ -1,0 +1,74 @@
+{
+  "buildings": {
+    "n": 546077,
+    "extruded_D015": 1614,
+    "compared": 541222,
+    "pearson_r": 0.8285561028473891,
+    "spearman_r": 0.8425750956573788,
+    "median_err_m": -0.466669088665137,
+    "median_abs_err_m": 0.5038564952676268
+  },
+  "blocks": {
+    "n": 240,
+    "unmapped_blobs": 44945,
+    "unmapped_km2": 15.816559,
+    "extruded_km2": 0.946012,
+    "dem_px_from_noaa": 265239794,
+    "dem_px_zero_fill": 688173482
+  },
+  "shares_in_city": {
+    "building_footprint_lidar": 0.1870878200908762,
+    "building_footprint_approx": 0.0025663754582417922,
+    "unmapped_structure": 0.014055606523771481,
+    "tree_phase2": 0.16710889692310638,
+    "landcover_canopy": 0.1906276303438134,
+    "chmv2_ge2m_nonbuilding": 0.2161054767245059,
+    "tree_height_median_m": 15.199999809265137,
+    "building_height_p99_m": 42.29999923706055,
+    "max_building_m": 344.7,
+    "max_building_lonlat": [
+      -75.17089952472779,
+      39.95503460667873
+    ]
+  },
+  "unmapped_landcover_composition": {
+    "0": 0.0010656666903481487,
+    "grass_shrub": 0.18426149298358874,
+    "bare": 0.045335623229680516,
+    "water": 0.037591778613150634,
+    "building": 0.1830290262895339,
+    "road": 0.3280863406241409,
+    "other_paved": 0.22063007156955713
+  },
+  "on_bridge_midpoints": {
+    "n": 575,
+    "share_structure_px": 0.42086956521739133,
+    "share_any_building_px": 0.43130434782608695,
+    "dsm_minus_dem_median_m": 5.559453964233398
+  },
+  "tract_canopy_r": {
+    "tree_vs_lc": 0.9906715819743754,
+    "tree_vs_chmv2": 0.9882934922042796
+  },
+  "dem_vs_noaa": {
+    "windows": 8,
+    "median_m": 1.1444091796875e-05,
+    "mad_m": 0.00557708740234375,
+    "p95_abs_m": 0.04293018579483032
+  },
+  "tiles": {
+    "n": 651,
+    "points_G": 15.626881603,
+    "laz_GB": 91.873731653,
+    "download_s_sum": 9111.537504434586,
+    "rasterise_s_sum": 4745.202705383301,
+    "empty_px_share_median": 0.062054105277408
+  },
+  "outputs_GB": {
+    "dsm.tif": 1.418704929,
+    "surface_building.tif": 0.115893237,
+    "surface_tree.tif": 0.282839249,
+    "building_source.tif": 0.022645681,
+    "dem.tif": 2.061256413
+  }
+}

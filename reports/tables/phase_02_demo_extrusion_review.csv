@@ -1,0 +1,7 @@
+n,objectid,address,building_name,approx_hgt_ft,lidar_median_m,share_above_2_5m,lon,lat,exclude,category,reason,reviewed_with
+1,9352,3200 WALNUT ST,Vagelos Laboratory for Energy Science and Technology,138.0,0.08,0.08,-75.188171,39.951971,False,new,2022 construction site; 2025 building complete (Vagelos Laboratory),PASDA PhiladelphiaImagery2022 / 2025 + LiDAR nDSM
+2,111186,2716 SOUTH ST,Roberts Center for Pediatric Research,314.0,0.1,0.23,-75.185782,39.945827,False,complete_user_field_check,2025 ortho showed steel frame under construction; user confirmed on site (2026-10-25) that the building is complete -> extrude with approx_hgt,PASDA PhiladelphiaImagery2022 / 2025 + LiDAR nDSM
+3,307640,3200 WALNUT ST,,110.0,0.08,0.03,-75.188386,39.952119,True,misjudged,small square at the NW corner of Vagelos; in 2025 mostly over lawn / paving outside the new building,PASDA PhiladelphiaImagery2022 / 2025 + LiDAR nDSM
+4,308059,400 UNIVERSITY AVE,,10.0,0.05,0.19,-75.199469,39.945923,False,existing_small,"small 10 ft structure beside a driveway, present in 2022 and 2025",PASDA PhiladelphiaImagery2022 / 2025 + LiDAR nDSM
+5,327035,119 S 31ST ST,,216.0,0.28,0.17,-75.184571,39.952848,False,new,2022 excavation between two buildings; 2025 new building fills the footprint,PASDA PhiladelphiaImagery2022 / 2025 + LiDAR nDSM
+6,488567,3800 POWELTON AVE,3810 Powelton Avenue,88.0,0.07,0.0,-75.200697,39.958934,False,new,2022 construction site; 2025 building complete (3810 Powelton Avenue),PASDA PhiladelphiaImagery2022 / 2025 + LiDAR nDSM

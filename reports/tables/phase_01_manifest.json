@@ -1,0 +1,183 @@
+{
+  "boundaries": {
+    "url": "Census TIGER/Line 2024 via pygris (county 42101)",
+    "downloaded": "2026-10-24",
+    "files": [
+      "data/raw/boundaries/philadelphia_county.parquet",
+      "data/raw/boundaries/philadelphia_tracts.parquet"
+    ],
+    "bytes": 621509,
+    "n_tracts": 408,
+    "city_area_km2": 368.57520539021095
+  },
+  "lidar_manifest": {
+    "url": "https://noaa-nos-coastal-lidar-pds.s3.amazonaws.com/laz/geoid18/9848/stac/noaa_copc_item_collection_m9848.json",
+    "downloaded": "2026-10-24",
+    "files": [
+      "data/raw/lidar/tiles_city.parquet"
+    ],
+    "bytes": 95132,
+    "n_tiles": 651,
+    "laz_total_gb": 91.873731653,
+    "points": 15626881603,
+    "acquisition": [
+      "2022-03-29",
+      "2022-03-30"
+    ],
+    "note": "LAZ downloaded tile by tile in phase 2 and deleted after rasterising (D-018)"
+  },
+  "septa_gtfs": {
+    "url": "https://www3.septa.org/developer/gtfs_public.zip",
+    "downloaded": "2026-10-24",
+    "files": [
+      "data/raw/gtfs"
+    ],
+    "bytes": 153612906,
+    "feeds": [
+      "google_bus",
+      "google_rail"
+    ],
+    "stops": {
+      "google_bus": 14122,
+      "google_rail": 156
+    }
+  },
+  "opa_properties": {
+    "url": "https://phl.carto.com/api/v2/sql table opa_properties_public",
+    "downloaded": "2026-10-24",
+    "files": [
+      "data/raw/opa/opa_properties.parquet"
+    ],
+    "bytes": 24651842,
+    "n": 583717,
+    "n_residential": 522758,
+    "missing_geom": 105,
+    "note": "parcel_number, category, census_tract, point only"
+  },
+  "dvrpc_pedestrian": {
+    "url": "https://gis.dvrpc.org/geoparquet/transportation/pedestriannetwork_lines.parquet",
+    "downloaded": "2026-10-24",
+    "files": [
+      "data/raw/dvrpc/pedestriannetwork_lines.parquet"
+    ],
+    "bytes": 68152911,
+    "n_region": 521212,
+    "n_philadelphia": 130729,
+    "line_types": {
+      "1": 85230,
+      "2": 45388,
+      "3": 111
+    }
+  },
+  "landcover2018": {
+    "url": "https://imagery.pasda.psu.edu/arcgis/rest/services/pasda/PhillyLULC/MapServer (layer 2)",
+    "downloaded": "2026-10-24",
+    "files": [
+      "data/raw/landcover/landcover2018_city_1m.tif"
+    ],
+    "bytes": 52785125
+  },
+  "chmv2": {
+    "url": "https://dataforgood-fb-data.s3.amazonaws.com/forests/v2/global/dinov3_global_chm_v2_ml3/",
+    "downloaded": "2026-10-24",
+    "files": [
+      "data/raw/chmv2/chmv2_city_1m.tif",
+      "data/raw/chmv2/meta_0320101201.geojson",
+      "data/raw/chmv2/meta_0320101210.geojson",
+      "data/raw/chmv2/meta_0320101023.geojson",
+      "data/raw/chmv2/meta_0320101032.geojson"
+    ],
+    "bytes": 237343246,
+    "tiles": [
+      "0320101201",
+      "0320101032",
+      "0320101210",
+      "0320101023"
+    ],
+    "acq_dates": {
+      "0320101201": [
+        "2019-09-22",
+        "2019-10-19",
+        "2019-11-04"
+      ],
+      "0320101032": [
+        "2019-08-12",
+        "2019-09-22",
+        "2019-09-27",
+        "2019-10-19",
+        "2019-11-04",
+        "2020-03-11"
+      ],
+      "0320101210": [
+        "2019-07-20",
+        "2019-08-12",
+        "2019-09-22",
+        "2019-09-27",
+        "2019-10-19",
+        "2019-11-04"
+      ],
+      "0320101023": [
+        "2019-09-22",
+        "2019-10-19",
+        "2019-11-04",
+        "2020-03-11"
+      ]
+    },
+    "role": "reference only (D-012)",
+    "licence": "CC BY 4.0"
+  },
+  "building_footprints": {
+    "url": "https://services.arcgis.com/fLeGjb7u4uXqeF9q/arcgis/rest/services/LI_BUILDING_FOOTPRINTS/FeatureServer/0",
+    "downloaded": "2026-10-24",
+    "files": [
+      "data/raw/buildings/buildings_city.parquet"
+    ],
+    "bytes": 116675558,
+    "n": 546078,
+    "approx_hgt_missing": 3194,
+    "note": "approx_hgt in US feet (metadata)"
+  },
+  "osm": {
+    "url": "Overpass API via osmnx.features_from_polygon (city polygon)",
+    "downloaded": "2026-10-24",
+    "files": [
+      "data/raw/osm/osm_bridge.parquet",
+      "data/raw/osm/osm_building_passage.parquet",
+      "data/raw/osm/osm_corridor.parquet",
+      "data/raw/osm/osm_covered.parquet",
+      "data/raw/osm/osm_entrance.parquet"
+    ],
+    "bytes": 457319,
+    "counts": {
+      "covered": 1044,
+      "building_passage": 190,
+      "entrance": 3714,
+      "corridor": 75,
+      "bridge": 3067
+    },
+    "tags": {
+      "covered": "{'covered': 'yes'}",
+      "building_passage": "{'tunnel': 'building_passage'}",
+      "entrance": "{'entrance': True}",
+      "corridor": "{'highway': 'corridor'}",
+      "bridge": "{'bridge': True}"
+    }
+  },
+  "acs5": {
+    "url": "https://api.census.gov/data/2024/acs/acs5",
+    "downloaded": "2026-10-24",
+    "files": [
+      "data/raw/acs/acs5_2024_tracts.parquet"
+    ],
+    "bytes": 71008,
+    "n_tracts": 408,
+    "variables": [
+      "median_hh_income",
+      "black_share",
+      "age65_share",
+      "no_car_share",
+      "poverty_rate",
+      "population"
+    ]
+  }
+}

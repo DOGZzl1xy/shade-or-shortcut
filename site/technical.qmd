@@ -1,0 +1,7 @@
+---
+title: "Technical notes"
+subtitle: "Pipeline, parameters, processing decisions and checks, for readers who want the details."
+jupyter: python3
+---
+
+{{< include ../notebooks/technical.qmd >}}

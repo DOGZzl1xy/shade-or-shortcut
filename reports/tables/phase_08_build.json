@@ -1,0 +1,69 @@
+{
+  "base_edges": 3582,
+  "base_edges_without_points": 35,
+  "osm": {
+    "osm_ways": 3810,
+    "dropped_by_tags": {
+      "footway_sidewalk_crossing": 2537,
+      "access": 21,
+      "indoor_or_tunnel": 14
+    },
+    "kept_by_tags": 1243,
+    "kept_by_tags_km": 48.883751590709025,
+    "after_dedup_pieces": 1118,
+    "after_dedup_km": 45.21367936804455
+  },
+  "osm_attach": {
+    "ends_snapped_le_1m": 1465,
+    "ends_linked_1_15m": 570,
+    "ends_dangling": 201,
+    "crossings_noded": 177
+  },
+  "connectivity": {
+    "osm_km_in_main_component": 35.50603503068991,
+    "osm_km_dropped_disconnected": 9.718193677265202,
+    "base_km_dropped_disconnected": 4.654423901451232,
+    "components_dropped": 52
+  },
+  "final_components": {
+    "0": 206508.0,
+    "1": 9.4
+  },
+  "edges": 6446,
+  "nodes": 4684,
+  "km_by_kind": {
+    "connector": 0.809,
+    "covered_link": 0.184,
+    "crosswalk": 13.029,
+    "indoor": 4.372,
+    "open_air": 0.04,
+    "osm_link": 2.547,
+    "osm_path": 35.505,
+    "other": 4.528,
+    "sidewalk": 145.504
+  },
+  "entrances": 125,
+  "connectors": 109,
+  "connector_m": {
+    "count": 109.0,
+    "mean": 7.5,
+    "std": 6.0,
+    "min": 0.0,
+    "50%": 6.7,
+    "90%": 15.1,
+    "max": 29.4
+  },
+  "connectors_to_osm_path": 69,
+  "connectors_not_nearest_edge": 3,
+  "connectors_over_30m": 0,
+  "entrances_unconnected": 16,
+  "passages": 81,
+  "indoor_km": 4.371532221708266,
+  "open_air_m": 39.1,
+  "cast_points": 19695,
+  "buildings": {
+    "total": 41,
+    "needs_penncard": 31,
+    "no_penncard": 10
+  }
+}

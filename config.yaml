@@ -1,0 +1,226 @@
+# Shade or Shortcut: all paths and parameters
+
+project:
+  seed: 42
+  crs: "EPSG:32618"          # UTM 18N, metres
+  crs_source_default: "EPSG:2272"   # Pennsylvania State Plane South, US survey feet
+  timezone: "America/New_York"
+  resolution_m: 1.0
+
+paths:
+  raw: data/raw
+  interim: data/interim
+  processed: data/processed
+  reports: reports
+  figures: reports/figures
+  tables: reports/tables     # json / csv / txt written by the scripts
+
+study:
+  dates: ["2026-06-21", "2026-08-01"]
+  hours: [8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19]
+  sun_reference_point: {lat: 39.9526, lon: -75.1652}   # Center City
+  key_hour: 15
+
+test_area:          # University City, phase 0 only
+  lat_min: 39.945
+  lat_max: 39.962
+  lon_min: -75.215
+  lon_max: -75.178
+
+demo_area:          # University City demo (about 1 x 1 mile around the Penn campus)
+  center: {lat: 39.9522, lon: -75.1932}
+  half_size_m: 805
+
+surface:
+  noise_classes: [7, 18]
+  ground_class: 2
+  height_dtype: uint16
+  height_scale_dm: 10       # stored in decimetres
+  laz_chunk_points: 5000000
+  max_laz_processes: 4
+  despike: {window_px: 5, tol_m: 10.0, min_support: 2}   # remove isolated high returns
+  dsm_hole_fill_max_px: 10      # interpolate DSM holes outside footprints up to 10 px; larger ones take the DEM
+  landcover_water_class: 4
+  max_ndsm_m: 400               # returns more than 400 m above ground are invalid (tallest building ~342 m, TV mast ~370 m)
+
+shadow:
+  sample_spacing_m: 2.0
+  observer_height_m: 1.5
+  bridge_observer_surface: dsm   # only for segments detected as bridge decks
+  max_ray_m: 1000
+  localmax_block_m: 32
+  localmax_window_m: 1000
+  tile_size_m: 2000
+  tile_buffer_m: 1000
+  states: {sun: 0, tree: 1, building: 2}
+  ray_step_m: 1.0           # D-005
+  terrain_occlusion: true   # bare terrain also blocks rays (counted as building / solid shade)
+
+bridge_deck:                # is a sidewalk segment on a bridge deck (not a 2D intersection test)
+  buffer_m: 15              # buffer around OSM bridge lines
+  min_length_share: 0.8     # minimum share of segment length inside the buffer
+  max_angle_deg: 20         # maximum angle between segment and bridge line (0-90 deg)
+  osm_bridge_highway_only: true   # only bridges with a highway tag (no rail-only bridges)
+  include_dvrpc_grade_separated: true   # DVRPC feat_type = GRADE_SEPARATED also counts as a deck
+
+tree:                       # D-012
+  source: lidar_landcover   # CHMv2 only as a cross-check
+  min_height_m: 2.0
+  landcover_canopy_class: 1
+  gap_fill_window_m: 3      # fill pixels < 2 m inside the canopy mask with the median of >= 2 m pixels in a 3 x 3 window
+  gap_fill_stat: median
+  buffer_source: chmv2      # trees in the buffer outside the city from CHMv2 (>= 2 m)
+  footprint_buffer_px: 2
+
+unmapped_structures:        # tall objects outside footprints (bridges, viaducts) become structures
+  min_height_m: 3.0
+  min_area_m2: 50
+  max_height_std_m: 3.0     # DSM standard deviation within a smooth segment
+  segment_jump_m: 2.0       # split candidate areas where neighbouring DSM pixels differ by more than this
+  opening_iterations: 1
+  footprint_buffer_px: 1
+
+footprint_height:           # footprints with almost no LiDAR height are extruded to approx_hgt
+  lidar_median_max_m: 2.0
+  approx_hgt_min_m: 3.0
+  approx_hgt_unit_m: 0.3048006096   # US survey foot
+  roof_fill_min_valid_share: 0.2   # D-003
+  skip_share_height_m: 2.5          # D-032
+  skip_share_range: [0.3, 0.5]      # no extrusion when the share of > 2.5 m pixels inside the footprint is in this range
+  exclude_csv: reports/tables/phase_02_demo_extrusion_review.csv   # objectids with exclude = True are not extruded
+
+network:
+  snap_tolerance_m: 1.0
+  min_lcc_edge_share: 0.95
+  permanent_shade:          # phase 4: OSM covered walkways and building passages
+    osm_groups: [covered, building_passage]
+    highway_types: [footway, path, pedestrian, steps, cycleway, living_street]
+    match_buffer_m: 8       # match to DVRPC edges: >= 80% of length within 8 m, angle < 20 deg
+    match_min_share: 0.8
+    match_max_angle_deg: 20
+    connector_max_m: 15     # unmatched OSM lines are added as new edges, linked to the nearest node by connectors <= 15 m
+
+routing:
+  theta_curve: {a: 0.3961, k: 0.0111, x0: 859.5746, b: 0.1958}
+  tree_factor: 0.5          # (1 - 0.5θ) L_tree
+  indoor_factor: 1.5        # (1 - 1.5θ) L_indoor
+  theta_fixed_sensitivity: [0.2, 0.4, 0.6]
+  search_radius_factor: 1.5
+
+trips:
+  feasibility_n: 50
+  station_n_sites: [8, 10]
+  station_buffer_m: 500
+  station_trip_radius_m: 1000
+  station_trips_per_site: [50, 80]
+  station_n_dest: 60        # destinations per station
+  station_sample:           # CP1 station sample
+    - {name: "Susquehanna-Dauphin", mode: BSL}
+    - {name: "15th St/City Hall", mode: MFL}
+    - {name: "Highland", mode: "Regional Rail"}
+    - {name: "Penn Medicine Station", mode: "Regional Rail"}
+    - {name: "NRG Station", mode: BSL}
+    - {name: "Carpenter", mode: "Regional Rail"}
+    - {name: "Snyder", mode: BSL}
+    - {name: "63rd St", mode: MFL}
+    - {name: "2nd St", mode: MFL}
+    - {name: "Ryers", mode: "Regional Rail"}
+  home_stops:               # home stops for the city sample
+    gtfs_timetable: "SEPTA GTFS fall 2026 timetable (v202609271)"
+    rep_date: "2026-10-28"   # representative weekday (Wednesday)
+    window: ["15:00:00", "19:00:00"]
+    min_per_hour: 6          # surface stops: >= 6 departures per hour on any one route-direction (routes not added)
+    max_network_m: 1200      # keep parcels with a stop within 1.2 km
+  length_bins_m: [0, 300, 800, 1200]   # all metrics are reported by walk length
+  bidirectional_check_n: 500
+  bidirectional_min_m: 400  # the direction check samples walks of >= 400 m
+
+acs:                        # latest acs5 year on api.census.gov; not used in the analysis
+  year: 2024
+  variables:                # num / den are ACS variable codes; no den = raw value
+    median_hh_income: {num: [B19013_001E]}
+    black_share: {num: [B02001_003E], den: [B02001_001E]}
+    age65_share:
+      num: [B01001_020E, B01001_021E, B01001_022E, B01001_023E, B01001_024E, B01001_025E,
+            B01001_044E, B01001_045E, B01001_046E, B01001_047E, B01001_048E, B01001_049E]
+      den: [B01001_001E]
+    no_car_share: {num: [B08201_002E], den: [B08201_001E]}
+    poverty_rate: {num: [B17001_002E], den: [B17001_001E]}
+    population: {num: [B01003_001E]}
+
+indoor:                     # phase 8: University City demo
+  penncard_override: {490261: true}   # The Quadrangle needs a PennCard (annotation exported false)
+  graph_buffer_m: 500       # network within 500 m of the demo square
+  connector_search_m: 150   # search radius from an entrance to the nearest sidewalk edge
+  crossing_tolerance_m: 0.3 # a connector crossing a (0.3 m inset) footprint by > 0.3 m crosses a building
+  connector_flag_m: 30      # list connectors longer than this for review
+  drop_connectors: [E102, E95, E125, E43, E104, E94, E65]   # not walkable in reality; these entrances are building-internal only
+  open_air_min_m: 1.0       # parts of passages > 1 m outside footprints are shaded as open air
+  campus_origins: 300       # campus walks: 300 random buildings as origins
+  campus_dest_per_origin: 10
+  campus_trip_range_m: [300, 1200]
+  station_buffer_m: 300     # rapid-transit stations within 300 m of the demo square
+  station_trip_max_m: 1200  # station sample: every demo building within 1.2 km
+  osm:                      # OSM footways added to the demo network only
+    highway: [footway, path, pedestrian, steps]
+    exclude_footway: [sidewalk, crossing]
+    exclude_access: [private, "no"]
+    exclude_indoor: ["yes", corridor]        # indoor corridors are not outdoor footways; tunnel=* is also excluded
+    dedup_m: 5              # drop OSM pieces within 5 m of an existing edge and < 20 deg apart (same-side duplicates)
+    dedup_angle_deg: 20
+    dedup_piece_m: 5        # dedup works on pieces <= 5 m
+    min_piece_m: 2          # drop fragments shorter than 2 m after dedup
+    attach_snap_m: 1.0      # join ends within 1 m directly
+    attach_max_m: 15        # 1-15 m: straight connector (not through buildings); farther ends stay loose
+
+metrics:
+  weighted_exposure: true   # report the path cost C
+  report_sun_increase: true
+  no_alt_threshold: 0.02                  # sun reduction < 2% = no cooler alternative
+  no_alt_threshold_sensitivity: [0.01, 0.05, 0.10]
+  grid_m: 500                             # bus walks summarised on a 500 m grid by home parcel
+  cluster_k: 3                            # k-means clusters (k = 3-6 have similar silhouettes)
+  cluster_length_bin: "300-800"           # clustering uses this length band only
+  min_trips_per_cell: 20                  # cells with fewer walks in the band are not clustered
+  min_trips_per_station: 10               # stations with fewer walks in a band are not reported
+  min_trips_station_rank: 50              # website ranking: stations with fewer walks are marked as small samples
+
+hardware:
+  max_disk_gb: 60
+  max_ram_gb: 18
+  max_total_hours: 8
+
+sources:
+  lidar_noaa_index: "https://noaa-nos-coastal-lidar-pds.s3.amazonaws.com/laz/geoid18/9848/index.html"
+  lidar_noaa_tile_kmz: "https://noaa-nos-coastal-lidar-pds.s3.amazonaws.com/laz/geoid18/9848/supplemental/pa2022_phil_m9848.kmz"
+  lidar_noaa_ept: "https://noaa-nos-coastal-lidar-pds.s3.amazonaws.com/entwine/geoid18/9848/ept.json"
+  lidar_noaa_bucket: "noaa-nos-coastal-lidar-pds"
+  lidar_noaa_prefix: "laz/geoid18/9848/"
+  lidar_pasda: "https://www.pasda.psu.edu/download/phillyLiDAR/2022/LAS/Classified_LAS/"
+  lidar_report: "https://www.pasda.psu.edu/download/phillyLiDAR/2022/Metadata_and_Reports/Lidar_Report/65221207_Philadelphia_Mapping_Report.pdf"
+  # from an anonymous listing of s3://noaa-nos-coastal-lidar-pds/dem/: 3 ft COG, EPSG:6565 (ftUS) + NAVD88 (ftUS)
+  dem_noaa_9849: "https://noaa-nos-coastal-lidar-pds.s3.amazonaws.com/dem/PA_Phil_DEM_2022_9849/Philadelphia_dem_3ft_2022.tif"
+  lidar_noaa_stac: "https://noaa-nos-coastal-lidar-pds.s3.amazonaws.com/laz/geoid18/9848/stac/noaa_copc_item_collection_m9848.json"
+  building_footprints_page: "https://opendataphilly.org/datasets/building-footprints"
+  building_footprints_geoparquet: "https://source.coop/nlebovits/phl-housing-demo/li_building_footprints"
+  # service URL from the OpenDataPhilly page
+  building_footprints_service: "https://services.arcgis.com/fLeGjb7u4uXqeF9q/arcgis/rest/services/LI_BUILDING_FOOTPRINTS/FeatureServer/0"
+  chmv2_tiles_index: "https://dataforgood-fb-data.s3.amazonaws.com/forests/v2/global/dinov3_global_chm_v2_ml3/tiles.geojson"
+  chmv2_http_base: "https://dataforgood-fb-data.s3.amazonaws.com/forests/v2/global/dinov3_global_chm_v2_ml3/"
+  chmv2_bucket: "dataforgood-fb-data"
+  chmv2_prefix: "forests/v2/global/dinov3_global_chm_v2_ml3/"
+  chmv2_region: "us-east-1"
+  dvrpc_ped_geoparquet: "https://gis.dvrpc.org/geoparquet/transportation/pedestriannetwork_lines.parquet"
+  dvrpc_ped_shapefile: "https://gis.dvrpc.org/shapefile/transportation/pedestriannetwork_lines.zip"
+  dvrpc_ped_rest: "https://arcgis.dvrpc.org/portal/rest/services/transportation/pedestriannetwork_lines/FeatureServer/0"
+  septa_gtfs: "https://www3.septa.org/developer/gtfs_public.zip"
+  septa_gtfs_history: "https://github.com/septadev/GTFS/releases"
+  census_fips_county: "42101"
+  tiger_year: 2024          # matches the ACS 2020-2024 tract boundaries
+  acs_api: "https://api.census.gov/data/{year}/acs/acs5"
+  opa_carto_sql: "https://phl.carto.com/api/v2/sql"
+  # Carto table named on the OpenDataPhilly 'Philadelphia Properties and Assessment History' page
+  opa_table: "opa_properties_public"
+  opa_residential_categories: ["1", "2", "3", "14"]   # single family, multi family, mixed use, apartments > 4 units
+  landcover_pasda: "https://imagery.pasda.psu.edu/arcgis/rest/services/pasda/PhillyLULC/MapServer"
+  aerial_basemap: "Esri.WorldImagery"   # contextily basemap, check figures only

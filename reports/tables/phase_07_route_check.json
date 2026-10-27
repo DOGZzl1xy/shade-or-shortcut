@@ -1,0 +1,72 @@
+[
+  {
+    "station": "BSL: Broad-Spring Garden",
+    "trips": 297,
+    "sun_red_mean": 0.5890965318373748,
+    "changed_share": 0.9966329966329966,
+    "bldg_shade_gained_m_per_trip": 142.65033656860442,
+    "tree_shade_gained_m_per_trip": -7.463043411171396,
+    "shade_only_edges_km": 0.87129178906365,
+    "shade_only_under_footprint_share": 0.0022471910112359553,
+    "shade_only_under_structure_share": 0.017977528089887642,
+    "shade_only_within_15m_of_structure_share": 0.14157303370786517,
+    "shade_only_bldg_shade_share": 0.5357838057207245,
+    "short_only_sun_share": 0.7509271943916858
+  },
+  {
+    "station": "MFL: Front-Girard",
+    "trips": 139,
+    "sun_red_mean": 0.5352816755301341,
+    "changed_share": 0.7985611510791367,
+    "bldg_shade_gained_m_per_trip": 216.1006287190554,
+    "tree_shade_gained_m_per_trip": -31.304472799781415,
+    "shade_only_edges_km": 0.5356133413299866,
+    "shade_only_under_footprint_share": 0.0,
+    "shade_only_under_structure_share": 0.03663003663003663,
+    "shade_only_within_15m_of_structure_share": 0.21611721611721613,
+    "shade_only_bldg_shade_share": 0.7519895931033884,
+    "short_only_sun_share": 0.7914621789844539
+  },
+  {
+    "station": "MFL: Huntingdon",
+    "trips": 1658,
+    "sun_red_mean": 0.41319965198656355,
+    "changed_share": 0.8341375150784077,
+    "bldg_shade_gained_m_per_trip": 195.00246923557955,
+    "tree_shade_gained_m_per_trip": -8.057783394728409,
+    "shade_only_edges_km": 2.0369697998673124,
+    "shade_only_under_footprint_share": 0.008604206500956023,
+    "shade_only_under_structure_share": 0.0038240917782026767,
+    "shade_only_within_15m_of_structure_share": 0.2294455066921606,
+    "shade_only_bldg_shade_share": 0.4151514291206525,
+    "short_only_sun_share": 0.8230869139420258
+  },
+  {
+    "station": "Regional Rail: Wyndmoor",
+    "trips": 51,
+    "sun_red_mean": 0.3672753778498736,
+    "changed_share": 1.0,
+    "bldg_shade_gained_m_per_trip": 26.452686721203374,
+    "tree_shade_gained_m_per_trip": 57.66055889690624,
+    "shade_only_edges_km": 0.3631038359682538,
+    "shade_only_under_footprint_share": 0.0,
+    "shade_only_under_structure_share": 0.0,
+    "shade_only_within_15m_of_structure_share": 0.0,
+    "shade_only_bldg_shade_share": 0.13687432537803668,
+    "short_only_sun_share": 0.6862969256115194
+  },
+  {
+    "station": "BSL: Broad-Girard",
+    "trips": 16,
+    "sun_red_mean": 0.3769007472775564,
+    "changed_share": 0.875,
+    "bldg_shade_gained_m_per_trip": 105.52433155477047,
+    "tree_shade_gained_m_per_trip": -0.22220851480960846,
+    "shade_only_edges_km": 0.2635108633758889,
+    "shade_only_under_footprint_share": 0.0,
+    "shade_only_under_structure_share": 0.0,
+    "shade_only_within_15m_of_structure_share": 0.0,
+    "shade_only_bldg_shade_share": 0.553765115140413,
+    "short_only_sun_share": 0.9022086675201774
+  }
+]

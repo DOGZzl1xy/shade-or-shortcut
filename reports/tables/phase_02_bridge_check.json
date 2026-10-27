@@ -1,0 +1,23 @@
+{
+  "city_edges": 130944,
+  "city_by_class": {
+    "other": 128537,
+    "crosses / under (angle \u2265 20\u00b0)": 1107,
+    "aligned, share < 80%": 725,
+    "on bridge deck": 575
+  },
+  "city_on_bridge_km": 27.62228428006787,
+  "view_by_class": {
+    "other": 1604,
+    "on bridge deck": 125,
+    "crosses / under (angle \u2265 20\u00b0)": 48,
+    "aligned, share < 80%": 47
+  },
+  "params": {
+    "buffer_m": 15,
+    "min_length_share": 0.8,
+    "max_angle_deg": 20,
+    "osm_bridge_highway_only": true,
+    "include_dvrpc_grade_separated": true
+  }
+}

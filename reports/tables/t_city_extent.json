@@ -1,0 +1,19 @@
+{
+  "city_area_km2": 369.3849907441748,
+  "buf_area_km2": 485.2204089586221,
+  "city_covered_share": 0.999999787315699,
+  "buf_covered_share": 0.9909325704110445,
+  "buf_land_uncovered_km2": 4.399701893356204,
+  "tiles_all": 752,
+  "tiles_buf": 653,
+  "points_all": 17144434957,
+  "points_buf": 15641262455,
+  "gb_all": 100.747306858,
+  "gb_buf": 91.960353544,
+  "max_tile_gb": 0.360726567,
+  "buf_bbox_km": [
+    29.70160376085638,
+    32.04943759614415
+  ],
+  "buf_raster_px": 951919696.238967
+}

@@ -1,0 +1,81 @@
+{
+  "gtfs": {
+    "google_bus": {
+      "start": "20260927",
+      "end": "20270220",
+      "version": "v202609271"
+    },
+    "google_rail": {
+      "start": "20260927",
+      "end": "20261121",
+      "version": "v202609271"
+    }
+  },
+  "rep_date": "2026-10-28",
+  "window": [
+    "15:00:00",
+    "19:00:00"
+  ],
+  "active_bus_trips_rep_date": 14904,
+  "stops": {
+    "rapid_by_kind": {
+      "MFL / BSL": 105,
+      "Regional Rail": 55,
+      "trolley tunnel": 19
+    },
+    "surface_in_city": 7856,
+    "surface_ge4": 4446,
+    "surface_ge6": 1605,
+    "surface_per_hour_quantiles": {
+      "0.25": 2.75,
+      "0.5": 4.0,
+      "0.75": 5.5,
+      "0.9": 6.5
+    }
+  },
+  "parcels": {
+    "n": 522749,
+    "snap_m_median": 37.262697718652504,
+    "snap_m_p90": 73.129393835782
+  },
+  "definitions": {
+    "1_rapid_only": {
+      "stops": 179,
+      "stop_snap_m_median": 12.958248928134351,
+      "parcels_reached_20km": 1.0,
+      "median_m": 1158.0611352881033,
+      "q25_m": 690.375344298723,
+      "q75_m": 1898.193270246966,
+      "p90_m": 3053.8185824432976,
+      "share_within_1200m": 0.5198403057681602
+    },
+    "2_rapid_plus_ge4": {
+      "stops": 4625,
+      "stop_snap_m_median": 4.6995175645882235,
+      "parcels_reached_20km": 1.0,
+      "median_m": 178.70323538444632,
+      "q25_m": 79.81414729000973,
+      "q75_m": 330.74126129157975,
+      "p90_m": 583.9096140461088,
+      "share_within_1200m": 0.9754834538181805
+    },
+    "3_rapid_plus_ge6": {
+      "stops": 1784,
+      "stop_snap_m_median": 4.839394687265162,
+      "parcels_reached_20km": 1.0,
+      "median_m": 407.2531021129036,
+      "q25_m": 193.16421576414285,
+      "q75_m": 855.526023171658,
+      "p90_m": 2046.3837141591011,
+      "share_within_1200m": 0.8246787655260938
+    },
+    "0_all_stops_with_service_on_rep_date": {
+      "stops": 8035,
+      "median_m": 113.25447199441643,
+      "q25_m": 56.2986193593841,
+      "q75_m": 204.03639392120792,
+      "p90_m": 312.33810886154475,
+      "share_within_1200m": 0.9982037268363976
+    }
+  }
+}

@@ -1,0 +1,35 @@
+{
+  "gtfs_stops_in_city": {
+    "google_bus": 8080,
+    "google_rail": 53
+  },
+  "dvrpc_city_km": 7236.185443523569,
+  "dvrpc_city_by_line_type": {
+    "1": 85230,
+    "2": 45388,
+    "3": 111
+  },
+  "dvrpc_grade_separated": 56,
+  "osm_bridge_lines": 3031,
+  "osm_bridge_highway": 2059,
+  "osm_bridge_railway_only": 969,
+  "osm_bridge_pedestrian": 1139,
+  "opa_by_category": {
+    "1": 463032,
+    "2": 41464,
+    "6": 39582,
+    "3": 14155,
+    "4": 12503,
+    "14": 4107,
+    "5": 3835,
+    "13": 2313,
+    "8": 1165,
+    "10": 909,
+    "12": 206,
+    "7": 130,
+    "9": 109,
+    "11": 102,
+    "15": 75,
+    "16": 30
+  }
+}

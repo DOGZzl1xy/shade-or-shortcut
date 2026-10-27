@@ -1,0 +1,176 @@
+{
+  "graph_nodes": 90627,
+  "graph_edges": 131329,
+  "load_s": 0.20165205001831055,
+  "n_od": 300,
+  "od_short_len_m": {
+    "min": 402.0,
+    "50%": 1458.3,
+    "max": 1999.5
+  },
+  "negative_detour": 0,
+  "shade_C_gt_short_C": 0,
+  "sun_increase_count": 57,
+  "sun_increase_share": 0.007916666666666667,
+  "short_sun_zero": 15,
+  "detour_mean": 0.01258095278937823,
+  "detour_p95": 0.048942795176060955,
+  "sun_red_mean": 0.20565635306023486,
+  "sun_red_median": 0.14852785180908223,
+  "exposure_red_mean": 0.03946492159078998,
+  "path_changed_share": 0.8083333333333333,
+  "at_0621_15": {
+    "detour_mean": 0.01107535966573051,
+    "sun_red_mean": 0.1484199284152758,
+    "exposure_red_mean": 0.031716180720183604
+  },
+  "theta_sensitivity_15h": {
+    "dynamic": {
+      "detour": 0.0119,
+      "sun_red": 0.1596,
+      "exposure_red": 0.0339
+    },
+    "fixed_0.2": {
+      "detour": 0.0061,
+      "sun_red": 0.1462,
+      "exposure_red": 0.0155
+    },
+    "fixed_0.4": {
+      "detour": 0.013,
+      "sun_red": 0.172,
+      "exposure_red": 0.0418
+    },
+    "fixed_0.6": {
+      "detour": 0.023,
+      "sun_red": 0.1878,
+      "exposure_red": 0.0761
+    }
+  },
+  "by_time": {
+    "0621_08": {
+      "detour": 0.018,
+      "sun_red": 0.3348,
+      "exposure_red": 0.0616
+    },
+    "0621_09": {
+      "detour": 0.0148,
+      "sun_red": 0.2399,
+      "exposure_red": 0.0492
+    },
+    "0621_10": {
+      "detour": 0.0102,
+      "sun_red": 0.1677,
+      "exposure_red": 0.0373
+    },
+    "0621_11": {
+      "detour": 0.0083,
+      "sun_red": 0.13,
+      "exposure_red": 0.0291
+    },
+    "0621_12": {
+      "detour": 0.0065,
+      "sun_red": 0.101,
+      "exposure_red": 0.0209
+    },
+    "0621_13": {
+      "detour": 0.005,
+      "sun_red": 0.0694,
+      "exposure_red": 0.0126
+    },
+    "0621_14": {
+      "detour": 0.0068,
+      "sun_red": 0.0988,
+      "exposure_red": 0.0212
+    },
+    "0621_15": {
+      "detour": 0.0111,
+      "sun_red": 0.1484,
+      "exposure_red": 0.0317
+    },
+    "0621_16": {
+      "detour": 0.0129,
+      "sun_red": 0.194,
+      "exposure_red": 0.0412
+    },
+    "0621_17": {
+      "detour": 0.0142,
+      "sun_red": 0.2305,
+      "exposure_red": 0.0479
+    },
+    "0621_18": {
+      "detour": 0.0166,
+      "sun_red": 0.2771,
+      "exposure_red": 0.0517
+    },
+    "0621_19": {
+      "detour": 0.0203,
+      "sun_red": 0.3803,
+      "exposure_red": 0.0543
+    },
+    "0801_08": {
+      "detour": 0.0181,
+      "sun_red": 0.3502,
+      "exposure_red": 0.0598
+    },
+    "0801_09": {
+      "detour": 0.0135,
+      "sun_red": 0.2424,
+      "exposure_red": 0.0485
+    },
+    "0801_10": {
+      "detour": 0.0111,
+      "sun_red": 0.1849,
+      "exposure_red": 0.0403
+    },
+    "0801_11": {
+      "detour": 0.0097,
+      "sun_red": 0.1526,
+      "exposure_red": 0.0338
+    },
+    "0801_12": {
+      "detour": 0.0109,
+      "sun_red": 0.1337,
+      "exposure_red": 0.0279
+    },
+    "0801_13": {
+      "detour": 0.0072,
+      "sun_red": 0.0938,
+      "exposure_red": 0.0195
+    },
+    "0801_14": {
+      "detour": 0.0091,
+      "sun_red": 0.1159,
+      "exposure_red": 0.0245
+    },
+    "0801_15": {
+      "detour": 0.0128,
+      "sun_red": 0.1707,
+      "exposure_red": 0.036
+    },
+    "0801_16": {
+      "detour": 0.0141,
+      "sun_red": 0.2172,
+      "exposure_red": 0.0447
+    },
+    "0801_17": {
+      "detour": 0.0153,
+      "sun_red": 0.2671,
+      "exposure_red": 0.0534
+    },
+    "0801_18": {
+      "detour": 0.0176,
+      "sun_red": 0.2904,
+      "exposure_red": 0.0541
+    },
+    "0801_19": {
+      "detour": 0.018,
+      "sun_red": 0.3505,
+      "exposure_red": 0.046
+    }
+  },
+  "ellipse_vs_unbounded_paths_differ": "0/50",
+  "networkx_fixed_theta_max_abs_err": 0.0,
+  "networkx_nodes_checked": 9094,
+  "ms_per_pair_search": 0.36160778999328613,
+  "ms_per_one_to_many_3km": 1.4512813091278076
+}

@@ -1,0 +1,539 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Indoor Annotation</title>
+<style>/*__MAPLIBRE_CSS__*/</style>
+<script>/*__MAPLIBRE_JS__*/</script>
+<style>
+  :root {
+    --bg: #f6f5f2; --panel: #ffffff; --ink: #1d1d1f; --muted: #6b6b70; --line: #e2e0da;
+    --accent: #1f6feb; --yes: #d9480f; --no: #2b8a3e; --danger: #c92a2a;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #151517; --panel: #1f1f22; --ink: #ececef; --muted: #9a9aa2; --line: #333338;
+      --accent: #4c8dff; --yes: #ff8a4c; --no: #51cf66; --danger: #ff6b6b;
+    }
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; background: var(--bg); color: var(--ink);
+    font: 14px/1.45 -apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif; }
+  #app { display: flex; height: 100%; }
+  #map { flex: 1; min-width: 0; }
+  #panel { width: 340px; background: var(--panel); border-left: 1px solid var(--line); overflow-y: auto;
+    padding: 14px 16px 24px; }
+  h1 { font-size: 16px; margin: 0 0 2px; }
+  h2 { font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin: 18px 0 6px; }
+  .muted { color: var(--muted); font-size: 12px; }
+  .modes { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+  button { font: inherit; border: 1px solid var(--line); background: var(--panel); color: var(--ink);
+    border-radius: 7px; padding: 7px 8px; cursor: pointer; }
+  button:hover { border-color: var(--accent); }
+  button.on { background: var(--accent); border-color: var(--accent); color: #fff; }
+  button:disabled { opacity: .45; cursor: not-allowed; }
+  button.danger { color: var(--danger); }
+  .row { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
+  .card { border: 1px solid var(--line); border-radius: 9px; padding: 10px; margin-top: 6px; }
+  .card b { font-weight: 600; }
+  .ask { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 8px; }
+  .ask .yes.on { background: var(--yes); border-color: var(--yes); }
+  .ask .no.on { background: var(--no); border-color: var(--no); }
+  .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; text-align: center; }
+  .stats div { border: 1px solid var(--line); border-radius: 8px; padding: 6px 2px; }
+  .stats b { display: block; font-size: 18px; }
+  label { display: flex; align-items: center; gap: 6px; margin: 3px 0; }
+  input[type=search] { width: 100%; font: inherit; padding: 6px 8px; border: 1px solid var(--line); border-radius: 7px;
+    background: var(--panel); color: var(--ink); }
+  #results div { padding: 4px 6px; border-radius: 6px; cursor: pointer; }
+  #results div:hover { background: var(--bg); }
+  #hint { position: absolute; left: 12px; top: 12px; background: rgba(20,20,22,.82); color: #fff; padding: 7px 10px;
+    border-radius: 8px; font-size: 13px; max-width: 520px; pointer-events: none; }
+  #toast { position: absolute; left: 50%; bottom: 24px; transform: translateX(-50%); background: rgba(20,20,22,.88);
+    color: #fff; padding: 7px 12px; border-radius: 8px; font-size: 13px; display: none; }
+  .legend span { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 4px; vertical-align: -1px; }
+  kbd { font: 11px ui-monospace, monospace; border: 1px solid var(--line); border-radius: 4px; padding: 0 4px; }
+  @media (max-width: 760px) {
+    #app { flex-direction: column; }
+    #panel { width: 100%; height: 46%; border-left: 0; border-top: 1px solid var(--line); }
+  }
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="map"></div>
+  <div id="panel">
+    <h1>Indoor passage annotation · University City demo</h1>
+    <div class="muted">One building at a time: select a building → answer whether it needs a PennCard → place entrances on its outline → draw passages between two entrances. Progress is saved in this browser. Mark public information only, no staff-only routes or access-control details.</div>
+
+    <h2>Mode</h2>
+    <div class="modes">
+      <button id="m-select" data-mode="select">Select <kbd>1</kbd></button>
+      <button id="m-entrance" data-mode="entrance">Entrance <kbd>2</kbd></button>
+      <button id="m-edge" data-mode="edge">Passage <kbd>3</kbd></button>
+    </div>
+
+    <h2>Building</h2>
+    <div id="bcard" class="card muted">Click a building on the map, or search below.</div>
+
+    <h2>Selected feature</h2>
+    <div id="fcard" class="card muted">Click an entrance or passage to select it, then delete it.</div>
+
+    <h2>Progress</h2>
+    <div class="stats">
+      <div><b id="n-b">0</b><span class="muted">buildings</span></div>
+      <div><b id="n-e">0</b><span class="muted">entrances</span></div>
+      <div><b id="n-p">0</b><span class="muted">passages</span></div>
+    </div>
+    <div class="row">
+      <button id="undo">Undo <kbd>⌘Z</kbd></button>
+      <button id="del" class="danger">Delete <kbd>Del</kbd></button>
+    </div>
+
+    <h2>Export</h2>
+    <div class="row">
+      <button id="export">Export 3 GeoJSON files</button>
+      <button id="backup">Back up JSON</button>
+      <button id="restore">Restore backup</button>
+      <input id="restore-file" type="file" accept=".json,application/json" hidden>
+    </div>
+    <div class="muted" style="margin-top:6px">Put the exported files in <code>data/raw/indoor/</code>.</div>
+
+    <h2>Find a building</h2>
+    <input id="search" type="search" placeholder="Name or address, e.g. Van Pelt">
+    <div id="results"></div>
+
+    <h2>Layers</h2>
+    <label><input type="radio" name="img" value="pasda" checked> Aerial PASDA 2025</label>
+    <label><input type="radio" name="img" value="esri"> Aerial Esri World Imagery</label>
+    <label><input type="checkbox" id="l-sw" checked> Sidewalks (DVRPC)</label>
+    <label><input type="checkbox" id="l-osm" checked> OSM entrances and corridors (reference)</label>
+    <div class="legend muted" style="margin-top:6px">
+      <div><span style="background:#ffd43b"></span>not annotated <span style="background:var(--no)"></span>no PennCard <span style="background:var(--yes)"></span>PennCard needed</div>
+      <div><span style="background:#e64980;border-radius:50%"></span>OSM entrance <span style="background:#be4bdb"></span>OSM corridor <span style="background:#ffffff;border:1px solid #333;border-radius:50%"></span>your entrance</div>
+    </div>
+
+    <h2>Shortcuts</h2>
+    <div class="muted"><kbd>1</kbd><kbd>2</kbd><kbd>3</kbd> switch mode; while drawing a passage, click empty space to add a vertex and another entrance of the same building to finish; <kbd>Esc</kbd> cancels the passage; <kbd>⌘Z</kbd> / <kbd>Ctrl Z</kbd> undo; <kbd>Delete</kbd> deletes the selection.</div>
+  </div>
+</div>
+<div id="hint"></div>
+<div id="toast"></div>
+
+<script>
+const DATA = /*__DATA__*/null;
+const STORE = "coolpath-indoor-annotation-v1";
+
+// ---------- state ----------
+let state = { buildings: {}, entrances: [], edges: [], nextE: 1, nextP: 1 };   // buildings: id -> {needs_penncard}
+let undoStack = [];
+let mode = "select", selB = null, selF = null, draft = null;    // draft: {building, from, pts: [[lon,lat]...]}
+
+const bById = new Map(DATA.buildings.features.map(f => [f.properties.building_id, f]));
+
+function load() {
+  try {
+    const s = localStorage.getItem(STORE);
+    if (s) state = JSON.parse(s);
+  } catch (e) { /* private mode: start empty */ }
+}
+function save() {
+  try { localStorage.setItem(STORE, JSON.stringify(state)); } catch (e) { toast("Cannot write to browser storage; use \"Back up JSON\" regularly"); }
+}
+function commit(fn) {
+  undoStack.push(JSON.stringify(state));
+  if (undoStack.length > 200) undoStack.shift();
+  fn();
+  save();
+  render();
+}
+function undo() {
+  if (draft) { cancelDraft(); return; }
+  const s = undoStack.pop();
+  if (!s) { toast("Nothing to undo"); return; }
+  state = JSON.parse(s);
+  clearSelF();
+  save();
+  render();
+}
+
+// ---------- geometry (local metres around the demo centre) ----------
+const LAT0 = DATA.center[1] * Math.PI / 180;
+const KX = 111320 * Math.cos(LAT0), KY = 110540;
+const toXY = p => [p[0] * KX, p[1] * KY];
+const toLL = q => [q[0] / KX, q[1] / KY];
+function haversine(a, b) {
+  const R = 6371008.8, r = Math.PI / 180;
+  const dLat = (b[1] - a[1]) * r, dLon = (b[0] - a[0]) * r;
+  const h = Math.sin(dLat / 2) ** 2 + Math.cos(a[1] * r) * Math.cos(b[1] * r) * Math.sin(dLon / 2) ** 2;
+  return 2 * R * Math.asin(Math.sqrt(h));
+}
+function lineLength(pts) { let s = 0; for (let i = 1; i < pts.length; i++) s += haversine(pts[i - 1], pts[i]); return s; }
+function rings(f) {
+  const g = f.geometry;
+  return g.type === "Polygon" ? g.coordinates : g.coordinates.flat();
+}
+function snapToOutline(f, ll) {          // nearest point on any ring segment of the footprint
+  const p = toXY(ll);
+  let best = null, bd = Infinity;
+  for (const ring of rings(f)) {
+    for (let i = 1; i < ring.length; i++) {
+      const a = toXY(ring[i - 1]), b = toXY(ring[i]);
+      const dx = b[0] - a[0], dy = b[1] - a[1], L2 = dx * dx + dy * dy;
+      let t = L2 ? ((p[0] - a[0]) * dx + (p[1] - a[1]) * dy) / L2 : 0;
+      t = Math.max(0, Math.min(1, t));
+      const q = [a[0] + t * dx, a[1] + t * dy];
+      const d = Math.hypot(q[0] - p[0], q[1] - p[1]);
+      if (d < bd) { bd = d; best = q; }
+    }
+  }
+  return { ll: toLL(best), dist: bd };
+}
+
+// ---------- map ----------
+const pasda = "https://imagery.pasda.psu.edu/arcgis/rest/services/pasda/PhiladelphiaImagery2025/MapServer/export" +
+  "?bbox={bbox-epsg-3857}&bboxSR=3857&imageSR=3857&size=512,512&format=png&transparent=false&layers=show:3&f=image";
+const glOK = (() => { try { const c = document.createElement("canvas"); return !!(c.getContext("webgl2") || c.getContext("webgl")); } catch (e) { return false; } })();
+if (typeof maplibregl === "undefined" || !glOK) {
+  document.getElementById("map").innerHTML = '<div style="padding:24px;color:#fff">The map cannot start: this browser has no WebGL, or the page is open in a restricted preview. Open the file in Chrome or Safari.</div>';
+  throw new Error("maplibre unavailable");
+}
+const map = new maplibregl.Map({
+  container: "map",
+  center: DATA.center, zoom: 16.2, maxZoom: 21, minZoom: 13, doubleClickZoom: false,
+  style: {
+    version: 8,
+    sources: {
+      pasda: { type: "raster", tiles: [pasda], tileSize: 512, maxzoom: 21, attribution: "Imagery: PASDA / City of Philadelphia 2025" },
+      esri: { type: "raster", tiles: ["https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"],
+              tileSize: 256, maxzoom: 19, attribution: "Imagery: Esri, Maxar, Earthstar Geographics" },
+    },
+    layers: [
+      { id: "bg", type: "background", paint: { "background-color": "#202024" } },
+      { id: "esri", type: "raster", source: "esri", layout: { visibility: "none" } },
+      { id: "pasda", type: "raster", source: "pasda" },
+    ],
+  },
+});
+map.addControl(new maplibregl.NavigationControl({ showCompass: false }), "bottom-right");
+map.addControl(new maplibregl.ScaleControl({ unit: "metric" }), "bottom-left");
+new ResizeObserver(() => map.resize()).observe(document.getElementById("map"));
+let tileWarned = false;
+map.on("error", e => {       // imagery tiles need internet; the vector layers work offline
+  if (!tileWarned && e.sourceId && (e.sourceId === "pasda" || e.sourceId === "esri")) {
+    tileWarned = true;
+    toast("Aerial imagery failed to load (needs internet); switch the imagery source on the right. Buildings and sidewalks can still be annotated.");
+  }
+});
+
+const empty = { type: "FeatureCollection", features: [] };
+map.on("load", () => {
+  map.addSource("demo", { type: "geojson", data: DATA.demo });
+  map.addSource("bld", { type: "geojson", data: DATA.buildings, promoteId: "building_id" });
+  map.addSource("sw", { type: "geojson", data: DATA.sidewalks });
+  map.addSource("osm-e", { type: "geojson", data: DATA.osm_entrances });
+  map.addSource("osm-c", { type: "geojson", data: DATA.osm_corridors });
+  map.addSource("ent", { type: "geojson", data: empty, promoteId: "entrance_id" });
+  map.addSource("edg", { type: "geojson", data: empty, promoteId: "edge_id" });
+  map.addSource("draft", { type: "geojson", data: empty });
+
+  map.addLayer({ id: "demo", type: "line", source: "demo", paint: { "line-color": "#ffffff", "line-width": 1.5, "line-dasharray": [3, 2] } });
+  const fillColor = ["case", ["==", ["feature-state", "pc"], 1], "#d9480f", ["==", ["feature-state", "pc"], 0], "#2b8a3e", "#ffd43b"];
+  map.addLayer({ id: "bld-fill", type: "fill", source: "bld",
+    paint: { "fill-color": fillColor, "fill-opacity": ["case", ["boolean", ["feature-state", "sel"], false], 0.45,
+                                                              ["!=", ["feature-state", "pc"], null], 0.32, 0.08] } });
+  map.addLayer({ id: "bld-line", type: "line", source: "bld",
+    paint: { "line-color": fillColor, "line-width": ["case", ["boolean", ["feature-state", "sel"], false], 3.5, 1.2] } });
+  map.addLayer({ id: "sw", type: "line", source: "sw", paint: { "line-color": "#74c0fc", "line-width": 1, "line-opacity": 0.7 } });
+  map.addLayer({ id: "osm-c", type: "line", source: "osm-c", paint: { "line-color": "#be4bdb", "line-width": 3, "line-dasharray": [1, 1] } });
+  map.addLayer({ id: "osm-e", type: "circle", source: "osm-e",
+    paint: { "circle-radius": 4, "circle-color": "#e64980", "circle-stroke-color": "#fff", "circle-stroke-width": 1 } });
+  map.addLayer({ id: "edg", type: "line", source: "edg", layout: { "line-cap": "round", "line-join": "round" },
+    paint: { "line-color": ["case", ["==", ["get", "needs_penncard"], true], "#ff8a4c", "#51cf66"],
+             "line-width": ["case", ["boolean", ["feature-state", "sel"], false], 7, 4] } });
+  map.addLayer({ id: "draft", type: "line", source: "draft", paint: { "line-color": "#ffffff", "line-width": 3, "line-dasharray": [2, 1] } });
+  map.addLayer({ id: "ent", type: "circle", source: "ent",
+    paint: { "circle-radius": ["case", ["boolean", ["feature-state", "sel"], false], 9, 7],
+             "circle-color": "#ffffff", "circle-stroke-width": 3,
+             "circle-stroke-color": ["case", ["==", ["get", "needs_penncard"], true], "#d9480f", "#2b8a3e"] } });
+
+  const b = DATA.demo.features[0].geometry.coordinates[0];
+  const xs = b.map(p => p[0]), ys = b.map(p => p[1]);
+  map.fitBounds([[Math.min(...xs), Math.min(...ys)], [Math.max(...xs), Math.max(...ys)]], { padding: 20, duration: 0 });
+  render();
+});
+
+// ---------- rendering ----------
+function needs(bid) { const b = state.buildings[bid]; return b ? b.needs_penncard : null; }
+function entranceFC() {
+  return { type: "FeatureCollection", features: state.entrances.map(e => ({ type: "Feature",
+    properties: { entrance_id: e.id, building_id: e.building_id, needs_penncard: needs(e.building_id) },
+    geometry: { type: "Point", coordinates: e.ll } })) };
+}
+function edgeFC() {
+  return { type: "FeatureCollection", features: state.edges.map(p => ({ type: "Feature",
+    properties: { edge_id: p.id, building_id: p.building_id, from_entrance_id: p.from, to_entrance_id: p.to,
+                  length_m: Math.round(lineLength(p.pts) * 100) / 100, needs_penncard: needs(p.building_id) },
+    geometry: { type: "LineString", coordinates: p.pts } })) };
+}
+let lastStates = new Set();
+function render() {
+  if (!map.getSource("ent")) return;
+  for (const id of lastStates) map.removeFeatureState({ source: "bld", id });
+  lastStates = new Set();
+  for (const [id, b] of Object.entries(state.buildings)) {
+    map.setFeatureState({ source: "bld", id: +id }, { pc: b.needs_penncard ? 1 : 0 });
+    lastStates.add(+id);
+  }
+  if (selB != null) { map.setFeatureState({ source: "bld", id: selB }, { sel: true }); lastStates.add(selB); }
+  map.getSource("ent").setData(entranceFC());
+  map.getSource("edg").setData(edgeFC());
+  map.getSource("draft").setData(draft ? { type: "Feature", geometry: { type: "LineString", coordinates: draft.pts } } : empty);
+  if (selF) {
+    const src = selF.kind === "entrance" ? "ent" : "edg";
+    map.setFeatureState({ source: src, id: selF.id }, { sel: true });
+  }
+  document.getElementById("n-b").textContent = Object.keys(state.buildings).length;
+  document.getElementById("n-e").textContent = state.entrances.length;
+  document.getElementById("n-p").textContent = state.edges.length;
+  for (const b of document.querySelectorAll(".modes button")) b.classList.toggle("on", b.dataset.mode === mode);
+  const annotated = selB != null && state.buildings[selB];
+  document.getElementById("m-entrance").disabled = !annotated;
+  document.getElementById("m-edge").disabled = !annotated;
+  renderBuildingCard();
+  renderFeatureCard();
+  renderHint();
+}
+function bLabel(f) {
+  const p = f.properties;
+  return (p.name || p.address || `Building ${p.building_id}`);
+}
+function renderBuildingCard() {
+  const el = document.getElementById("bcard");
+  if (selB == null) { el.className = "card muted"; el.textContent = "Click a building on the map, or search below."; return; }
+  const f = bById.get(selB), p = f.properties, a = state.buildings[selB];
+  const ne = state.entrances.filter(e => e.building_id === selB).length;
+  const np = state.edges.filter(e => e.building_id === selB).length;
+  el.className = "card";
+  el.innerHTML = `<b>${esc(bLabel(f))}</b><div class="muted">${esc(p.address)} · id ${p.building_id}` +
+    (p.height_m ? ` · about ${p.height_m} m` : "") + `</div>` +
+    `<div style="margin-top:8px">Does this building need a PennCard?</div>` +
+    `<div class="ask"><button class="yes ${a && a.needs_penncard ? "on" : ""}" id="pc-yes">Yes</button>` +
+    `<button class="no ${a && !a.needs_penncard ? "on" : ""}" id="pc-no">No</button></div>` +
+    `<div class="muted" style="margin-top:8px">${a ? `${ne} entrances · ${np} passages` : "Answer first to place entrances and draw passages."}</div>` +
+    (a ? `<div class="row"><button class="danger" id="b-clear">Clear this building</button></div>` : "");
+  document.getElementById("pc-yes").onclick = () => setPennCard(true);
+  document.getElementById("pc-no").onclick = () => setPennCard(false);
+  const c = document.getElementById("b-clear");
+  if (c) c.onclick = clearBuilding;
+}
+function renderFeatureCard() {
+  const el = document.getElementById("fcard");
+  if (selF && !(selF.kind === "entrance" ? state.entrances : state.edges).some(x => x.id === selF.id)) selF = null;
+  if (!selF) { el.className = "card muted"; el.textContent = "Click an entrance or passage to select it, then delete it."; return; }
+  el.className = "card";
+  if (selF.kind === "entrance") {
+    const e = state.entrances.find(x => x.id === selF.id);
+    const n = state.edges.filter(p => p.from === e.id || p.to === e.id).length;
+    el.innerHTML = `<b>Entrance ${e.id}</b><div class="muted">building ${e.building_id} · ${n} passages (deleted with the entrance)</div>`;
+  } else {
+    const p = state.edges.find(x => x.id === selF.id);
+    el.innerHTML = `<b>Passage ${p.id}</b><div class="muted">${p.from} → ${p.to} · ${lineLength(p.pts).toFixed(1)} m · ${p.pts.length - 2} vertices</div>`;
+  }
+}
+function renderHint() {
+  const h = document.getElementById("hint");
+  if (mode === "select") h.textContent = selB == null ? "Select: click a building" : "Select: answer the PennCard question, then press 2 to place entrances";
+  else if (mode === "entrance") h.textContent = "Entrance: click near the outline of the current building; entrances snap to the outline";
+  else h.textContent = draft ? `Passage: click empty space to add a vertex, another entrance of the same building to finish (${lineLength(draft.pts).toFixed(0)} m so far); Esc cancels`
+                             : "Passage: first click an entrance of the current building";
+}
+function esc(s) { return String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c])); }
+let toastT;
+function toast(msg) {
+  const t = document.getElementById("toast");
+  t.textContent = msg; t.style.display = "block";
+  clearTimeout(toastT); toastT = setTimeout(() => (t.style.display = "none"), 2400);
+}
+
+// ---------- actions ----------
+function setMode(m) {
+  if (m !== "select" && (selB == null || !state.buildings[selB])) { toast("Select a building and answer the PennCard question first"); return; }
+  if (draft && m !== "edge") cancelDraft();
+  mode = m;
+  render();
+}
+function selectBuilding(id) {
+  if (draft) cancelDraft();
+  if (selB != null) map.setFeatureState({ source: "bld", id: selB }, { sel: false });
+  selB = id;
+  if (!state.buildings[id]) mode = "select";
+  render();
+}
+function setPennCard(v) {
+  commit(() => { state.buildings[selB] = { needs_penncard: v }; });
+}
+function clearBuilding() {
+  const n = state.entrances.filter(e => e.building_id === selB).length;
+  if (!confirm(`Clear the PennCard answer and the ${n} entrances and passages of this building?`)) return;
+  clearSelF();
+  commit(() => {
+    delete state.buildings[selB];
+    state.entrances = state.entrances.filter(e => e.building_id !== selB);
+    state.edges = state.edges.filter(p => p.building_id !== selB);
+  });
+  map.removeFeatureState({ source: "bld", id: selB });
+  mode = "select";
+  render();
+}
+function addEntrance(ll) {
+  const s = snapToOutline(bById.get(selB), ll);
+  if (s.dist > 25) { toast(`${s.dist.toFixed(0)} m from the outline: too far`); return; }
+  commit(() => { state.entrances.push({ id: `E${state.nextE++}`, building_id: selB, ll: s.ll }); });
+}
+function cancelDraft() { draft = null; render(); }
+function edgeClick(entranceId, ll) {
+  if (!draft) {
+    if (!entranceId) { toast("First click an entrance of the current building"); return; }
+    const e = state.entrances.find(x => x.id === entranceId);
+    if (e.building_id !== selB) { toast("This entrance belongs to another building"); return; }
+    draft = { building: selB, from: e.id, pts: [e.ll] };
+  } else if (entranceId) {
+    const e = state.entrances.find(x => x.id === entranceId);
+    if (e.id === draft.from) { toast("The end must be a different entrance"); return; }
+    if (e.building_id !== draft.building) { toast("Both ends must be entrances of the same building"); return; }
+    const d = draft;
+    draft = null;
+    commit(() => { state.edges.push({ id: `P${state.nextP++}`, building_id: d.building, from: d.from, to: e.id, pts: [...d.pts, e.ll] }); });
+    return;
+  } else {
+    draft.pts.push(ll);
+  }
+  render();
+}
+function deleteSelected() {
+  if (!selF) { toast("No entrance or passage selected"); return; }
+  const f = selF;
+  clearSelF();
+  commit(() => {
+    if (f.kind === "entrance") {
+      state.entrances = state.entrances.filter(e => e.id !== f.id);
+      state.edges = state.edges.filter(p => p.from !== f.id && p.to !== f.id);
+    } else {
+      state.edges = state.edges.filter(p => p.id !== f.id);
+    }
+  });
+}
+function pick(e, layers, px = 6) {
+  const b = [[e.point.x - px, e.point.y - px], [e.point.x + px, e.point.y + px]];
+  return map.queryRenderedFeatures(b, { layers });
+}
+function clearSelF() {
+  if (selF) map.setFeatureState({ source: selF.kind === "entrance" ? "ent" : "edg", id: selF.id }, { sel: false });
+  selF = null;
+}
+map.on("click", e => {
+  const ll = [e.lngLat.lng, e.lngLat.lat];
+  const ent = pick(e, ["ent"])[0];
+  if (mode === "edge") { edgeClick(ent ? ent.properties.entrance_id : null, ll); return; }
+  if (ent) { clearSelF(); selF = { kind: "entrance", id: ent.properties.entrance_id }; render(); return; }
+  const edg = pick(e, ["edg"], 4)[0];
+  if (edg && mode === "select") { clearSelF(); selF = { kind: "edge", id: edg.properties.edge_id }; render(); return; }
+  if (mode === "entrance") { addEntrance(ll); return; }
+  clearSelF();
+  const b = pick(e, ["bld-fill"], 0)[0];
+  if (b) selectBuilding(b.properties.building_id);
+  else { if (selB != null) map.setFeatureState({ source: "bld", id: selB }, { sel: false }); selB = null; render(); }
+});
+map.on("mousemove", e => {
+  const hit = pick(e, ["ent", "edg", "bld-fill"], 3).length > 0;
+  map.getCanvas().style.cursor = mode === "select" ? (hit ? "pointer" : "") : "crosshair";
+});
+
+for (const b of document.querySelectorAll(".modes button")) b.onclick = () => setMode(b.dataset.mode);
+document.getElementById("undo").onclick = undo;
+document.getElementById("del").onclick = deleteSelected;
+document.addEventListener("keydown", e => {
+  if (e.target.tagName === "INPUT") return;
+  if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "z") { e.preventDefault(); undo(); }
+  else if (e.key === "1") setMode("select");
+  else if (e.key === "2") setMode("entrance");
+  else if (e.key === "3") setMode("edge");
+  else if (e.key === "Escape") { if (draft) cancelDraft(); }
+  else if (e.key === "Delete" || e.key === "Backspace") deleteSelected();
+});
+
+// ---------- layers ----------
+for (const r of document.querySelectorAll("input[name=img]")) r.onchange = () => {
+  map.setLayoutProperty("pasda", "visibility", r.value === "pasda" && r.checked ? "visible" : "none");
+  map.setLayoutProperty("esri", "visibility", r.value === "esri" && r.checked ? "visible" : "none");
+};
+document.getElementById("l-sw").onchange = e => map.setLayoutProperty("sw", "visibility", e.target.checked ? "visible" : "none");
+document.getElementById("l-osm").onchange = e => {
+  for (const id of ["osm-e", "osm-c"]) map.setLayoutProperty(id, "visibility", e.target.checked ? "visible" : "none");
+};
+
+// ---------- search ----------
+document.getElementById("search").oninput = e => {
+  const q = e.target.value.trim().toLowerCase();
+  const out = document.getElementById("results");
+  out.innerHTML = "";
+  if (q.length < 2) return;
+  const hits = DATA.buildings.features.filter(f => (f.properties.name + " " + f.properties.address).toLowerCase().includes(q)).slice(0, 12);
+  for (const f of hits) {
+    const d = document.createElement("div");
+    d.textContent = `${bLabel(f)}${f.properties.name && f.properties.address ? " · " + f.properties.address : ""}`;
+    d.onclick = () => {
+      const xs = rings(f).flat().map(p => p[0]), ys = rings(f).flat().map(p => p[1]);
+      map.fitBounds([[Math.min(...xs), Math.min(...ys)], [Math.max(...xs), Math.max(...ys)]], { padding: 120, maxZoom: 19 });
+      selectBuilding(f.properties.building_id);
+    };
+    out.appendChild(d);
+  }
+};
+
+// ---------- export / backup ----------
+function download(name, obj) {
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([JSON.stringify(obj, null, 1)], { type: "application/geo+json" }));
+  a.download = name;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+}
+document.getElementById("export").onclick = () => {
+  const bfc = { type: "FeatureCollection", features: Object.entries(state.buildings).map(([id, b]) => {
+    const f = bById.get(+id);
+    return { type: "Feature", geometry: f.geometry,
+             properties: { building_id: +id, needs_penncard: b.needs_penncard, name: f.properties.name, address: f.properties.address } };
+  }) };
+  const efc = entranceFC();
+  efc.features.forEach(f => delete f.properties.needs_penncard);
+  const pfc = edgeFC();
+  pfc.features.forEach(f => delete f.properties.needs_penncard);
+  const orphan = Object.keys(state.buildings).filter(id => !state.entrances.some(e => e.building_id === +id));
+  download("buildings.geojson", bfc);
+  setTimeout(() => download("entrances.geojson", efc), 300);
+  setTimeout(() => download("indoor_edges.geojson", pfc), 600);
+  toast(`Exported ${bfc.features.length} buildings, ${efc.features.length} entrances, ${pfc.features.length} passages` +
+        (orphan.length ? ` (${orphan.length} buildings have no entrance yet)` : ""));
+};
+document.getElementById("backup").onclick = () => download("indoor_annotation_backup.json", state);
+document.getElementById("restore").onclick = () => document.getElementById("restore-file").click();
+document.getElementById("restore-file").onchange = async e => {
+  const f = e.target.files[0];
+  if (!f) return;
+  try {
+    const s = JSON.parse(await f.text());
+    if (!s.buildings || !Array.isArray(s.entrances) || !Array.isArray(s.edges)) throw new Error("format");
+    commit(() => { state = s; });
+    toast("Backup restored");
+  } catch (err) { toast("Wrong file: use a file saved with \"Back up JSON\""); }
+  e.target.value = "";
+};
+
+load();
+render();
+</script>
+</body>
+</html>
