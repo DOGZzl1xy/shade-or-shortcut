@@ -1,6 +1,6 @@
 // Home page: a scroll story over one fixed map; each screen sets the map view and layers for its one sentence.
 import { VERSION, nav, baseStyle, getJSON, shadeRamp, pmtilesProtocol, COLORS, CLUSTERS, GRID_RAMPS, ATTR, DEMO_CENTER, pct, newMap,
-  routeLayers, ROUTE_LAYERS } from "./common.js?v=1e22d72";
+  routeLayers, ROUTE_LAYERS } from "./common.js?v=510bf10";
 
 nav("index.html");
 pmtilesProtocol();
@@ -25,7 +25,9 @@ const map = newMap({
       paint: { "line-color": shadeRamp("s7"), "line-width": ["interpolate", ["linear"], ["zoom"], 13, 0.6, 16, 2.4], "line-opacity": 0.9 } },
     { id: "grid", type: "fill", source: "grid", layout: { visibility: "none" },
       paint: { "fill-color": "#555", "fill-opacity": 0.7, "fill-outline-color": "rgba(7,8,11,0.6)" } },
-    { id: "bld", type: "line", source: "bld", layout: { visibility: "none" }, paint: { "line-color": "#ffffff", "line-width": 1.2, "line-opacity": 0.5 } },
+    // annotated buildings, filled as on the route tool so the last screen leads straight into it
+    { id: "bld", type: "fill", source: "bld", layout: { visibility: "none" },
+      paint: { "fill-color": "rgba(180,140,255,0.22)", "fill-outline-color": "rgba(180,140,255,0.55)" } },
     // what shades each campus sidewalk at 15:00 (opening screens); it fades in, "spread onto the map"
     { id: "types", type: "line", source: "types", filter: ["!=", ["get", "t"], "indoor"], layout: { visibility: "none", "line-cap": "round" },
       paint: { "line-color": ["match", ["get", "t"], "tree", COLORS.tree, "bldg", COLORS.bldg, COLORS.sun], "line-width": 2.6,
@@ -43,17 +45,22 @@ const map = newMap({
 });
 const styleReady = new Promise((res) => map.once("style.load", res));
 // layers needed only further down the story load in the background
-let TYPES_AT = DEMO_CENTER;
 getJSON("data/massing.geojson").then((d) => styleReady.then(() => map.getSource("mass").setData(d)));
 getJSON("data/stations.geojson").then((d) => styleReady.then(() => map.getSource("st").setData(d)));
-getJSON("data/shade_types.geojson").then((d) => {
-  const c = d.features.filter((f) => f.properties.t === "indoor").flatMap((f) => f.geometry.coordinates);
-  TYPES_AT = [c.reduce((a, q) => a + q[0], 0) / c.length, c.reduce((a, q) => a + q[1], 0) / c.length];   // around the campus passages
-  styleReady.then(() => map.getSource("types").setData(d));
-});
+getJSON("data/shade_types.geojson").then((d) => styleReady.then(() => map.getSource("types").setData(d)));
 const [hero, summary, layers, grid] = await Promise.all([
   getJSON("data/hero.json"), getJSON("data/summary.json"), getJSON("data/demo_layers.json"), getJSON("data/grid.geojson")]);
 const $ = (id) => document.getElementById(id);
+// shade-type close-up: a spot with all four states within a block, one labelled example of each
+const TF = hero.types_focus, TYPES_AT = TF.center;
+const PILL = { sun: ["sun", COLORS.sun], tree: ["tree shade", COLORS.tree], bldg: ["building shade", COLORS.bldg], indoor: ["indoors", COLORS.indoor] };
+// (the fade sits on an inner element: MapLibre sets an inline opacity on the marker element itself)
+const pills = TF.labels.map(({ t, at }) => {
+  const el = document.createElement("div");
+  el.innerHTML = `<div class="pill" style="color:${PILL[t][1]}">${PILL[t][0]}</div>`;
+  return new maplibregl.Marker({ element: el }).setLngLat(at);
+});
+const showPills = (on) => pills.forEach((m) => { if (on) m.addTo(map); m.getElement().firstChild.classList.toggle("on", on); });
 const set = (id, v) => { const el = $(id); if (el) el.textContent = v; };
 
 // ---- headline numbers: walks home from frequent bus stops, 300-800 m, 15:00 (the walks the grid summarises)
@@ -146,10 +153,16 @@ function arrangeTags() {
 map.on("moveend", arrangeTags);
 const showTag = (k, on) => tags[k].getElement().classList.toggle("on", on);
 const hideTags = () => { showTag("short", false); showTag("cool", false); };
+// indoor pieces in the walking direction (their side offset follows the line direction, like the coolest walk's)
+function along(segs, path) {
+  const at = (q) => path.reduce((b, c, i) => ((c[0] - q[0]) ** 2 + (c[1] - q[1]) ** 2 < (path[b][0] - q[0]) ** 2 + (path[b][1] - q[1]) ** 2 ? i : b), 0);
+  return segs.map((g) => (at(g[0]) > at(g[g.length - 1]) ? [...g].reverse() : g));
+}
 const routeFeatures = (p, fs = 1, fc = 1, indoor = false) => ({ type: "FeatureCollection", features: [
   { type: "Feature", properties: { role: "short" }, geometry: { type: "LineString", coordinates: partial(p.shortest.coords, fs) } },
   { type: "Feature", properties: { role: "cool" }, geometry: { type: "LineString", coordinates: partial(p.coolest.coords, fc) } },
-  ...(indoor ? [{ type: "Feature", properties: { role: "indoor" }, geometry: { type: "MultiLineString", coordinates: p.coolest.indoor_segs } }] : [])] });
+  ...(indoor ? along(p.coolest.indoor_segs, p.coolest.coords).map((g) => (
+    { type: "Feature", properties: { role: "indoor" }, geometry: { type: "LineString", coordinates: g } })) : [])] });
 
 // ---- opening animation: draw the shortest walk, then the coolest, then switch to the next station
 const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -189,9 +202,11 @@ function fitPair(p, panel, labels = false, tilt = false) {
   }
   map.setPadding({ top: 0, bottom: 0, left: 0, right: 0 });      // flyTo below leaves its padding on the map
   const view = tilt ? { pitch: 55, bearing: -28 } : { pitch: 0, bearing: 0 };
-  const cam = map.cameraForBounds([[Math.min(...lons), Math.min(...lats)], [Math.max(...lons), Math.max(...lats)]],
-    { padding: pad, maxZoom: 17, bearing: view.bearing });
-  map.flyTo({ ...cam, ...view, zoom: cam.zoom + (tilt ? 0.1 : 0), duration: 1200 });   // tilted, the near half of the walk needs less room
+  const bounds = [[Math.min(...lons), Math.min(...lats)], [Math.max(...lons), Math.max(...lats)]];
+  // no camera fits when the padding is larger than the canvas (e.g. before the first resize): fall back to small margins
+  const cam = map.cameraForBounds(bounds, { padding: pad, maxZoom: 17, bearing: view.bearing })
+    ?? map.cameraForBounds(bounds, { padding: 20, maxZoom: 17, bearing: view.bearing });
+  if (cam) map.flyTo({ ...cam, ...view, zoom: cam.zoom + (tilt ? 0.1 : 0), duration: 1200 });   // tilted, the near half of the walk needs less room
 }
 const examplePanel = () => (current === "example" ? document.querySelector('[data-step="example"] .panel') : null);
 function nextPair() {
@@ -248,7 +263,7 @@ const gridBy = (key) => {
 // centre a view in the part of the screen the step panel leaves free
 const fly = (view) => {
   const p = document.querySelector(`[data-step="${current}"] .panel`)?.getBoundingClientRect(), W = window.innerWidth;
-  const padding = !p ? {} : W > 760 ? { left: p.right, top: 52, right: 0, bottom: 0 } : { bottom: window.innerHeight - p.top, top: 52, left: 0, right: 0 };
+  const padding = !p ? {} : W > 760 ? { left: p.right + 40, top: 52, right: 0, bottom: 0 } : { bottom: window.innerHeight - p.top, top: 52, left: 0, right: 0 };
   map.flyTo({ pitch: 0, bearing: 0, ...view, padding });
 };
 const CITY = { center: [-75.135, 39.995], zoom: 10.9, duration: 2200 };
@@ -257,6 +272,7 @@ const scene = ({ city = false, grid = false, bld = false, route = false, mass = 
   if (current !== "hero" && current !== "example") heroOn = false;
   vis("city", city); vis("bld", bld); vis("mass", mass); vis("st", st); routes(route); if (!grid) vis("grid", false);
   for (const id of ["types", "types-in"]) { vis(id, true); map.setPaintProperty(id, "line-opacity", types ? 1 : 0); }
+  showPills(types);
   map.setPaintProperty("city", "line-opacity", cityOpacity);
   if (!route || current !== "example") hideTags();
 };
@@ -267,8 +283,8 @@ const STEPS = {
     scene({ city: true }); map.setPaintProperty("city", "line-color", ["step", ["get", "s7"], COLORS.sun, 50, "#2a2e36"]);
     fly({ center: [-75.1652, 39.9502], zoom: 14.6, duration: 2000 });
   },
-  sources: () => { scene(); fly({ center: TYPES_AT, zoom: 15.9, duration: 2000 }); },
-  types: () => { scene({ types: true }); fly({ center: TYPES_AT, zoom: 15.9, duration: 1200 }); },
+  sources: () => { scene(); fly({ center: TYPES_AT, zoom: 17, duration: 2000 }); },
+  types: () => { scene({ types: true }); fly({ center: TYPES_AT, zoom: 17, duration: 1200 }); },
   question: () => { scene({ st: true }); fly(CITY); },
   example: () => { scene({ route: true }); drawn = false; placeTags(PAIRS[pairIdx], false); startLoop(); fitPair(PAIRS[pairIdx], examplePanel(), true); },
   shade: () => {
@@ -287,7 +303,7 @@ const STEPS = {
     placeTags(p, true); showTag("short", true); showTag("cool", true);
     fitPair(p, document.querySelector('[data-step="indoor"] .panel'), true, true);
   },
-  end: () => { scene({ city: true, bld: true, cityOpacity: 0.6 }); setHour(15); fly({ center: DEMO_CENTER, zoom: 15, duration: 2000 }); },
+  end: () => { scene({ city: true, bld: true, cityOpacity: 0.75 }); setHour(15); fly({ center: DEMO_CENTER, zoom: 15, duration: 2000 }); },
 };
 const io = new IntersectionObserver((entries) => {
   for (const en of entries) {
@@ -300,6 +316,11 @@ const io = new IntersectionObserver((entries) => {
   }
 }, { threshold: 0.55 });
 document.querySelectorAll("section[data-step]").forEach((s) => io.observe(s));
+// the buttons on the last screen hand the current view to the tool and the city map, which open where the story ends
+document.querySelectorAll(".cta a").forEach((a) => a.addEventListener("click", () => {
+  const b = map.getBounds();
+  a.href = `${a.getAttribute("href").split("#")[0]}#b=${[b.getWest(), b.getSouth(), b.getEast(), b.getNorth()].map((v) => v.toFixed(5)).join(",")}`;
+}));
 
 // keys and presentation clickers (PageDown / PageUp) move exactly one screen; a focused map canvas would swallow them otherwise
 const SCREENS = [...document.querySelectorAll("section[data-step]")];

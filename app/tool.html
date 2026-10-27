@@ -9,23 +9,33 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500&family=Space+Grotesk:wght@500;600&family=Space+Mono&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="vendor/maplibre-gl.css">
-<link rel="stylesheet" href="css/site.css?v=1e22d72">
+<link rel="stylesheet" href="css/site.css?v=510bf10">
+<script>
+  // a page cross-fade the browser skips (e.g. in a background tab) rejects its promises; nothing to do about it
+  const quiet = (e) => { const t = e.viewTransition; if (t) [t.ready, t.finished, t.updateCallbackDone].forEach((q) => q.catch(() => {})); };
+  addEventListener("pagereveal", quiet); addEventListener("pageswap", quiet);
+</script>
 <style>
   #map { position: fixed; top: var(--nav-h); left: 0; right: 0; bottom: 0; }
-  #side { position: fixed; top: calc(var(--nav-h) + 14px); right: 14px; width: 340px; max-height: calc(100vh - var(--nav-h) - 28px);
+  #side { position: fixed; top: calc(var(--nav-h) + 14px); left: 14px; width: 320px; max-height: calc(100vh - var(--nav-h) - 28px);
     overflow-y: auto; z-index: 5; }
-  #side h1 { font-family: var(--display); font-weight: 500; font-size: 24px; margin: 4px 0 6px; }
-  #side p { margin: 0 0 10px; font-size: 14px; color: var(--dim); }
+  #side h1 { font-family: var(--display); font-weight: 500; font-size: 22px; margin: 4px 0 4px; }
   .block { margin-top: 14px; }
-  table.cmp { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 13px; }
+  table.cmp { width: 100%; border-collapse: collapse; font-size: 13px; }
   table.cmp th { font: 10px var(--mono); text-transform: uppercase; letter-spacing: 0.1em; color: var(--dim); font-weight: 400; text-align: right; padding: 4px 0; }
   table.cmp th:first-child, table.cmp td:first-child { text-align: left; }
   table.cmp td { text-align: right; padding: 5px 0; border-top: 1px solid var(--line); font-family: var(--mono); line-height: 1.3; }
   table.cmp td small { display: block; color: var(--dim); font-size: 11px; }
+  table.cmp th + th, table.cmp td + td { padding-left: 10px; }
+  table.cmp td { font-size: 12px; }
   .verdict { margin-top: 10px; font-size: 14px; }
-  .bar { display: flex; height: 8px; border-radius: 4px; overflow: hidden; margin-top: 4px; background: var(--line); }
+  .bar { display: flex; height: 8px; border-radius: 4px; overflow: hidden; margin-top: 10px; background: var(--line); }
   .bar span { display: block; height: 100%; }
-  .hint { font-size: 12px; color: var(--dim); }
+  .keys { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 5px; font-size: 11px; color: var(--dim); }
+  .keys i { display: inline-block; width: 8px; height: 8px; border-radius: 2px; margin-right: 4px; vertical-align: middle; }
+  .hint { font-size: 12px; color: var(--dim); margin: 0; }
+  .ramp { height: 6px; border-radius: 3px; margin-top: 10px; background: linear-gradient(to right, #ff8a3d, #e9b36a, #6fb0c8, #35d0e0); }
+  .ends { display: flex; justify-content: space-between; font: 10px var(--mono); color: var(--dim); }
   .pin { width: 26px; height: 26px; border-radius: 50%; background: #07080b; border: 2px solid #fff; color: #fff; cursor: grab;
     font: 12px/22px var(--mono); text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.6); }
   #status { font: 11px var(--mono); color: var(--dim); }
@@ -39,19 +49,21 @@
 <body>
 <div id="map"></div>
 <div id="side" class="panel">
-  <div class="label">University City · summer walks</div>
+  <div class="label">University City · demo</div>
   <h1>Shortest or coolest?</h1>
-  <p>Click a start (A) and an end (B) on the map, or drag the markers, to compare the shortest walk with the coolest one.</p>
-  <div id="status">Loading the sidewalk map…</div>
-
+  <p class="hint">Click two points, or drag A and B.</p>
+  <div id="status">Loading…</div>
   <div class="msg keep" id="msg" role="status"></div>
+
   <div class="block" id="time"></div>
+  <div class="ramp"></div><div class="ends"><span>sunny</span><span>shaded</span></div>
+
   <div class="block">
-    <div class="label" style="margin-bottom:6px">Indoor passages</div>
+    <div class="label" style="margin-bottom:6px">Through buildings</div>
     <div class="seg" id="scen">
-      <button data-s="outdoor">Outdoor only</button>
-      <button data-s="no_penncard">No PennCard</button>
-      <button data-s="all" class="on">All buildings</button>
+      <button data-s="outdoor">None</button>
+      <button data-s="no_penncard" title="Only buildings that need no Penn ID">No ID needed</button>
+      <button data-s="all" class="on">All</button>
     </div>
   </div>
 
@@ -59,26 +71,18 @@
     <table class="cmp">
       <thead><tr><th></th><th>length</th><th>sun</th><th>shade</th><th>indoor</th></tr></thead>
       <tbody>
-        <tr><td><span class="legend-swatch ls-short"></span>Shortest<small>(outdoors)</small></td><td id="s-len"></td><td id="s-sun"></td><td id="s-sh"></td><td id="s-in"></td></tr>
+        <tr><td><span class="legend-swatch ls-short"></span>Shortest</td><td id="s-len"></td><td id="s-sun"></td><td id="s-sh"></td><td id="s-in"></td></tr>
         <tr><td><span class="legend-swatch ls-cool"></span>Coolest</td><td id="c-len"></td><td id="c-sun"></td><td id="c-sh"></td><td id="c-in"></td></tr>
       </tbody>
     </table>
-    <div class="block"><div class="label">Coolest walk, by surface</div><div class="bar" id="cbar"></div></div>
+    <div class="bar" id="cbar"></div>
+    <div class="keys"><span><i style="background:var(--sun)"></i>sun</span><span><i style="background:var(--tree)"></i>tree</span><span><i style="background:var(--bldg)"></i>building</span><span><i style="background:var(--indoor)"></i>indoor</span></div>
     <div class="verdict" id="verdict"></div>
-    <p class="hint" style="margin-top:8px" id="cost"></p>
-    <p class="hint">Sun, shade and indoor: metres, and share of the walk's length.</p>
   </div>
 
-  <div class="block legend-row hint">
-    <span><span class="legend-swatch" style="background:var(--sun)"></span>sunny sidewalk</span>
-    <span><span class="legend-swatch" style="background:var(--cool)"></span>shaded</span>
-    <span><span class="legend-swatch" style="background:var(--indoor)"></span>indoor passage</span>
-  </div>
-  <div class="block"><button class="ghost" id="swap">Swap A and B</button> <button class="ghost" id="reset">Clear points</button></div>
-  <p class="hint" style="margin-top:12px">The shortest walk stays outdoors; the coolest walk may go through the buildings you open. “No PennCard” opens only buildings that do not need a Penn ID; indoor passages are assumed open and air-conditioned. Weighted exposure counts a metre in the sun as 1 and a shaded metre as less, more so the farther you have walked (Wen et al. 2025).</p>
-  <p class="credits">Basemap © Esri, HERE, Garmin, © OpenStreetMap contributors (ODbL). Shade from NOAA 2022 LiDAR, City of Philadelphia building footprints and PASDA land cover; sidewalks DVRPC; campus footways © OpenStreetMap contributors (ODbL).</p>
+  <div class="block"><button class="ghost" id="swap">Swap A and B</button> <button class="ghost" id="reset">Clear</button></div>
 </div>
 <script src="vendor/maplibre-gl.js"></script>
-<script type="module" src="js/tool.js?v=1e22d72"></script>
+<script type="module" src="js/tool.js?v=510bf10"></script>
 </body>
 </html>

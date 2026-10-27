@@ -1,5 +1,5 @@
 // City map: sidewalk shade by hour (PMTiles), 500 m grid indicators and clusters (bus walks), rapid-transit stations.
-import { VERSION, nav, collapsible, baseStyle, getJSON, shadeRamp, pmtilesProtocol, COLORS, CLUSTERS, GRID_RAMPS, ATTR, pct, timeControl, newMap } from "./common.js?v=1e22d72";
+import { VERSION, handoff, nav, collapsible, baseStyle, getJSON, shadeRamp, pmtilesProtocol, COLORS, CLUSTERS, GRID_RAMPS, ATTR, pct, timeControl, newMap } from "./common.js?v=510bf10";
 
 nav("map.html");
 pmtilesProtocol();
@@ -13,8 +13,9 @@ let summary;                                   // filled with the station data
 const RAMPS = GRID_RAMPS;
 const stColor = ["interpolate", ["linear"], ["coalesce", ["get", "sun_red_300-800"], 0], 0, "#1d2733", 0.15, "#2f8f9a", 0.4, COLORS.cool];
 
+const start = handoff();                // arriving from the story: open on its last view
 const map = newMap({
-  container: "map", center: [-75.135, 39.995], zoom: 10.6,
+  container: "map", ...(start ? { bounds: start } : { center: [-75.135, 39.995], zoom: 10.6 }),
   style: baseStyle({
     city: { type: "vector", url: `pmtiles://data/city_shade.pmtiles?v=${VERSION}`, attribution: `${ATTR.shade}; ${ATTR.chm}` },
     grid: { type: "geojson", data: EMPTY, attribution: "Transit: SEPTA GTFS (fall 2026)" },

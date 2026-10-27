@@ -20,6 +20,8 @@
   color-scheme: dark;
 }
 * { box-sizing: border-box; }
+/* page changes between the story, the tool and the map cross-fade instead of flashing (where browsers support it) */
+@view-transition { navigation: auto; }
 html, body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.6 var(--body); }
 a { color: var(--cool); }
 a:hover { color: #fff; }
@@ -69,10 +71,10 @@ a:hover { color: #fff; }
   backdrop-filter: blur(8px);
 }
 .legend-swatch { display: inline-block; width: 18px; height: 4px; border-radius: 2px; vertical-align: middle; margin-right: 6px; }
-/* route swatches drawn like the lines: shortest solid, coolest dashed, indoors dotted */
-.ls-short { background: var(--sun); box-shadow: 0 0 0 1.5px #d4d6db; }
-.ls-cool { background: repeating-linear-gradient(to right, var(--cool) 0 6px, #d4d6db 6px 10px); box-shadow: 0 0 0 1.5px #d4d6db; }
-.ls-indoor { background: radial-gradient(circle, var(--indoor) 1.8px, #d4d6db 2.2px) 0 50% / 6px 4px repeat-x; box-shadow: 0 0 0 1.5px #d4d6db; }
+/* route swatches drawn like the lines: shortest solid, coolest dashed over a dim track, indoors dotted */
+.ls-short { background: var(--sun); }
+.ls-cool { background: repeating-linear-gradient(to right, var(--cool) 0 6px, #1d6b73 6px 10px); }
+.ls-indoor { background: radial-gradient(circle, var(--indoor) 1.8px, #4b3d73 2.2px) 0 50% / 6px 4px repeat-x; }
 
 /* ---- form controls */
 input[type=range] { width: 100%; accent-color: var(--cool); }

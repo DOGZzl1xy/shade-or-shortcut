@@ -9,11 +9,17 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500&family=Space+Grotesk:wght@500;600&family=Space+Mono&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="vendor/maplibre-gl.css">
-<link rel="stylesheet" href="css/site.css?v=1e22d72">
+<link rel="stylesheet" href="css/site.css?v=510bf10">
+<script>
+  // a page cross-fade the browser skips (e.g. in a background tab) rejects its promises; nothing to do about it
+  const quiet = (e) => { const t = e.viewTransition; if (t) [t.ready, t.finished, t.updateCallbackDone].forEach((q) => q.catch(() => {})); };
+  addEventListener("pagereveal", quiet); addEventListener("pageswap", quiet);
+</script>
 <style>
   #map { position: fixed; top: var(--nav-h); left: 0; right: 0; bottom: 0; }
   #side { position: fixed; top: calc(var(--nav-h) + 14px); left: 14px; width: 320px; max-height: calc(100vh - var(--nav-h) - 28px); overflow-y: auto; z-index: 5; }
-  #side h1 { font-family: var(--display); font-weight: 500; font-size: 22px; margin: 4px 0 6px; }
+  #side h1 { font-family: var(--display); font-weight: 500; font-size: 22px; margin: 4px 0 4px; }
+  .hint { font-size: 12px; color: var(--dim); margin: 14px 0 0; }
   #side p { margin: 0 0 8px; font-size: 13px; color: var(--dim); }
   .block { margin-top: 14px; }
   .dot { display: inline-block; width: 11px; height: 11px; border-radius: 50%; border: 1px solid #e8e6df; vertical-align: middle; margin-right: 6px; }
@@ -29,12 +35,11 @@
 <body>
 <div id="map"></div>
 <div id="side" class="panel">
-  <div class="label">Philadelphia · sidewalks and walks home</div>
+  <div class="label">Philadelphia</div>
   <h1>City shade map</h1>
-  <p>Zoom in to street level to see the shade on every sidewalk. The <b>500 m grid</b> summarises walks home from <b>high-frequency bus stops</b>; the <b>circles</b> are <b>rapid-transit stations</b> (Regional Rail, L, B and the trolley tunnel). Both use walks of 300–800 m at 15:00.</p>
 
   <div class="block">
-    <div class="label" style="margin-bottom:6px">Sidewalk shade</div>
+    <div class="label" style="margin-bottom:6px">Sidewalk shade · zoom in</div>
     <div id="time"></div>
     <div class="ramp" style="background:linear-gradient(to right,#ff8a3d,#e9b36a,#6fb0c8,#35d0e0)"></div>
     <div class="ends"><span>sunny</span><span>shaded</span></div>
@@ -42,29 +47,28 @@
   </div>
 
   <div class="block">
-    <div class="label" style="margin-bottom:6px">500 m grid · high-frequency bus walks</div>
+    <div class="label" style="margin-bottom:6px">500 m grid · bus walks</div>
     <select id="gridvar">
-      <option value="cluster">Cluster (k = 3)</option>
-      <option value="sun_red">Achievable sun reduction</option>
-      <option value="no_alt_share">No cooler option (&lt; 2%)</option>
-      <option value="sun_share">Sun share of the shortest walk</option>
-      <option value="network_km_km2">Sidewalk density (km/km²)</option>
-      <option value="none">Hide grid</option>
+      <option value="cluster">Clusters</option>
+      <option value="sun_red">Less sun possible</option>
+      <option value="no_alt_share">No cooler option</option>
+      <option value="sun_share">Sun on the shortest walk</option>
+      <option value="network_km_km2">Sidewalk density</option>
+      <option value="none">Hide</option>
     </select>
     <div id="glegend" class="block" style="margin-top:8px"></div>
   </div>
 
   <div class="block">
-    <label class="chk"><input type="checkbox" id="stations" checked> Rapid-transit stations · sun reduction</label>
+    <label class="chk"><input type="checkbox" id="stations" checked> Stations · less sun</label>
     <div class="ramp" style="background:linear-gradient(to right,#1d2733,#2f8f9a,#35d0e0)"></div>
     <div class="ends"><span>0%</span><span>40%+</span></div>
-    <div style="font-size:12px;margin-top:4px"><span class="dot" style="background:transparent"></span>hollow: fewer than <span id="minst">50</span> walks, treat with caution</div>
+    <div style="font-size:11px;color:var(--dim);margin-top:4px"><span class="dot" style="background:transparent"></span>under <span id="minst">50</span> walks</div>
   </div>
-  <p class="block" style="font-size:12px">Click a cell or a station for details. Methods: <a href="../methods.html">methods page</a>.</p>
-  <p class="credits">Basemap © Esri, HERE, Garmin, © OpenStreetMap contributors (ODbL). Shade from NOAA 2022 LiDAR, City of Philadelphia building footprints and PASDA land cover; trees in the 1 km buffer outside the city from Meta / WRI CHMv2 (CC BY 4.0); sidewalks DVRPC; transit SEPTA GTFS.</p>
+  <p class="hint">Walks of 300–800 m at 15:00. Click a cell or station.</p>
 </div>
 <script src="vendor/maplibre-gl.js"></script>
 <script src="vendor/pmtiles.js"></script>
-<script type="module" src="js/map.js?v=1e22d72"></script>
+<script type="module" src="js/map.js?v=510bf10"></script>
 </body>
 </html>
