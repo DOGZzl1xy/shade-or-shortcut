@@ -236,7 +236,7 @@ ul.task-list li input[type="checkbox"] {
 </section>
 <section id="key-parameters" class="level2">
 <h2 class="anchored" data-anchor-id="key-parameters">Key parameters</h2>
-<div id="9251badd" class="cell" data-execution_count="2">
+<div id="64be455b" class="cell" data-execution_count="2">
 <div class="cell-output cell-output-display cell-output-markdown" data-execution_count="2">
 <table class="caption-top table table-sm table-striped small">
 <colgroup>
@@ -342,7 +342,7 @@ ul.task-list li input[type="checkbox"] {
 <h2 class="anchored" data-anchor-id="validation">Validation</h2>
 <ul>
 <li><strong>Synthetic shadows.</strong> Unit tests cast shadows from box buildings and trees on flat ground and check the shadow length against height / tan(sun elevation) for several sun positions, no shadow on the sunny side, tree versus building priority, terrain shadows and observers on bridge decks.</li>
-<li><strong>Building heights.</strong> LiDAR heights agree with the city’s recorded heights for 541,222 buildings (Spearman ρ = 0.84, median absolute difference 0.5 m).</li>
+<li><strong>Building heights.</strong> LiDAR heights agree with the city’s recorded heights for 541,222 buildings (Spearman ρ = 0.84; Pearson r = 0.83). The median difference (LiDAR minus record) is −0.5 m, so LiDAR heights are typically 0.5 m lower than the records; the median absolute difference is 0.5 m.</li>
 <li><strong>Routing.</strong> With θ fixed, the search reproduces networkx Dijkstra exactly on 9,094 nodes (largest absolute difference 0). Hand-computed small networks check the cost rule, tree versus building shade and the indoor term.</li>
 <li><strong>Browser and analysis agree.</strong> The route tool’s JavaScript router returns the same shortest and coolest paths as the Python analysis for 100 random walks, scenarios and hours.</li>
 <li><strong>Direction of travel.</strong> Reversing 500 walks of at least 400 m (home → stop) changes little: mean sun reduction 14.2% one way and 14.2% the other, correlation 0.99.</li>
