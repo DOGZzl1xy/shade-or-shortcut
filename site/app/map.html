@@ -29,6 +29,8 @@
   .ends { display: flex; justify-content: space-between; font: 10px var(--mono); color: var(--dim); }
   .maplibregl-popup-content { background: #11141a; color: var(--ink); font: 12px var(--body); border: 1px solid var(--line); }
   .maplibregl-popup-tip { display: none; }
+  .ringlabel { font: 11px var(--mono); letter-spacing: 0.06em; color: #fff; background: rgba(7,8,11,0.85); padding: 2px 8px;
+    border: 1px dashed rgba(255,255,255,0.7); border-radius: 10px; margin-bottom: 6px; white-space: nowrap; }
   @media (max-width: 760px) { #side { left: 8px; right: 8px; width: auto; top: auto; bottom: 8px; max-height: 44vh; } }
 </style>
 </head>
@@ -65,7 +67,11 @@
     <div class="ends"><span>0%</span><span>40%+</span></div>
     <div style="font-size:11px;color:var(--dim);margin-top:4px"><span class="dot" style="background:transparent"></span>under <span id="minst">50</span> walks</div>
   </div>
-  <p class="hint">Walks of 300–800 m at 15:00. Click a cell or station.</p>
+  <p class="hint">Walks of 300–800 m at 15:00. Click a cell, or a station to see its 1.2 km reach.</p>
+  <div class="block" id="focus" hidden>
+    <div id="focus-info" style="font-size:13px"></div>
+    <button class="ghost" id="unfocus" style="margin-top:10px">Back to the whole city</button>
+  </div>
 </div>
 <script src="vendor/maplibre-gl.js"></script>
 <script src="vendor/pmtiles.js"></script>
