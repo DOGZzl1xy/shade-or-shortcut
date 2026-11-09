@@ -29,6 +29,7 @@ heat-stress category (Bröde et al. 2012: < 26 none, 26-32 moderate, 32-38 stron
 
 import json
 import sys
+import time
 
 import geopandas as gpd
 import numpy as np
@@ -36,12 +37,13 @@ import pandas as pd
 import pvlib
 import rasterio
 import requests
+import shapely
 from rasterio.transform import from_origin
 from scipy import ndimage
 from shapely.geometry import LineString
 
 from coolpath import ROOT, load_config
-from coolpath.areas import solweig_bbox4326, solweig_box
+from coolpath.areas import city, solweig_bbox4326, solweig_box
 from coolpath.network import bridge_deck
 from coolpath.shadow import cast_z, local_max, sample_points
 from coolpath.sun import sun_table
@@ -86,6 +88,9 @@ def met(cfg):
     out.parent.mkdir(parents=True, exist_ok=True)
     fmt = ["%d"] * 4 + ["%.2f"] * (len(UMEP_COLS) - 4)
     np.savetxt(out, m.to_numpy(), fmt=fmt, delimiter=" ", header=" ".join(UMEP_COLS), comments="")
+    h0, h1 = s["met_hours"]                         # the city run's file: rows h0..h1 only
+    sub = m[(m.it >= h0) & (m.it <= h1)]
+    np.savetxt(met_file(cfg), sub.to_numpy(), fmt=fmt, delimiter=" ", header=" ".join(UMEP_COLS), comments="")
     day = h[(t.dt.hour >= min(s["hours"])) & (t.dt.hour <= max(s["hours"]))]
     res = {"date": s["date"], "source": f"{s['met_api']} (models=era5)", "grid_lat": js["latitude"],
            "grid_lon": js["longitude"], "grid_elevation_m": js["elevation"], "met_file": out.name,
@@ -97,6 +102,11 @@ def met(cfg):
     (cfg["paths"]["tables"] / "phase_10_met.json").write_text(json.dumps(res, indent=2))
     print(json.dumps(res, indent=2))
     print(h[["time", *HOURLY[:7], "cloud_cover"]].to_string())
+
+
+def met_file(cfg):
+    h0, h1 = cfg["solweig"]["met_hours"]
+    return folder(cfg) / f"met_{cfg['solweig']['date']}_h{h0:02d}-{h1:02d}.txt"
 
 
 def runs(cfg) -> dict:
@@ -581,10 +591,257 @@ def figure(cfg):
     print("figure:", out)
 
 
+# ---------------------------------------------------------------- city-wide run (D-061)
+def city_folder(cfg):
+    return cfg["paths"]["interim"] / "solweig_city"
+
+
+def city_runs(cfg) -> dict:
+    """core_m cores tiling the city bounding box from its south-west corner (cores that miss the city are skipped);
+    run window = core + margin_m on every side. Keys x{column from west}_y{row from south}."""
+    c = cfg["solweig"]["city"]
+    k, mg = c["core_m"], c["margin_m"]
+    poly = city(cfg)
+    x0, y0, x1, y1 = poly.bounds
+    x0, y0 = float(np.floor(x0)), float(np.floor(y0))
+    out = {}
+    for i in range(int(np.ceil((x1 - x0) / k))):
+        for j in range(int(np.ceil((y1 - y0) / k))):
+            core = (x0 + i * k, y0 + j * k, x0 + (i + 1) * k, y0 + (j + 1) * k)
+            if shapely.box(*core).intersects(poly):
+                out[f"x{i:02d}_y{j:02d}"] = {"core": core, "run": (core[0] - mg, core[1] - mg, core[2] + mg, core[3] + mg)}
+    return out
+
+
+def city_points(cfg):
+    """Sample points of the phase-4 graph: the phase-3 points plus the phase-4 additions (OSM covered ways,
+    connectors) resampled as phase 4 does (same edges in the same order, 2 m, ground observers), with the
+    SOLWEIG core each point falls in. Written to solweig_city/points_city.parquet."""
+    proc, sc = cfg["paths"]["processed"], cfg["shadow"]
+    p3 = pd.read_parquet(proc / "shadow_points_xyz.parquet", columns=["edge_id", "seg_m", "x", "y", "z0", "on_bridge"])
+    ge = gpd.read_parquet(proc / "graph_edges.parquet", columns=["edge_id", "geometry"])
+    new = ge[~ge.edge_id.isin(np.unique(p3.edge_id))]
+    px, py, k, seg = sample_points(new, sc["sample_spacing_m"])
+    with rasterio.open(proc / "dem.tif") as f:
+        z0 = np.array([v[0] for v in f.sample(zip(px, py))], np.float64) + sc["observer_height_m"]
+    p4 = pd.DataFrame({"edge_id": new.edge_id.to_numpy()[k], "seg_m": seg, "x": px, "y": py, "z0": z0, "on_bridge": False})
+    pts = pd.concat([p3, p4], ignore_index=True)
+    rr = city_runs(cfg)
+    k_ = cfg["solweig"]["city"]["core_m"]
+    x0, y0 = min(r["core"][0] for r in rr.values()), min(r["core"][1] for r in rr.values())
+    i = np.floor((pts.x - x0) / k_).astype(int)
+    j = np.floor((pts.y - y0) / k_).astype(int)
+    pts["key"] = [f"x{a:02d}_y{b:02d}" for a, b in zip(i, j)]
+    missing = set(pts.key) - set(rr)
+    assert not missing, f"points outside every core: {sorted(missing)[:5]}"
+    pts.index.name = "pid"
+    city_folder(cfg).mkdir(parents=True, exist_ok=True)
+    pts.reset_index().to_parquet(city_folder(cfg) / "points_city.parquet")
+    res = {"points": len(pts), "phase3_points": len(p3), "phase4_new_points": len(p4), "bridge_points": int(pts.on_bridge.sum()),
+           "cores": len(rr), "cores_with_points": int(pts.key.nunique()),
+           "points_per_core_quantiles": pts.key.value_counts().quantile([0, .1, .5, .9, 1]).to_dict()}
+    print(json.dumps(res, indent=2))
+    return res
+
+
+def city_package(cfg):
+    """One tar for the cloud-drive upload: surfaces (DEM as LERC with 1 mm max error, building / tree heights,
+    land cover), the points (pid, x, y, on_bridge, key), the 7-19 h met file, runs_city.json (cores that hold sample
+    points only) and the runner. Unpack and run on the server: python solweig_run.py city solweig_city ..."""
+    import shutil
+    import tarfile
+    s = cfg["solweig"]
+    d = city_folder(cfg)
+    pk = d / "package"
+    (pk / "rasters").mkdir(parents=True, exist_ok=True)
+    proc = cfg["paths"]["processed"]
+    with rasterio.open(proc / "dem.tif") as f:
+        prof = f.profile | {"driver": "GTiff", "compress": "LERC_ZSTD", "max_z_error": 0.001, "tiled": True,
+                            "blockxsize": 512, "blockysize": 512, "BIGTIFF": "YES"}
+        prof.pop("predictor", None)
+        with rasterio.open(pk / "rasters" / "dem.tif", "w", **prof) as dst:
+            for _, w in f.block_windows(1):
+                dst.write(f.read(1, window=w), 1, window=w)
+    for src in (proc / "surface_building.tif", proc / "surface_tree.tif",
+                cfg["paths"]["raw"] / "landcover" / "landcover2018_city_1m.tif"):
+        shutil.copy(src, pk / "rasters" / src.name.replace("landcover2018_city_1m", "landcover"))
+    pts = pd.read_parquet(d / "points_city.parquet", columns=["pid", "x", "y", "on_bridge", "key"])
+    pts.to_parquet(pk / "points.parquet", compression="zstd")
+    shutil.copy(met_file(cfg), pk / "met.txt")
+    shutil.copy(ROOT / "scripts" / "solweig_run.py", pk / "solweig_run.py")
+    runs = {k: v for k, v in city_runs(cfg).items() if k in set(pts.key)}      # cores without sample points are skipped
+    man = {"date": s["date"], "met_file": "met.txt", "crs": cfg["project"]["crs"], "runs": runs,
+           "tree_max_m": s["tree_max_m"], "landcover_umep": s["landcover_umep"], "utci_scale": s["city"]["utci_scale"],
+           "met_hours": s["met_hours"], "rasters": {"dem": "dem.tif", "building": "surface_building.tif",
+                                                    "tree": "surface_tree.tif", "landcover": "landcover.tif"}}
+    (pk / "runs_city.json").write_text(json.dumps(man, indent=2))
+    tar = d / "solweig_city_package.tar"
+    with tarfile.open(tar, "w") as t:
+        t.add(pk, arcname="solweig_city")
+    sizes = {p.name: round(p.stat().st_size / 1e6, 1) for p in sorted(pk.rglob("*")) if p.is_file()}
+    print(json.dumps(sizes, indent=2), f"\ntar: {tar} {tar.stat().st_size / 1e9:.2f} GB, {len(man['runs'])} runs")
+
+
+def city_shade(cfg):
+    """The project's ray caster on every city sample point at SOLWEIG's sun times (h - 0:30 on the SOLWEIG date,
+    report hours), with the same tree cap as the SOLWEIG inputs: the shade path of the city comparison."""
+    from scripts.phase_03_shadow import cast_points
+    s = cfg["solweig"]
+    pts = pd.read_parquet(city_folder(cfg) / "points_city.parquet", columns=["pid", "x", "y", "z0"])
+    c0 = cfg["demo_area"]["center"]
+    times = pd.DatetimeIndex([pd.Timestamp(f"{s['date']} {h:02d}:00", tz=cfg["project"]["timezone"]) for h in s["hours"]])
+    sp = pvlib.solarposition.get_solarposition(times - pd.Timedelta(minutes=30), c0["lat"], c0["lon"])
+    st, stats = cast_points(cfg, pts.x.to_numpy(), pts.y.to_numpy(), pts.z0.to_numpy(), sp.azimuth.to_numpy(),
+                            sp.apparent_elevation.to_numpy(), tree_max_m=s["tree_max_m"])
+    out = pd.DataFrame({"pid": pts.pid})
+    for t, h in enumerate(s["hours"]):
+        out[f"state_{label(cfg, h)}"] = st[:, t]
+    out.to_parquet(city_folder(cfg) / "shade_states.parquet")
+    print(json.dumps({k: v for k, v in stats.items()}, default=float),
+          {label(cfg, h): round(float((st[:, t] == 0).mean()), 4) for t, h in enumerate(s["hours"])})
+
+
+def city_collect(cfg):
+    """Server output (unpacked into solweig_city/results/out/) -> per-edge heat table of the city graph.
+
+    Per edge and report hour, as for the demo: L_sun / L_tree / L_bldg from city_shade (covered edges: building
+    shade), mean Tmrt and UTCI, metres per UTCI heat-stress category. Covered walkways are under a roof SOLWEIG does
+    not see, so they take the hour's median UTCI / Tmrt of building-shaded points. Checks go to phase_10_city.json."""
+    s = cfg["solweig"]
+    d = city_folder(cfg)
+    files = sorted((d / "results" / "out").glob("points_*.parquet"))
+    sol = pd.concat([pd.read_parquet(f) for f in files], ignore_index=True)
+    labs = {h: label(cfg, h) for h in s["hours"]}
+    sol = sol.rename(columns={f"{v}_{h:02d}": f"{v}_{labs[h]}" for h in s["hours"] for v in ("utci", "tmrt", "shadow")})
+    sol = sol[["pid", "moved_m", "svf", *[f"{v}_{l}" for l in labs.values() for v in ("utci", "tmrt", "shadow")]]]
+    pts = pd.read_parquet(d / "points_city.parquet", columns=["pid", "edge_id", "seg_m", "on_bridge", "key"])
+    pts = pts.merge(pd.read_parquet(d / "shade_states.parquet"), on="pid").merge(sol, on="pid", how="left")
+    ge = gpd.read_parquet(cfg["paths"]["processed"] / "graph_edges.parquet", columns=["edge_id", "length", "covered"])
+    row = pd.Series(np.arange(len(ge)), index=ge.edge_id).reindex(pts.edge_id).to_numpy()
+    n, seg, cov = len(ge), pts.seg_m.to_numpy(np.float64), ge.covered.to_numpy()
+    out = pd.DataFrame({"edge_id": ge.edge_id, "length": ge.length, "covered": cov})
+    by_hour = []
+    for lab in labs.values():
+        st = pts[f"state_{lab}"].to_numpy()
+        u, tm = pts[f"utci_{lab}"].to_numpy(np.float64), pts[f"tmrt_{lab}"].to_numpy(np.float64)
+        u_b, tm_b = float(np.nanmedian(u[st == 2])), float(np.nanmedian(tm[st == 2]))
+        for j, name in enumerate(("sun", "tree", "bldg")):
+            Lk = np.bincount(row, seg * (st == j), n)
+            out[f"L_{name}_{lab}"] = np.where(cov, out.length if name == "bldg" else 0.0, Lk).astype(np.float32)
+        ok = np.isfinite(u)
+        wt = np.bincount(row[ok], seg[ok], n)
+        mu = np.bincount(row[ok], seg[ok] * u[ok], n) / np.where(wt > 0, wt, np.nan)
+        mt = np.bincount(row[ok], seg[ok] * tm[ok], n) / np.where(wt > 0, wt, np.nan)
+        out[f"utci_{lab}"] = np.where(cov, u_b, mu).astype(np.float32)
+        out[f"tmrt_{lab}"] = np.where(cov, tm_b, mt).astype(np.float32)
+        cat = np.digitize(u[ok], UTCI_BINS)
+        cat_cov = np.digitize([u_b], UTCI_BINS)[0]
+        for j, name in enumerate(UTCI_CATS):
+            Lk = np.bincount(row[ok], seg[ok] * (cat == j), n)
+            out[f"L_{name}_{lab}"] = np.where(cov, out.length * (cat_cov == j), Lk).astype(np.float32)
+        a, b = st > 0, pts[f"shadow_{lab}"].to_numpy() < 0.5
+        po = float((a == b).mean())
+        pe = float(a.mean() * b.mean() + (1 - a.mean()) * (1 - b.mean()))
+        by_hour.append({"label": lab, "agree": po, "kappa": (po - pe) / (1 - pe), "project_shaded": float(a.mean()),
+                        "solweig_shaded": float(b.mean()), "u_sun": float(np.nanmedian(u[st == 0])),
+                        "u_tree": float(np.nanmedian(u[st == 1])), "u_bldg": u_b,
+                        "utci_mean_sun": float(np.nanmean(u[st == 0])), "utci_mean_tree": float(np.nanmean(u[st == 1])),
+                        "utci_mean_bldg": float(np.nanmean(u[st == 2]))})
+    out.to_parquet(d / "edges_heat_city.parquet")
+    bh = pd.DataFrame(by_hour)
+    bh["tree_relief"] = (bh.u_sun - bh.u_tree) / (bh.u_sun - bh.u_bldg)
+    res = {"server_files": len(files), "points": len(pts), "points_with_utci": int(pts[f"utci_{labs[s['hours'][0]]}"].notna().sum()),
+           "bridge_points": int(pts.on_bridge.sum()), "points_moved_off_buildings": int((pts.moved_m > 0).sum()),
+           "moved_m_p99": float(pts.moved_m.quantile(0.99)), "covered_edges": int(cov.sum()),
+           "edges_without_utci": int(out[f"utci_{labs[cfg['study']['key_hour']]}"].isna().sum()),
+           "by_hour": bh.to_dict("records")}
+    (cfg["paths"]["tables"] / "phase_10_city.json").write_text(json.dumps(res, indent=2, default=float))
+    print(bh.round(3).to_string())
+    print(json.dumps({k: v for k, v in res.items() if k != "by_hour"}, indent=2, default=float))
+
+
+def city_routes(cfg):
+    """City sample (phase 6 walks home from transit), every report hour: shortest vs shade path (Wen et al. on the
+    project's shadows at SOLWEIG's sun times) vs heat path (UTCI relief cost, as `routes`). One-to-many searches per
+    stop with phase 6's radius; path sums along the search trees (tree_totals). Writes routes_city.parquet and the
+    summary by mode x length band in phase_10_city_routes.json."""
+    from coolpath.routing import load_city_graph, search, theta_params, tree_totals
+    from scripts.phase_06_trips import length_bin
+    s, rc = cfg["solweig"], cfg["routing"]
+    d = city_folder(cfg)
+    g, L, _ = load_city_graph(cfg)
+    e = pd.read_parquet(d / "edges_heat_city.parquet").set_index("edge_id").loc[g.edge_ids].reset_index()
+    par = pd.read_parquet(cfg["paths"]["processed"] / "trips_city_parcels.parquet",
+                          columns=["node", "stop_node", "stop_dist", "mode", "station"]).reset_index(drop=True)
+    tp, tf, fac = theta_params(cfg), rc["tree_factor"], rc["search_radius_factor"]
+    z = np.zeros_like(L)
+    cols = {k: [] for k in ("trip", "time")}
+    vals = []
+    t0 = time.time()
+    labs = [label(cfg, h) for h in s["hours"]]
+    for lab in labs:
+        ls, lt, lb = (e[f"L_{k}_{lab}"].to_numpy(np.float64) for k in ("sun", "tree", "bldg"))
+        sun_pts = e[f"L_sun_{lab}"] > 0.5 * e.length
+        bld_pts = e[f"L_bldg_{lab}"] > 0.5 * e.length
+        u = e[f"utci_{lab}"].to_numpy(np.float64)
+        u_sun, u_bldg = np.nanmedian(u[sun_pts]), np.nanmedian(u[bld_pts])
+        u = np.nan_to_num(u, nan=u_sun)
+        r = np.clip((u_sun - u) / (u_sun - u_bldg), -1, 1.5)
+        uL = u * L
+        ext = e[f"L_extreme_{lab}"].to_numpy(np.float64)
+        for sn, grp in par.groupby("stop_node"):
+            o, dests = int(sn), grp.node.to_numpy(np.int64)
+            rad = max(grp.stop_dist.max(), 1.0) * fac + 1
+            _, _, p0, e0 = search(g, L, z, z, z, o, "shortest", max_dist=rad)
+            _, _, p1, e1 = search(g, L, ls, lt, lb, o, "shade", tp=tp, tree_factor=tf, max_dist=rad)
+            _, _, p2, e2 = search(g, L, L * (1 - r), z, L * r, o, "shade", tp=tp, tree_factor=tf, max_dist=rad)
+            A = tree_totals(p0, e0, o, dests, L, ls, uL, ext, tp, tf, -1.0, e0)
+            B = tree_totals(p1, e1, o, dests, L, ls, uL, ext, tp, tf, -1.0, e0)
+            C = tree_totals(p2, e2, o, dests, L, ls, uL, ext, tp, tf, -1.0, e1)
+            cols["trip"].append(grp.index.to_numpy())
+            cols["time"] += [lab] * len(dests)
+            vals.append(np.c_[A[:, :4], B[:, :4], B[:, 5], C[:, :4], C[:, 5]].astype(np.float32))
+        print(lab, f"{time.time() - t0:.0f} s", flush=True)
+    V = np.concatenate(vals)
+    names = [f"{p}_{k}" for p in ("short",) for k in ("len", "sun", "utcixL", "extreme")] + \
+            [f"shade_{k}" for k in ("len", "sun", "utcixL", "extreme")] + ["shade_same_as_short"] + \
+            [f"heat_{k}" for k in ("len", "sun", "utcixL", "extreme")] + ["heat_same_as_shade"]
+    df = pd.DataFrame(V, columns=names)
+    df["trip"] = np.concatenate(cols["trip"])
+    df["time"] = pd.Categorical(cols["time"])
+    df = df.join(par[["mode", "stop_dist"]], on="trip")
+    df["length_bin"] = length_bin(df.stop_dist, cfg)
+    for p in ("short", "shade", "heat"):
+        df[f"{p}_utci"] = df[f"{p}_utcixL"] / df[f"{p}_len"]
+    for p in ("shade", "heat"):
+        df[f"{p}_detour"] = df[f"{p}_len"] / df.short_len - 1
+        df[f"{p}_sun_red"] = 1 - df[f"{p}_sun"] / df.short_sun.where(df.short_sun > 0)
+        df[f"{p}_dutci"] = df[f"{p}_utci"] - df.short_utci
+        df[f"{p}_extreme_red"] = 1 - df[f"{p}_extreme"] / df.short_extreme.where(df.short_extreme > 0)
+    df = df[np.isfinite(df.short_len) & np.isfinite(df.heat_len) & np.isfinite(df.shade_len)]
+    df.to_parquet(d / "routes_city.parquet")
+    agg = {"trips": ("trip", "size"), "short_utci": ("short_utci", "mean"), "short_extreme_m": ("short_extreme", "mean")}
+    for p in ("shade", "heat"):
+        for m in ("detour", "sun_red", "dutci", "extreme_red"):
+            agg[f"{p}_{m}"] = (f"{p}_{m}", "mean")
+    agg["shade_changed"] = ("shade_same_as_short", lambda x: 1 - x.mean())
+    agg["heat_eq_shade"] = ("heat_same_as_shade", "mean")
+    key = label(cfg, cfg["study"]["key_hour"])
+    t = df.groupby("time", observed=True).agg(**agg)
+    mb = df[df.time == key].groupby(["mode", "length_bin"], observed=True).agg(**agg)
+    res = {"trips": int(df.trip.nunique()), "rows": len(df), "seconds": time.time() - t0,
+           "by_time": t.reset_index().to_dict("records"), "by_mode_bin_key_hour": mb.reset_index().to_dict("records")}
+    (cfg["paths"]["tables"] / "phase_10_city_routes.json").write_text(json.dumps(res, indent=2, default=float))
+    with pd.option_context("display.width", 250):
+        print(t.round(4).to_string())
+        print(mb.round(4).to_string())
+
+
 def main(args):
     cfg = load_config()
     steps = {"met": met, "inputs": inputs, "network": network, "figure": figure, "routes": routes,
-             "frontier": frontier}
+             "frontier": frontier, "city-points": city_points, "city-package": city_package,
+             "city-shade": city_shade, "city-collect": city_collect, "city-routes": city_routes}
     for a in args or ["met", "inputs"]:
         steps[a](cfg)
 

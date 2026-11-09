@@ -99,9 +99,10 @@ def read_m(path, bounds):
         return a, s.window_transform(w)
 
 
-def cast_points(cfg, x, y, z0, az, el, log=True):
+def cast_points(cfg, x, y, z0, az, el, log=True, tree_max_m=None):
     """Shadow states for arbitrary points (observer elevation z0), tiled like spec phase 3:
-    2 km tiles read with a 1 km buffer. Returns (states uint8 [n, n_times], stats)."""
+    2 km tiles read with a 1 km buffer. Returns (states uint8 [n, n_times], stats).
+    tree_max_m: drop tree pixels taller than this (phase 10, D-060); None keeps the surface as it is."""
     proc, sc = cfg["paths"]["processed"], cfg["shadow"]
     T, buf = sc["tile_size_m"], sc["tile_buffer_m"]
     tx, ty = np.floor(x / T).astype(int), np.floor(y / T).astype(int)
@@ -116,6 +117,8 @@ def cast_points(cfg, x, y, z0, az, el, log=True):
         dem, tr = read_m(proc / "dem.tif", b)
         hb, _ = read_m(proc / "surface_building.tif", b)
         ht, _ = read_m(proc / "surface_tree.tif", b)
+        if tree_max_m is not None:
+            ht[ht > tree_max_m] = 0
         lmax = local_max(dem + np.maximum(hb, ht), tr.a, sc["localmax_block_m"], sc["max_ray_m"])
         t_read += time.time() - t0
         t0 = time.time()

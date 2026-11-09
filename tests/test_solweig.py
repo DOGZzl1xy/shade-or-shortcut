@@ -40,3 +40,24 @@ def test_met_columns_where_solweig_gpu_reads_them():
     # utci_process.compute_utci: Ws 9, RH 10, Ta 11, P (kPa) 12, global radiation 14, kdiff 21, kdir 22, wdir 23
     assert [UMEP_COLS[i] for i in (1, 2, 3, 9, 10, 11, 12, 14, 21, 22, 23)] == \
         ["id", "it", "imin", "U", "RH", "Tair", "pres", "kdown", "kdiff", "kdir", "wdir"]
+
+
+def test_city_cores_tile_without_overlap_and_touch_the_city():
+    from coolpath.areas import city
+    from scripts.phase_10_solweig import city_runs
+    cfg = load_config()
+    rr = city_runs(cfg)
+    poly = city(cfg)
+    cores = [shapely.box(*r["core"]) for r in rr.values()]
+    assert all(c.intersects(poly) for c in cores)
+    assert abs(shapely.union_all(cores).area - sum(c.area for c in cores)) < 1e-3     # no overlap
+    assert poly.difference(shapely.union_all(cores)).area < 1.0                        # the city is covered
+    m = cfg["solweig"]["city"]["margin_m"]
+    assert all(shapely.box(*r["run"]).equals(shapely.box(*r["core"]).buffer(m, join_style="mitre")) for r in rr.values())
+
+
+def test_server_landcover_rule_matches_local():
+    from scripts.solweig_run import umep_landcover as server
+    rng = np.random.default_rng(0)
+    lc = rng.integers(0, 8, (60, 60)).astype(np.uint8)
+    assert np.array_equal(server(lc, MAP), umep_landcover(lc, MAP))

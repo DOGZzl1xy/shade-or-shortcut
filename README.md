@@ -205,6 +205,18 @@ uv run python -m scripts.phase_10_solweig network figure routes
 Outputs: `data/interim/solweig/` (rasters, `points.parquet`, `edges_heat.parquet`, `routes.parquet`),
 `reports/tables/phase_10_*.json`, `reports/figures/phase_10_solweig_check.png`.
 
+City-wide (after phases 1–4 and 6): 400 one-kilometre cores that hold sidewalk sample points, met hours 7–19,
+run on a rented GPU server from a single upload package; only point values and core UTCI rasters come back.
+
+```bash
+uv run python -m scripts.phase_10_solweig met city-points city-shade city-package   # data/interim/solweig_city/solweig_city_package.tar (~1.1 GB)
+# on the server (env: gdal from conda-forge, pyarrow, numba, rasterio, torch, solweig-gpu==2.0.0), after unpacking:
+python solweig_city/solweig_run.py city solweig_city --gpus 0 --per-gpu 3 --cpu 3       # resumable; ~10 GB GPU memory per process
+python solweig_city/solweig_run.py city-status solweig_city
+# back home: unpack the server's solweig_city/out/ into data/interim/solweig_city/results/out/, then
+uv run python -m scripts.phase_10_solweig city-collect city-routes
+```
+
 Hand-written pages live in `site/app/` (story, route tool, city map); data, methods and results pages are rendered from
 `notebooks/`. The code and the site are published in their own public
 repository (`DOGZzl1xy/shade-or-shortcut`: `main` = code, `gh-pages` = website). When the analysis notebooks change,

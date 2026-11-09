@@ -207,6 +207,11 @@ solweig:                    # Tmrt / UTCI with SOLWEIG 2022a (solweig-gpu 2.0.0)
   landcover_umep: {1: 0, 2: 5, 3: 6, 4: 7, 5: 2, 6: 1, 7: 1}
   keep_svf_intermediates: false   # shadowmats_*.npz are ~GBs per run and only needed to rerun Tmrt
   tree_max_m: 40            # "tree" pixels above this are dropped (facade returns beside towers, cranes; ~0.1 %)
+  met_hours: [7, 19]        # city run: met rows 7-19 h give bit-identical Tmrt / UTCI to a full-day file (tested)
+  city:                     # city-wide run (D-061), on a rented GPU server (scripts/solweig_run.py city)
+    core_m: 1000            # cores tile the city bounding box from its south-west corner; cores off the city are skipped
+    margin_m: 400
+    utci_scale: 100         # core UTCI rasters stored as int16 hundredths of a degree (nodata -32768)
 
 hardware:
   max_disk_gb: 60
