@@ -241,6 +241,8 @@ sources:
   dvrpc_ped_rest: "https://arcgis.dvrpc.org/portal/rest/services/transportation/pedestriannetwork_lines/FeatureServer/0"
   septa_gtfs: "https://www3.septa.org/developer/gtfs_public.zip"
   septa_gtfs_history: "https://github.com/septadev/GTFS/releases"
+  # the feed the analysis used; the live feed above moves on (v202611010 starts after trips.home_stops.rep_date)
+  septa_gtfs_release: "https://github.com/septadev/GTFS/releases/download/v202609271/gtfs_public.zip"
   census_fips_county: "42101"
   tiger_year: 2024          # matches the ACS 2020-2024 tract boundaries
   acs_api: "https://api.census.gov/data/{year}/acs/acs5"

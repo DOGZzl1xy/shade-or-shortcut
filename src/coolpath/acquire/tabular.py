@@ -69,9 +69,11 @@ def opa(cfg: dict) -> gpd.GeoDataFrame:
 
 
 def gtfs(cfg: dict) -> dict[str, Path]:
-    """Download SEPTA's public GTFS and unpack its nested feeds (rail, bus/trolley/subway)."""
+    """Download SEPTA's public GTFS (the pinned release if configured, else the live feed) and unpack its
+    nested feeds (rail, bus/trolley/subway)."""
     root = cfg["paths"]["raw"] / "gtfs"
-    z = _download(cfg["sources"]["septa_gtfs"], root / "gtfs_public.zip")
+    url = cfg["sources"].get("septa_gtfs_release") or cfg["sources"]["septa_gtfs"]
+    z = _download(url, root / "gtfs_public.zip")
     feeds = {}
     with zipfile.ZipFile(z) as zf:
         for name in zf.namelist():
