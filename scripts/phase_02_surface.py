@@ -1,9 +1,11 @@
 """Phase 2: city-wide 1 m DEM / DSM / building and tree heights.
 
-    caffeinate -i uv run python -m scripts.phase_02_surface [A] [B] [C] [--area test|city]
+    caffeinate -i uv run python -m scripts.phase_02_surface [A] [B] [C] [--area test|demo|city]
 
 Every stage is resumable (finished tiles / blocks are skipped). `--area test` runs the same
 code on the phase-0 test tiles only (output under data/interim/surface_test) for validation.
+`--area demo` covers the SOLWEIG domain in University City (D-060; output under data/interim/surface_demo)
+with footprints, land cover and CHMv2 fetched for that grid only, so no city-wide downloads are needed.
 """
 
 import argparse
@@ -22,8 +24,8 @@ from rasterio.shutil import copy as rio_copy
 from rasterio.windows import Window
 
 from coolpath import load_config
-from coolpath.acquire import lidar
-from coolpath.areas import city, city_grid, test_area_bbox4326
+from coolpath.acquire import chm, landcover, lidar, vector
+from coolpath.areas import city, city_grid, solweig_bbox4326, solweig_box, test_area_bbox4326
 from coolpath.surface import Grid
 from coolpath.surface_city import mosaic_block, surface_block, tile_raster
 
@@ -42,6 +44,11 @@ def setup(cfg, area):
         tiles = lidar.tiles_for_bbox(cfg, *test_area_bbox4326(cfg)).to_crs(cfg["project"]["crs"])
         grid = Grid.from_bounds(*tiles.total_bounds)
         root = cfg["paths"]["interim"] / "surface_test"
+        out = root
+    elif area == "demo":
+        tiles = lidar.tiles_for_bbox(cfg, *solweig_bbox4326(cfg)).to_crs(cfg["project"]["crs"])
+        grid = Grid.from_bounds(*solweig_box(cfg).bounds, crs=cfg["project"]["crs"])
+        root = cfg["paths"]["interim"] / "surface_demo"
         out = root
     else:
         tiles = gpd.read_parquet(cfg["paths"]["raw"] / "lidar" / "tiles_city.parquet")
@@ -133,12 +140,26 @@ def _block_job(cfg, paths, grid, r0, c0, h, w, bld):
     return r0, c0, h, w, out, stats
 
 
-def stage_c(cfg, grid, root, out_dir, n_jobs):
+def area_inputs(cfg, area, grid) -> dict:
+    """Land cover, CHMv2 and footprints for stage C: the phase-1 city files, or for `demo` the same
+    sources fetched on the demo grid (written next to the city files with `demo` in the name)."""
+    raw = cfg["paths"]["raw"]
+    if area != "demo":
+        return {"landcover": raw / "landcover" / "landcover2018_city_1m.tif",
+                "chmv2": raw / "chmv2" / "chmv2_city_1m.tif", "buildings": raw / "buildings" / "buildings_city.parquet"}
+    bbox = solweig_bbox4326(cfg)
+    vector.buildings(cfg, bbox, "demo")
+    poly = gpd.GeoSeries([shapely.box(*grid.bounds)], crs=grid.crs).to_crs(4326).iloc[0]
+    return {"landcover": landcover.city_cog(cfg, grid, "demo"),
+            "chmv2": chm.city_cog(cfg, grid, chm.tiles_for(cfg, poly), "demo"),
+            "buildings": raw / "buildings" / "buildings_demo.parquet"}
+
+
+def stage_c(cfg, grid, root, out_dir, n_jobs, inputs):
     paths = {"dsm_raw": root / "dsm_raw.tif", "dem_pts": root / "dem_pts.tif",
-             "landcover": cfg["paths"]["raw"] / "landcover" / "landcover2018_city_1m.tif",
-             "chmv2": cfg["paths"]["raw"] / "chmv2" / "chmv2_city_1m.tif", "city": city(cfg),
+             "landcover": inputs["landcover"], "chmv2": inputs["chmv2"], "city": city(cfg),
              "exclude_ids": exclude_ids(cfg)}
-    bld = gpd.read_parquet(cfg["paths"]["raw"] / "buildings" / "buildings_city.parquet").to_crs(grid.crs)
+    bld = gpd.read_parquet(inputs["buildings"]).to_crs(grid.crs)
     bld = bld[bld.geometry.notna() & bld.is_valid & ~bld.is_empty][["objectid", "approx_hgt", "geometry"]]
     bld = bld.reset_index(drop=True)
     sidx = bld.sindex
@@ -187,7 +208,7 @@ def stage_c(cfg, grid, root, out_dir, n_jobs):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("stages", nargs="*", default=["A", "B", "C"])
-    ap.add_argument("--area", default="city", choices=["city", "test"])
+    ap.add_argument("--area", default="city", choices=["city", "test", "demo"])
     ap.add_argument("--jobs", type=int, default=None)
     a = ap.parse_args()
     cfg = load_config()
@@ -200,7 +221,7 @@ def main():
     if "B" in a.stages:
         stage_b(cfg, tiles, grid, root)
     if "C" in a.stages:
-        stage_c(cfg, grid, root, out, a.jobs or cfg["surface"]["max_laz_processes"])
+        stage_c(cfg, grid, root, out, a.jobs or cfg["surface"]["max_laz_processes"], area_inputs(cfg, a.area, grid))
     print("disk free GB:", shutil.disk_usage(root).free / 1e9)
 
 

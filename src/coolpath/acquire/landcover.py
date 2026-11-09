@@ -52,10 +52,10 @@ def classes_on_grid(cfg: dict, grid) -> np.ndarray:
     return cls
 
 
-def city_cog(cfg: dict, grid):
-    """2018 land cover classes on the city 1 m grid (uint8 COG, 0 = no data / unknown colour)."""
+def city_cog(cfg: dict, grid, name: str = "city"):
+    """2018 land cover classes on the city (or a named area's) 1 m grid (uint8 COG, 0 = no data / unknown colour)."""
     from coolpath.surface import write_tiled
-    dest = cfg["paths"]["raw"] / "landcover" / "landcover2018_city_1m.tif"
+    dest = cfg["paths"]["raw"] / "landcover" / f"landcover2018_{name}_1m.tif"
     if not dest.exists():
         write_tiled(dest, grid, "uint8", lambda g: classes_on_grid(cfg, g), block=MAX_PX, nodata=0,
                     tags={"classes": "1 tree,2 grass/shrub,3 bare,4 water,5 building,6 road,7 other paved",

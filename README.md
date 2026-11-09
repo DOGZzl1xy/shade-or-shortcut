@@ -185,6 +185,26 @@ scripts/publish_site.sh scan                                # check main for key
 scripts/publish_site.sh push                                # create DOGZzl1xy/shade-or-shortcut, push both, turn on Pages
 ```
 
+### Phase 10 — SOLWEIG mean radiant temperature and UTCI (University City)
+
+Extends the shade classes with SOLWEIG 2022a (GPU version, [solweig-gpu](https://github.com/nvnsudharsan/SOLWEIG-GPU) 2.0.0)
+for one hot, clear day (2025-06-24, PHL 101 °F), and compares the shortest, shade (Wen et al.) and heat (UTCI) paths.
+SOLWEIG needs GDAL's Python bindings and PyTorch, so it runs in its own conda env next to the repository:
+
+```bash
+conda create -p ../envs/solweig -c conda-forge --override-channels python=3.12 gdal pyyaml netcdf4 timezonefinder pytz xarray tqdm matplotlib scipy pandas shapely rasterio
+../envs/solweig/bin/pip install torch --index-url https://download.pytorch.org/whl/cu128   # CUDA 12.8 wheels (RTX 50xx)
+../envs/solweig/bin/pip install solweig-gpu==2.0.0
+uv run python -m scripts.phase_02_surface A B C --area demo   # 1 m surfaces for the 4.8 km SOLWEIG domain (36 LAZ tiles)
+uv run python -m scripts.phase_10_solweig met inputs          # ERA5 met file; 16 sub-domains (1 km core + 400 m margin)
+../envs/solweig/bin/python scripts/solweig_run.py run         # one SOLWEIG run per sub-domain (resumable)
+../envs/solweig/bin/python scripts/solweig_run.py merge       # tmrt / utci / utci_deck / shadow / svf on the domain grid
+uv run python -m scripts.phase_10_solweig network figure routes
+```
+
+Outputs: `data/interim/solweig/` (rasters, `points.parquet`, `edges_heat.parquet`, `routes.parquet`),
+`reports/tables/phase_10_*.json`, `reports/figures/phase_10_solweig_check.png`.
+
 Hand-written pages live in `site/app/` (story, route tool, city map); data, methods and results pages are rendered from
 `notebooks/`. The code and the site are published in their own public
 repository (`DOGZzl1xy/shade-or-shortcut`: `main` = code, `gh-pages` = website). When the analysis notebooks change,

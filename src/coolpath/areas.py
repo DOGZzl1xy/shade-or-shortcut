@@ -16,6 +16,19 @@ def test_area_bbox4326(cfg: dict, buffer_deg: float = 0.0) -> tuple:
             t["lon_max"] + buffer_deg, t["lat_max"] + buffer_deg)
 
 
+def solweig_box(cfg: dict, margin: bool = True):
+    """SOLWEIG domain around the demo centre (project CRS); with the shadow margin by default."""
+    s, c = cfg["solweig"], cfg["demo_area"]["center"]
+    p = gpd.GeoSeries.from_xy([c["lon"]], [c["lat"]], crs="EPSG:4326").to_crs(cfg["project"]["crs"]).iloc[0]
+    h = s["half_size_m"] + (s["margin_m"] if margin else 0)
+    x, y = round(p.x), round(p.y)
+    return box(x - h, y - h, x + h, y + h)
+
+
+def solweig_bbox4326(cfg: dict) -> tuple:
+    return tuple(gpd.GeoSeries([solweig_box(cfg)], crs=cfg["project"]["crs"]).to_crs(4326).total_bounds)
+
+
 def city(cfg: dict):
     """Philadelphia County polygon (project CRS)."""
     from coolpath.acquire.boundaries import county

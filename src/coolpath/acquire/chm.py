@@ -44,10 +44,10 @@ def read_to_grid(cfg: dict, tile_ids: list[str], grid) -> np.ndarray:
     return out
 
 
-def city_cog(cfg: dict, grid, tile_ids: list[str]):
-    """CHMv2 on the city 1 m grid as a uint8 COG (metres; 0 also where no data). Reference only (D-012)."""
+def city_cog(cfg: dict, grid, tile_ids: list[str], name: str = "city"):
+    """CHMv2 on the city (or a named area's) 1 m grid as a uint8 COG (metres; 0 also where no data). Reference only (D-012)."""
     from coolpath.surface import write_tiled
-    dest = cfg["paths"]["raw"] / "chmv2" / "chmv2_city_1m.tif"
+    dest = cfg["paths"]["raw"] / "chmv2" / f"chmv2_{name}_1m.tif"
     if not dest.exists():
         write_tiled(dest, grid, "uint8", lambda g: np.nan_to_num(read_to_grid(cfg, tile_ids, g)).round().clip(0, 255),
                     tags={"units": "metre", "source": "Meta CHMv2 dinov3_global_chm_v2_ml3, CC BY 4.0"})

@@ -194,6 +194,20 @@ heat:                       # home page background on summer heat (D-059); not u
   summer: ["2025-06-01", "2025-08-31"]
   hot_day_f: 90
 
+solweig:                    # Tmrt / UTCI with SOLWEIG 2022a (solweig-gpu 2.0.0), University City demo (D-060)
+  date: "2025-06-24"        # PHL max 101 F; ERA5 cloud cover 8-19 h mean 11%; 3 days after the solstice
+  hours: [8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19]   # reported; the model runs 0-23 h
+  # UMEP convention: met row h holds the mean radiation of h-1..h and the sun is placed at h-0:30
+  half_size_m: 2000         # analysis domain around demo_area.center (demo network reaches 1,490 m)
+  core_m: 1000              # sub-domain core; each run = core + margin on every side, as one SOLWEIG tile
+  margin_m: 400             # shadow / sky-view margin; surfaces cover half_size + margin
+  met_api: "https://archive-api.open-meteo.com/v1/archive"   # ERA5 hourly, no key
+  # PASDA 2018 classes -> UMEP land cover (1 paved, 2 building, 5 grass, 6 bare soil, 7 water);
+  # 0 = canopy / unknown: takes the class of the nearest other pixel (the surface under the tree)
+  landcover_umep: {1: 0, 2: 5, 3: 6, 4: 7, 5: 2, 6: 1, 7: 1}
+  keep_svf_intermediates: false   # shadowmats_*.npz are ~GBs per run and only needed to rerun Tmrt
+  tree_max_m: 40            # "tree" pixels above this are dropped (facade returns beside towers, cranes; ~0.1 %)
+
 hardware:
   max_disk_gb: 60
   max_ram_gb: 18
