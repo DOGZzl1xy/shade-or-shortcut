@@ -700,9 +700,19 @@ def city_package(cfg):
     print(json.dumps(sizes, indent=2), f"\ntar: {tar} {tar.stat().st_size / 1e9:.2f} GB, {len(man['runs'])} runs")
 
 
-def city_labels(cfg):
-    """(date, hour, label) for every city date and report hour."""
-    return [(d, h, label(cfg, h, d)) for d in cfg["solweig"]["dates"] for h in cfg["solweig"]["hours"]]
+def city_labels(cfg, dates=None):
+    """(date, hour, label) for every city date (or the given dates) and report hour."""
+    return [(d, h, label(cfg, h, d)) for d in (dates or cfg["solweig"]["dates"]) for h in cfg["solweig"]["hours"]]
+
+
+def city_dates(cfg):
+    """City dates whose server output is unpacked in solweig_city/results/<date>/out."""
+    r = city_folder(cfg) / "results"
+    ds = [d for d in cfg["solweig"]["dates"] if (r / d / "out").is_dir()]
+    if len(ds) < len(cfg["solweig"]["dates"]):
+        print("server output not (yet) unpacked for:", sorted(set(cfg["solweig"]["dates"]) - set(ds)))
+    assert ds, "no server output under solweig_city/results/<date>/out"
+    return ds
 
 
 def city_shade(cfg):
@@ -759,14 +769,15 @@ def city_collect(cfg):
     pts = pd.read_parquet(d / "points_city.parquet", columns=["pid", "edge_id", "seg_m", "on_bridge", "key"])
     pts = pts.merge(pd.read_parquet(d / "shade_states.parquet"), on="pid")
     files = {}
-    for date in s["dates"]:
+    dates = city_dates(cfg)
+    for date in dates:
         files[date] = sorted((d / "results" / date / "out").glob("points_*.parquet"))
         sol = pd.concat([pd.read_parquet(f) for f in files[date]], ignore_index=True)
         ren = {f"{v}_{h:02d}": f"{v}_{label(cfg, h, date)}" for h in s["hours"] for v in ("utci", "tmrt", "shadow")}
-        sol = sol.rename(columns=ren)[["pid", *ren.values()] + (["moved_m", "svf"] if date == s["dates"][0] else [])]
+        sol = sol.rename(columns=ren)[["pid", *ren.values()] + (["moved_m", "svf"] if date == dates[0] else [])]
         pts = pts.merge(sol, on="pid", how="left")                  # demo-only pids (pid >= n_city) drop out here
-    labs = {lab: lab for _, _, lab in city_labels(cfg)}
-    ge = gpd.read_parquet(cfg["paths"]["processed"] / "graph_edges.parquet", columns=["edge_id", "length", "covered"])
+    labs = {lab: lab for _, _, lab in city_labels(cfg, dates)}
+    ge = pd.read_parquet(cfg["paths"]["processed"] / "graph_edges.parquet", columns=["edge_id", "length", "covered"])
     row = pd.Series(np.arange(len(ge)), index=ge.edge_id).reindex(pts.edge_id).to_numpy()
     n, seg, cov = len(ge), pts.seg_m.to_numpy(np.float64), ge.covered.to_numpy()
     out = pd.DataFrame({"edge_id": ge.edge_id, "length": ge.length, "covered": cov})
@@ -830,7 +841,8 @@ def city_routes(cfg):
     cols = {k: [] for k in ("trip", "time")}
     vals = []
     t0 = time.time()
-    labs = [lab for _, _, lab in city_labels(cfg)]
+    dates = [dd for dd in s["dates"] if f"utci_{label(cfg, s['hours'][0], dd)}" in e.columns]    # collected dates
+    labs = [lab for _, _, lab in city_labels(cfg, dates)]
     for lab in labs:
         ls, lt, lb = (e[f"L_{k}_{lab}"].to_numpy(np.float64) for k in ("sun", "tree", "bldg"))
         sun_pts = e[f"L_sun_{lab}"] > 0.5 * e.length
@@ -878,10 +890,10 @@ def city_routes(cfg):
             agg[f"{p}_{m}"] = (f"{p}_{m}", "mean")
     agg["shade_changed"] = ("shade_same_as_short", lambda x: 1 - x.mean())
     agg["heat_eq_shade"] = ("heat_same_as_shade", "mean")
-    keys = [label(cfg, cfg["study"]["key_hour"], dd) for dd in s["dates"]]      # key hour pooled over dates (phase 7)
+    keys = [label(cfg, cfg["study"]["key_hour"], dd) for dd in dates]          # key hour pooled over dates (phase 7)
     t = df.groupby("time", observed=True).agg(**agg)
     mb = df[df.time.isin(keys)].groupby(["mode", "length_bin"], observed=True).agg(**agg)
-    res = {"trips": int(df.trip.nunique()), "rows": len(df), "seconds": time.time() - t0,
+    res = {"dates": dates, "trips": int(df.trip.nunique()), "rows": len(df), "seconds": time.time() - t0,
            "by_time": t.reset_index().to_dict("records"), "by_mode_bin_key_hour": mb.reset_index().to_dict("records")}
     (cfg["paths"]["tables"] / "phase_10_city_routes.json").write_text(json.dumps(res, indent=2, default=float))
     with pd.option_context("display.width", 250):
