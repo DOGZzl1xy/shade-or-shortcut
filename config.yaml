@@ -195,7 +195,10 @@ heat:                       # home page background on summer heat (D-059); not u
   hot_day_f: 90
 
 solweig:                    # Tmrt / UTCI with SOLWEIG 2022a (solweig-gpu 2.0.0), University City demo (D-060)
-  date: "2025-06-24"        # PHL max 101 F; ERA5 cloud cover 8-19 h mean 11%; 3 days after the solstice
+  date: "2025-06-24"        # PHL max 101 F; ERA5 cloud cover 8-19 h mean 11%; 3 days after the solstice (demo run)
+  # city-wide dates, mirroring the website's two shade dates (06-21, 08-01); 08-01-2025 itself was cool and overcast,
+  # 07-29 (PHL max 98 F, no rain, afternoon cloud 4-14 %) is the nearest hot clear day
+  dates: ["2025-06-24", "2025-07-29"]
   hours: [8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19]   # reported; the model runs 0-23 h
   # UMEP convention: met row h holds the mean radiation of h-1..h and the sun is placed at h-0:30
   half_size_m: 2000         # analysis domain around demo_area.center (demo network reaches 1,490 m)

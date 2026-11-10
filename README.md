@@ -210,10 +210,14 @@ run on a rented GPU server from a single upload package; only point values and c
 
 ```bash
 uv run python -m scripts.phase_10_solweig met city-points city-shade city-package   # data/interim/solweig_city/solweig_city_package.tar (~1.1 GB)
-# on the server (env: gdal from conda-forge, pyarrow, numba, rasterio, torch, solweig-gpu==2.0.0), after unpacking:
-python solweig_city/solweig_run.py city solweig_city --gpus 0 --per-gpu 3 --cpu 3       # resumable; ~10 GB GPU memory per process
+# on the server (env: gdal from conda-forge, pyarrow, numba, rasterio, torch, solweig-gpu==2.0.0; on Ubuntu 22.04 put
+# the env's lib/ first on LD_LIBRARY_PATH, pyarrow needs a newer libstdc++), after unpacking:
+python solweig_city/solweig_run.py city solweig_city --gpus 0 --per-gpu 3 --cpu 6       # resumable; ~10 GB GPU memory per process
 python solweig_city/solweig_run.py city-status solweig_city
-# back home: unpack the server's solweig_city/out/ into data/interim/solweig_city/results/out/, then
+# further dates (solweig.dates[1:]) reuse the uploaded surfaces: city-bundle writes a small bundle per date
+# (met file, runs_city.json, the demo network's points); on the server link rasters/, append the demo points to points.parquet
+uv run python -m scripts.phase_10_solweig city-bundle
+# back home: unpack each date's out/ into data/interim/solweig_city/results/<date>/out/, then
 uv run python -m scripts.phase_10_solweig city-collect city-routes
 ```
 

@@ -60,13 +60,19 @@ def folder(cfg):
 
 
 def met(cfg):
+    """ERA5 met files for every date in solweig.dates: the full day (demo run) and the met_hours rows (city run)."""
+    res = {d: met_day(cfg, d) for d in cfg["solweig"]["dates"]}
+    (cfg["paths"]["tables"] / "phase_10_met.json").write_text(json.dumps(res, indent=2))
+
+
+def met_day(cfg, date):
     s, c = cfg["solweig"], cfg["demo_area"]["center"]
     raw = cfg["paths"]["raw"] / "met"
     raw.mkdir(parents=True, exist_ok=True)
-    dest = raw / f"era5_openmeteo_{s['date']}.json"
+    dest = raw / f"era5_openmeteo_{date}.json"
     if not dest.exists():
         r = requests.get(s["met_api"], timeout=120, params={
-            "latitude": c["lat"], "longitude": c["lon"], "start_date": s["date"], "end_date": s["date"],
+            "latitude": c["lat"], "longitude": c["lon"], "start_date": date, "end_date": date,
             "hourly": ",".join(HOURLY), "wind_speed_unit": "ms", "timezone": cfg["project"]["timezone"],
             "models": "era5"})
         r.raise_for_status()
@@ -84,29 +90,29 @@ def met(cfg):
     m["rain"] = h.precipitation
     m["kdown"] = h.shortwave_radiation
     # wdir stays -999: no directional wind coefficients, every pixel gets the 10 m ERA5 wind
-    out = folder(cfg) / f"met_{s['date']}.txt"
+    out = folder(cfg) / f"met_{date}.txt"
     out.parent.mkdir(parents=True, exist_ok=True)
     fmt = ["%d"] * 4 + ["%.2f"] * (len(UMEP_COLS) - 4)
     np.savetxt(out, m.to_numpy(), fmt=fmt, delimiter=" ", header=" ".join(UMEP_COLS), comments="")
     h0, h1 = s["met_hours"]                         # the city run's file: rows h0..h1 only
     sub = m[(m.it >= h0) & (m.it <= h1)]
-    np.savetxt(met_file(cfg), sub.to_numpy(), fmt=fmt, delimiter=" ", header=" ".join(UMEP_COLS), comments="")
+    np.savetxt(met_file(cfg, date), sub.to_numpy(), fmt=fmt, delimiter=" ", header=" ".join(UMEP_COLS), comments="")
     day = h[(t.dt.hour >= min(s["hours"])) & (t.dt.hour <= max(s["hours"]))]
-    res = {"date": s["date"], "source": f"{s['met_api']} (models=era5)", "grid_lat": js["latitude"],
+    res = {"date": date, "source": f"{s['met_api']} (models=era5)", "grid_lat": js["latitude"],
            "grid_lon": js["longitude"], "grid_elevation_m": js["elevation"], "met_file": out.name,
            "ta_max_c": float(h.temperature_2m.max()), "ta_15h_c": float(h.temperature_2m[t.dt.hour == 15].iloc[0]),
            "rh_15h": float(h.relative_humidity_2m[t.dt.hour == 15].iloc[0]),
            "wind_15h_ms": float(h.wind_speed_10m[t.dt.hour == 15].iloc[0]),
            "kdown_max_wm2": float(h.shortwave_radiation.max()),
            "cloud_cover_mean_report_hours": float(day.cloud_cover.mean())}
-    (cfg["paths"]["tables"] / "phase_10_met.json").write_text(json.dumps(res, indent=2))
     print(json.dumps(res, indent=2))
     print(h[["time", *HOURLY[:7], "cloud_cover"]].to_string())
+    return res
 
 
-def met_file(cfg):
+def met_file(cfg, date=None):
     h0, h1 = cfg["solweig"]["met_hours"]
-    return folder(cfg) / f"met_{cfg['solweig']['date']}_h{h0:02d}-{h1:02d}.txt"
+    return folder(cfg) / f"met_{date or cfg['solweig']['date']}_h{h0:02d}-{h1:02d}.txt"
 
 
 def runs(cfg) -> dict:
@@ -179,8 +185,17 @@ UTCI_BINS = [26.0, 32.0, 38.0, 46.0]                 # Bröde et al. (2012) heat
 UTCI_CATS = ["none", "moderate", "strong", "very_strong", "extreme"]
 
 
-def label(cfg, h):
-    return f"{cfg['solweig']['date'][5:].replace('-', '')}_{h:02d}"
+def label(cfg, h, date=None):
+    """Time label MMDD_HH (the demo run's date unless `date` is given)."""
+    return f"{(date or cfg['solweig']['date'])[5:].replace('-', '')}_{h:02d}"
+
+
+def sun_at(cfg, date):
+    """Azimuth / elevation at SOLWEIG's sun times (h - 0:30) of the report hours on `date`, at the demo centre."""
+    s, c0 = cfg["solweig"], cfg["demo_area"]["center"]
+    times = pd.DatetimeIndex([pd.Timestamp(f"{date} {h:02d}:00", tz=cfg["project"]["timezone"]) for h in s["hours"]])
+    sp = pvlib.solarposition.get_solarposition(times - pd.Timedelta(minutes=30), c0["lat"], c0["lon"])
+    return sp.azimuth.to_numpy(), sp.apparent_elevation.to_numpy()
 
 
 def demo_edges(cfg) -> gpd.GeoDataFrame:
@@ -226,16 +241,22 @@ def tree_heights(cfg):
     return ht, int(tall.sum())
 
 
+def demo_points(cfg):
+    """2 m sample points of the demo network's outdoor edges (indoor parts are not sampled) with bridge-deck flags
+    (phase-3 rule on OSM highway bridges). Returns edges, outdoor edges, their flags, x, y, edge index, seg, on_bridge."""
+    sc, bd = cfg["shadow"], cfg["bridge_deck"]
+    edges = demo_edges(cfg)
+    outdoor = edges[edges.kind != 2]
+    px, py, k, seg = sample_points(outdoor, sc["sample_spacing_m"])
+    flags = bridge_deck(outdoor, osm_bridges(cfg), bd["buffer_m"], bd["min_length_share"], bd["max_angle_deg"])
+    return edges, outdoor, flags, px, py, outdoor.index.to_numpy()[k], seg, flags.on_bridge.to_numpy()[k]
+
+
 def network(cfg):
     """Sample SOLWEIG outputs and the project's own shadows along the demo network; per-edge table + checks."""
-    s, sc, bd = cfg["solweig"], cfg["shadow"], cfg["bridge_deck"]
+    s, sc = cfg["solweig"], cfg["shadow"]
     d = folder(cfg)
-    edges = demo_edges(cfg)
-    outdoor = edges[edges.kind != 2]                                    # indoor parts are not sampled
-    px, py, k, seg = sample_points(outdoor, sc["sample_spacing_m"])
-    eid = outdoor.index.to_numpy()[k]
-    flags = bridge_deck(outdoor, osm_bridges(cfg), bd["buffer_m"], bd["min_length_share"], bd["max_angle_deg"])
-    on_b = flags.on_bridge.to_numpy()[k]
+    edges, outdoor, flags, px, py, eid, seg, on_b = demo_points(cfg)
 
     # project ray caster on the phase-2 demo surfaces, at SOLWEIG's sun times (h - 0:30)
     dem, tr = read_surface(cfg, "dem")
@@ -245,10 +266,7 @@ def network(cfg):
     r = ((tr.f - py) / -tr.e).astype(int)
     c = ((px - tr.c) / tr.a).astype(int)
     z0 = np.where(on_b, dsm[r, c], dem[r, c]) + sc["observer_height_m"]
-    c0 = cfg["demo_area"]["center"]
-    times = pd.DatetimeIndex([pd.Timestamp(f"{s['date']} {h:02d}:00", tz=cfg["project"]["timezone"]) for h in s["hours"]])
-    sp = pvlib.solarposition.get_solarposition(times - pd.Timedelta(minutes=30), c0["lat"], c0["lon"])
-    az, el = sp.azimuth.to_numpy(), sp.apparent_elevation.to_numpy()
+    az, el = sun_at(cfg, s["date"])
     lmax = local_max(dem + np.maximum(hb, ht), tr.a, sc["localmax_block_m"], sc["max_ray_m"])
     def cast(az_, el_):
         return cast_z(px, py, z0.astype(np.float64), dem, hb, ht, lmax, tr.c, tr.f, tr.a, az_, el_,
@@ -682,40 +700,72 @@ def city_package(cfg):
     print(json.dumps(sizes, indent=2), f"\ntar: {tar} {tar.stat().st_size / 1e9:.2f} GB, {len(man['runs'])} runs")
 
 
+def city_labels(cfg):
+    """(date, hour, label) for every city date and report hour."""
+    return [(d, h, label(cfg, h, d)) for d in cfg["solweig"]["dates"] for h in cfg["solweig"]["hours"]]
+
+
 def city_shade(cfg):
-    """The project's ray caster on every city sample point at SOLWEIG's sun times (h - 0:30 on the SOLWEIG date,
+    """The project's ray caster on every city sample point at SOLWEIG's sun times (h - 0:30 on each city date,
     report hours), with the same tree cap as the SOLWEIG inputs: the shade path of the city comparison."""
     from scripts.phase_03_shadow import cast_points
     s = cfg["solweig"]
     pts = pd.read_parquet(city_folder(cfg) / "points_city.parquet", columns=["pid", "x", "y", "z0"])
-    c0 = cfg["demo_area"]["center"]
-    times = pd.DatetimeIndex([pd.Timestamp(f"{s['date']} {h:02d}:00", tz=cfg["project"]["timezone"]) for h in s["hours"]])
-    sp = pvlib.solarposition.get_solarposition(times - pd.Timedelta(minutes=30), c0["lat"], c0["lon"])
-    st, stats = cast_points(cfg, pts.x.to_numpy(), pts.y.to_numpy(), pts.z0.to_numpy(), sp.azimuth.to_numpy(),
-                            sp.apparent_elevation.to_numpy(), tree_max_m=s["tree_max_m"])
+    sun = [sun_at(cfg, d) for d in s["dates"]]
+    az, el = np.concatenate([a for a, _ in sun]), np.concatenate([e for _, e in sun])
+    st, stats = cast_points(cfg, pts.x.to_numpy(), pts.y.to_numpy(), pts.z0.to_numpy(), az, el, tree_max_m=s["tree_max_m"])
     out = pd.DataFrame({"pid": pts.pid})
-    for t, h in enumerate(s["hours"]):
-        out[f"state_{label(cfg, h)}"] = st[:, t]
+    labs = [lab for _, _, lab in city_labels(cfg)]
+    for t, lab in enumerate(labs):
+        out[f"state_{lab}"] = st[:, t]
     out.to_parquet(city_folder(cfg) / "shade_states.parquet")
     print(json.dumps({k: v for k, v in stats.items()}, default=float),
-          {label(cfg, h): round(float((st[:, t] == 0).mean()), 4) for t, h in enumerate(s["hours"])})
+          {lab: round(float((st[:, t] == 0).mean()), 4) for t, lab in enumerate(labs)})
+
+
+def city_bundle(cfg):
+    """Small per-date bundles for the server for every city date after the first (the surfaces are already there):
+    met file, runs_city.json for that date, and the demo network's outdoor sample points (pids after the city
+    points, same core grid) so the route tool gets values too. Written to solweig_city/bundle_<date>/."""
+    s = cfg["solweig"]
+    d = city_folder(cfg)
+    base = json.loads((d / "package" / "runs_city.json").read_text())
+    n_city = len(pd.read_parquet(d / "points_city.parquet", columns=["pid"]))
+    _, _, _, px, py, eid, seg, on_b = demo_points(cfg)
+    rr, k_ = city_runs(cfg), s["city"]["core_m"]
+    x0, y0 = min(r["core"][0] for r in rr.values()), min(r["core"][1] for r in rr.values())
+    keys = [f"x{a:02d}_y{b:02d}" for a, b in zip(np.floor((px - x0) / k_).astype(int), np.floor((py - y0) / k_).astype(int))]
+    assert set(keys) <= set(base["runs"]), "demo points outside the run cores"
+    demo = pd.DataFrame({"pid": n_city + np.arange(len(px)), "x": px, "y": py, "on_bridge": on_b, "key": keys})
+    demo.assign(edge=eid, seg_m=seg).to_parquet(d / "demo_points.parquet")
+    for date in s["dates"][1:]:
+        b = d / f"bundle_{date}"
+        b.mkdir(parents=True, exist_ok=True)
+        demo.to_parquet(b / "demo_points.parquet", compression="zstd")
+        import shutil
+        shutil.copy(met_file(cfg, date), b / "met.txt")
+        (b / "runs_city.json").write_text(json.dumps(base | {"date": date}, indent=2))
+        print(date, {p.name: p.stat().st_size for p in b.iterdir()}, f"{len(demo)} demo points")
 
 
 def city_collect(cfg):
-    """Server output (unpacked into solweig_city/results/out/) -> per-edge heat table of the city graph.
+    """Server output (one tar per date, unpacked into solweig_city/results/<date>/out/) -> per-edge heat table.
 
     Per edge and report hour, as for the demo: L_sun / L_tree / L_bldg from city_shade (covered edges: building
     shade), mean Tmrt and UTCI, metres per UTCI heat-stress category. Covered walkways are under a roof SOLWEIG does
     not see, so they take the hour's median UTCI / Tmrt of building-shaded points. Checks go to phase_10_city.json."""
     s = cfg["solweig"]
     d = city_folder(cfg)
-    files = sorted((d / "results" / "out").glob("points_*.parquet"))
-    sol = pd.concat([pd.read_parquet(f) for f in files], ignore_index=True)
-    labs = {h: label(cfg, h) for h in s["hours"]}
-    sol = sol.rename(columns={f"{v}_{h:02d}": f"{v}_{labs[h]}" for h in s["hours"] for v in ("utci", "tmrt", "shadow")})
-    sol = sol[["pid", "moved_m", "svf", *[f"{v}_{l}" for l in labs.values() for v in ("utci", "tmrt", "shadow")]]]
     pts = pd.read_parquet(d / "points_city.parquet", columns=["pid", "edge_id", "seg_m", "on_bridge", "key"])
-    pts = pts.merge(pd.read_parquet(d / "shade_states.parquet"), on="pid").merge(sol, on="pid", how="left")
+    pts = pts.merge(pd.read_parquet(d / "shade_states.parquet"), on="pid")
+    files = {}
+    for date in s["dates"]:
+        files[date] = sorted((d / "results" / date / "out").glob("points_*.parquet"))
+        sol = pd.concat([pd.read_parquet(f) for f in files[date]], ignore_index=True)
+        ren = {f"{v}_{h:02d}": f"{v}_{label(cfg, h, date)}" for h in s["hours"] for v in ("utci", "tmrt", "shadow")}
+        sol = sol.rename(columns=ren)[["pid", *ren.values()] + (["moved_m", "svf"] if date == s["dates"][0] else [])]
+        pts = pts.merge(sol, on="pid", how="left")                  # demo-only pids (pid >= n_city) drop out here
+    labs = {lab: lab for _, _, lab in city_labels(cfg)}
     ge = gpd.read_parquet(cfg["paths"]["processed"] / "graph_edges.parquet", columns=["edge_id", "length", "covered"])
     row = pd.Series(np.arange(len(ge)), index=ge.edge_id).reindex(pts.edge_id).to_numpy()
     n, seg, cov = len(ge), pts.seg_m.to_numpy(np.float64), ge.covered.to_numpy()
@@ -750,10 +800,12 @@ def city_collect(cfg):
     out.to_parquet(d / "edges_heat_city.parquet")
     bh = pd.DataFrame(by_hour)
     bh["tree_relief"] = (bh.u_sun - bh.u_tree) / (bh.u_sun - bh.u_bldg)
-    res = {"server_files": len(files), "points": len(pts), "points_with_utci": int(pts[f"utci_{labs[s['hours'][0]]}"].notna().sum()),
+    res = {"server_files": {k: len(v) for k, v in files.items()}, "points": len(pts),
+           "points_with_utci": {lab: int(pts[f"utci_{lab}"].notna().sum()) for lab in labs if lab.endswith(f"_{s['hours'][0]:02d}")},
            "bridge_points": int(pts.on_bridge.sum()), "points_moved_off_buildings": int((pts.moved_m > 0).sum()),
            "moved_m_p99": float(pts.moved_m.quantile(0.99)), "covered_edges": int(cov.sum()),
-           "edges_without_utci": int(out[f"utci_{labs[cfg['study']['key_hour']]}"].isna().sum()),
+           "edges_without_utci": {lab: int(out[f"utci_{lab}"].isna().sum()) for lab in labs
+                                  if lab.endswith(f"_{cfg['study']['key_hour']:02d}")},
            "by_hour": bh.to_dict("records")}
     (cfg["paths"]["tables"] / "phase_10_city.json").write_text(json.dumps(res, indent=2, default=float))
     print(bh.round(3).to_string())
@@ -778,7 +830,7 @@ def city_routes(cfg):
     cols = {k: [] for k in ("trip", "time")}
     vals = []
     t0 = time.time()
-    labs = [label(cfg, h) for h in s["hours"]]
+    labs = [lab for _, _, lab in city_labels(cfg)]
     for lab in labs:
         ls, lt, lb = (e[f"L_{k}_{lab}"].to_numpy(np.float64) for k in ("sun", "tree", "bldg"))
         sun_pts = e[f"L_sun_{lab}"] > 0.5 * e.length
@@ -826,9 +878,9 @@ def city_routes(cfg):
             agg[f"{p}_{m}"] = (f"{p}_{m}", "mean")
     agg["shade_changed"] = ("shade_same_as_short", lambda x: 1 - x.mean())
     agg["heat_eq_shade"] = ("heat_same_as_shade", "mean")
-    key = label(cfg, cfg["study"]["key_hour"])
+    keys = [label(cfg, cfg["study"]["key_hour"], dd) for dd in s["dates"]]      # key hour pooled over dates (phase 7)
     t = df.groupby("time", observed=True).agg(**agg)
-    mb = df[df.time == key].groupby(["mode", "length_bin"], observed=True).agg(**agg)
+    mb = df[df.time.isin(keys)].groupby(["mode", "length_bin"], observed=True).agg(**agg)
     res = {"trips": int(df.trip.nunique()), "rows": len(df), "seconds": time.time() - t0,
            "by_time": t.reset_index().to_dict("records"), "by_mode_bin_key_hour": mb.reset_index().to_dict("records")}
     (cfg["paths"]["tables"] / "phase_10_city_routes.json").write_text(json.dumps(res, indent=2, default=float))
@@ -841,7 +893,8 @@ def main(args):
     cfg = load_config()
     steps = {"met": met, "inputs": inputs, "network": network, "figure": figure, "routes": routes,
              "frontier": frontier, "city-points": city_points, "city-package": city_package,
-             "city-shade": city_shade, "city-collect": city_collect, "city-routes": city_routes}
+             "city-shade": city_shade, "city-bundle": city_bundle, "city-collect": city_collect,
+             "city-routes": city_routes}
     for a in args or ["met", "inputs"]:
         steps[a](cfg)
 
