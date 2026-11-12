@@ -16,8 +16,11 @@ paths:
   tables: reports/tables     # json / csv / txt written by the scripts
 
 study:
-  dates: ["2026-06-21", "2026-08-01"]
+  # solweig branch: the SOLWEIG days (2025 heat days near the solstice and Aug 1) and SOLWEIG's sun time within the
+  # hour, so shade and heat (phase 10) describe the same moments; main uses 2026-06-21 / 2026-08-01 at hh:00
+  dates: ["2025-06-24", "2025-07-29"]
   hours: [8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19]
+  sun_offset_min: -30         # sun of hour h at h - 0:30 (SOLWEIG's hourly-mean convention); 0 = on the hour
   sun_reference_point: {lat: 39.9526, lon: -75.1652}   # Center City
   key_hour: 15
 

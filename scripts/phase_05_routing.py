@@ -16,6 +16,7 @@ import numpy as np
 import pandas as pd
 
 from coolpath import load_config
+from coolpath.sun import key_labels
 from coolpath.routing import load_city_graph, path_cost, path_edges, path_totals, search, theta_params
 
 N_OD = 300
@@ -75,7 +76,7 @@ def main():
     dyn = df[df.theta == "dynamic"]
 
     # ellipse vs unbounded on 50 ODs at 15:00
-    lab15 = "0621_15"
+    lab15 = key_labels(cfg)[0]
     ls, lt, lb = shade[lab15]
     diff = 0
     for o, dst in ods[:50]:
@@ -120,7 +121,7 @@ def main():
         "sun_red_mean": float(dyn.sun_red.mean()), "sun_red_median": float(dyn.sun_red.median()),
         "exposure_red_mean": float(dyn.exposure_red.mean()),
         "path_changed_share": float(1 - dyn.same_path.mean()),
-        "at_0621_15": {"detour_mean": float(dyn[i15].detour.mean()), "sun_red_mean": float(dyn[i15].sun_red.mean()),
+        f"at_{lab15}": {"detour_mean": float(dyn[i15].detour.mean()), "sun_red_mean": float(dyn[i15].sun_red.mean()),
                        "exposure_red_mean": float(dyn[i15].exposure_red.mean())},
         "theta_sensitivity_15h": df[df.time.str.endswith("_15")].groupby("theta")[["detour", "sun_red", "exposure_red"]]
                                  .mean().round(4).to_dict("index"),

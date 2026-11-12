@@ -21,6 +21,7 @@ import pandas as pd
 
 from coolpath import ROOT, load_config
 from coolpath.export import load_network_json, network_json, scenario_csr
+from coolpath.sun import key_labels
 from coolpath.routing import path_edges, search
 from coolpath.transit import station_display
 from scripts.phase_08_demo import demo_square, load_indoor
@@ -124,7 +125,7 @@ def main():
     net = load_network_json(OUT / "demo_network.json")
     m = pd.read_parquet(proc / "demo_trips_metrics.parquet").merge(
         pd.read_parquet(proc / "demo_trips.parquet")[["trip_id", "o", "d"]], on="trip_id")
-    lab = "0621_15"
+    lab = key_labels(cfg)[0]
     geom = json.loads((OUT / "demo_network.json").read_text())["edges"]["geom"]
 
     def pair(row, scenario):
@@ -232,14 +233,14 @@ def main():
     s4 = json.loads((tabs / "phase_04_stats.json").read_text())
     s6s = json.loads((tabs / "phase_06_stats.json").read_text())
     sun = pd.read_parquet(proc / "sun.parquet")
-    es = pd.read_parquet(proc / "edges_shade.parquet", columns=["length"] + [f"L_{k}_0621_15" for k in ("sun", "tree", "bldg")])
+    es = pd.read_parquet(proc / "edges_shade.parquet", columns=["length"] + [f"L_{k}_{key_labels(cfg)[0]}" for k in ("sun", "tree", "bldg")])
     sizes["summary.json"] = write("summary.json", {
         "phase6_at_15h": s6["at_15h"], "phase7_by_mode_bin_15h": s7["by_mode_bin_15h"], "phase8_at_15h": s8["at_15h"],
         "sidewalk_km": s4["km"], "city_trips": s6s["city"]["trips"], "annotated_buildings": int(len(bld)),
         "min_trips_station_rank": cfg["metrics"]["min_trips_station_rank"],
         # opening screens: sun height and the city's sidewalk length in sun / tree / building shade, 06-21 15:00
-        "sun_elevation_15": round(float(sun.set_index("label").elevation["0621_15"]), 1),
-        "sidewalk_share_15": {k: round(float(es[f"L_{k}_0621_15"].sum() / es.length.sum()), 4) for k in ("sun", "tree", "bldg")}})
+        "sun_elevation_15": round(float(sun.set_index("label").elevation[key_labels(cfg)[0]]), 1),
+        "sidewalk_share_15": {k: round(float(es[f"L_{k}_{key_labels(cfg)[0]}"].sum() / es.length.sum()), 4) for k in ("sun", "tree", "bldg")}})
     (tabs / "phase_09_export.json").write_text(json.dumps(
         {"sizes_mb": sizes, "opener": [{k: h[k] for k in ("station", "line", "top_share")} for h in hero["opener"]]}, indent=2))
     print(json.dumps(sizes, indent=2))

@@ -75,7 +75,7 @@ const part = (x) => { const n = Math.round(1 / x); return PART[n] ? `about ${PAR
 const inTen = (x) => { const n = Math.round(10 * x); return n >= 1 && n <= 9 ? `${NUM[n][0].toUpperCase()}${NUM[n].slice(1)} in ten` : pct(x, 0); };
 const oneIn = (x) => { const n = Math.round(1 / x); return n >= 2 && n <= 10 ? `about one in ${NUM[n]}` : pct(x, 0) + " of"; };
 set("n-km", Math.round(summary.sidewalk_km).toLocaleString("en-US"));
-// opening screens: sun height and the city's sidewalks in sun / tree shade / building shade at 15:00 on June 21
+// opening screens: sun height and the city's sidewalks in sun / tree shade / building shade at 15:00 on June 24
 const elev = `${Math.round(summary.sun_elevation_15)}°`, ss = summary.sidewalk_share_15;
 document.querySelectorAll(".n-elev").forEach((el) => { el.textContent = elev; });
 // opening heat screen: airport air temperature (NOAA ACIS) and a Landsat surface-temperature map
@@ -197,7 +197,7 @@ let pairIdx = 0, t0 = performance.now(), heroOn = true, current = "hero", drawn 
 function showCase(p) {
   const top = p.top_share < 0.01 ? "top 1%" : `top ${Math.ceil(100 * p.top_share)}%`;
   const line = p.line.startsWith("Regional") ? "Regional Rail" : p.line[0];
-  set("h-case", `${p.station.replace(/-/g, "–")} (${line}) · June 21, 15:00 · ${top} of University City station walks`);
+  set("h-case", `${p.station.replace(/-/g, "–")} (${line}) · June 24, 15:00 · ${top} of University City station walks`);
 }
 // frame the walk in the space the text leaves free; labels need room beside the lines
 function fitPair(p, panel, labels = false, tilt = false) {
@@ -245,7 +245,7 @@ const startLoop = () => {
   heroOn = true; if (!raf) raf = requestAnimationFrame(frame);
 };
 
-// ---- sidewalk shade through the day (screen 02): June 21, 08:00-19:00, one hour every 0.9 s
+// ---- sidewalk shade through the day (screen 02): June 24, 08:00-19:00, one hour every 0.9 s
 let hourTimer = null, hour = 15;
 $("hours").innerHTML = "<i></i>".repeat(12);
 const setHour = (h) => {

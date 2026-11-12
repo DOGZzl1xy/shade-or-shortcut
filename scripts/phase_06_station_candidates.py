@@ -22,6 +22,7 @@ from rasterio.windows import from_bounds
 
 from coolpath import load_config
 from coolpath.areas import city
+from coolpath.sun import key_labels
 
 SUBWAY = ["L1", "B1", "B2", "B3"]
 
@@ -51,7 +52,8 @@ MIN_NETWORK_KM = 2.0   # stations need sidewalks around them to sample trips (e.
 
 def features(cfg, g):
     proc, r = cfg["paths"]["processed"], cfg["trips"]["station_buffer_m"]
-    pts = pd.read_parquet(proc / "shadow_points.parquet", columns=["x", "y", "seg_m", "s_0621_15"])
+    k15 = key_labels(cfg)[0]
+    pts = pd.read_parquet(proc / "shadow_points.parquet", columns=["x", "y", "seg_m", f"s_{k15}"]).rename(columns={f"s_{k15}": "s_key"})
     pg = gpd.GeoDataFrame(pts, geometry=gpd.points_from_xy(pts.x, pts.y), crs=g.crs)
     rows = []
     for _, s in g.iterrows():
@@ -69,7 +71,7 @@ def features(cfg, g):
         rows.append({"bldg_height_mean_m": float(hb[bmask].mean()) if bmask.any() else 0.0,
                      "canopy_cover": float(((ht > 0) & inside).sum() / inside.sum()),
                      "bldg_coverage": float(bmask.sum() / inside.sum()),
-                     "sun_share_1500": float((near.seg_m * (near.s_0621_15 == 0)).sum() / near.seg_m.sum()) if len(near) else np.nan,
+                     "sun_share_1500": float((near.seg_m * (near.s_key == 0)).sum() / near.seg_m.sum()) if len(near) else np.nan,
                      "network_km_500m": float(near.seg_m.sum() / 1e3)})
     return pd.concat([g.reset_index(drop=True), pd.DataFrame(rows)], axis=1)
 

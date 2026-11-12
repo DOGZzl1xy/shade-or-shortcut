@@ -2,6 +2,7 @@
 Geofabrik extract (Pennsylvania .osm.pbf), read with GDAL's OSM driver.
 
     uv run python -m scripts.osm_geofabrik [group ...]      # default: every group whose parquet is missing
+    uv run python -m scripts.osm_geofabrik demo_paths        # phase 8's osm_demo_paths.parquet (University City footways)
 
 The PBF is expected at data/raw/osm/geofabrik/pennsylvania-latest.osm.pbf (download it and its .md5 from
 https://download.geofabrik.de/north-america/us/). ogr2ogr comes from the SOLWEIG conda env (GDAL with the OSM
@@ -32,9 +33,12 @@ def ogr2ogr() -> str:
     return str(p) if p.exists() else shutil.which("ogr2ogr")
 
 
+ATTRS = [*osm.KEEP, "indoor"]                    # osm.KEEP plus the tag phase 8 filters footways on
+
+
 def osmconf(default: str, out) -> None:
-    """GDAL's osmconf.ini with every layer exposing the tags osm.KEEP needs as columns."""
-    keep = ",".join(k for k in osm.KEEP)
+    """GDAL's osmconf.ini with every layer exposing ATTRS as columns."""
+    keep = ",".join(ATTRS)
     lines = []
     for ln in open(default):
         lines.append(f"attributes={keep}\n" if ln.startswith("attributes=") else ln)
@@ -53,8 +57,36 @@ def extract(cfg, gpkg):
                     "-spat", *map(str, bbox), *LAYERS], check=True)
 
 
+def demo_paths(cfg):
+    """phase 8's osm_demo_paths.parquet from the extract: ways with highway in OSM_QUERY that intersect the demo
+    square + graph_buffer_m (the polygon phase 8 sends to Overpass), same columns, EPSG:4326."""
+    from scripts.phase_08_demo import OSM_QUERY, demo_square
+    root = cfg["paths"]["raw"] / "osm"
+    dest = root / "osm_demo_paths.parquet"
+    if dest.exists():
+        print(f"{dest.name} exists, not overwritten")
+        return
+    gpkg = root / "geofabrik" / "philadelphia_bbox.gpkg"
+    if not gpkg.exists() or "indoor" not in gpd.read_file(gpkg, layer="lines", rows=1).columns:
+        extract(cfg, gpkg)
+    region = demo_square(cfg).buffer(cfg["indoor"]["graph_buffer_m"], join_style="mitre")
+    poly = gpd.GeoSeries([region], crs=cfg["project"]["crs"]).to_crs(4326).iloc[0]
+    g = gpd.read_file(gpkg, layer="lines", on_invalid="ignore")
+    g = g[g.highway.isin(OSM_QUERY) & g.intersects(poly)].copy()
+    g["element"], g["id"] = "way", pd.to_numeric(g.osm_id).astype("int64")
+    keep = [c for c in ("element", "id", "highway", "footway", "access", "indoor", "tunnel", "bridge", "layer",
+                        "covered", "name") if c in g.columns]
+    g[keep + ["geometry"]].reset_index(drop=True).to_parquet(dest)
+    record(cfg, "osm_demo_paths_geofabrik", f"https://download.geofabrik.de/north-america/us/{PBF}", [dest], n=len(g),
+           note="Overpass returned 502 on 2026-11-12; phase 8's footway query run on the Geofabrik extract")
+    print(f"{dest.name}: {len(g)} ways {g.highway.value_counts().to_dict()}")
+
+
 def main(groups):
     cfg = load_config()
+    if groups == ["demo_paths"]:
+        demo_paths(cfg)
+        return
     root = cfg["paths"]["raw"] / "osm"
     groups = groups or [g for g in osm.GROUPS if not (root / f"osm_{g}.parquet").exists()]
     if not groups:

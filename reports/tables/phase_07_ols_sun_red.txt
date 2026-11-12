@@ -1,26 +1,26 @@
                             OLS Regression Results                            
 ==============================================================================
-Dep. Variable:        sun_red_300-800   R-squared:                       0.229
-Model:                            OLS   Adj. R-squared:                  0.225
-Method:                 Least Squares   F-statistic:                     27.80
-Date:                Sun, 25 Oct 2026   Prob (F-statistic):           1.17e-16
-Time:                        16:31:09   Log-Likelihood:                 525.18
-No. Observations:                 510   AIC:                            -1042.
-Df Residuals:                     506   BIC:                            -1025.
+Dep. Variable:        sun_red_300-800   R-squared:                       0.223
+Model:                            OLS   Adj. R-squared:                  0.218
+Method:                 Least Squares   F-statistic:                     21.87
+Date:                Thu, 12 Nov 2026   Prob (F-statistic):           2.47e-13
+Time:                        13:13:41   Log-Likelihood:                 623.36
+No. Observations:                 510   AIC:                            -1239.
+Df Residuals:                     506   BIC:                            -1222.
 Df Model:                           3                                         
 Covariance Type:                  HC3                                         
 ======================================================================================
                          coef    std err          z      P>|z|      [0.025      0.975]
 --------------------------------------------------------------------------------------
-const                  0.0743      0.004     19.122      0.000       0.067       0.082
-bldg_height_mean_m     0.0288      0.008      3.501      0.000       0.013       0.045
-canopy_cover          -0.0005      0.005     -0.106      0.915      -0.010       0.009
-network_km_per_km2     0.0349      0.006      6.051      0.000       0.024       0.046
+const                  0.0599      0.003     18.647      0.000       0.054       0.066
+bldg_height_mean_m     0.0270      0.008      3.484      0.000       0.012       0.042
+canopy_cover           0.0013      0.004      0.312      0.755      -0.007       0.010
+network_km_per_km2     0.0255      0.005      4.967      0.000       0.015       0.036
 ==============================================================================
-Omnibus:                      195.782   Durbin-Watson:                   1.565
-Prob(Omnibus):                  0.000   Jarque-Bera (JB):              816.793
-Skew:                           1.705   Prob(JB):                    4.32e-178
-Kurtosis:                       8.178   Cond. No.                         1.74
+Omnibus:                      209.393   Durbin-Watson:                   1.554
+Prob(Omnibus):                  0.000   Jarque-Bera (JB):             1102.417
+Skew:                           1.742   Prob(JB):                    4.10e-240
+Kurtosis:                       9.304   Cond. No.                         1.74
 ==============================================================================
 
 Notes:

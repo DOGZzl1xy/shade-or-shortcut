@@ -33,11 +33,12 @@ from sklearn.preprocessing import StandardScaler
 
 from coolpath import load_config
 from coolpath.areas import city
+from coolpath.sun import key_labels
 from coolpath.transit import home_stops
 
 IND = ["sun_share", "sun_red", "detour", "no_alt_share"]
 FEAT = ["bldg_height_mean_m", "canopy_cover", "network_km_per_km2"]
-T15 = ["0621_15", "0801_15"]
+T15 = key_labels(load_config())             # the key hour on every study date, pooled
 
 
 def load(cfg):
@@ -49,7 +50,8 @@ def load(cfg):
 
 def distribution(cfg, df):
     figs = cfg["paths"]["figures"]
-    times = ["0621_09", "0621_12", "0621_15", "0621_18", "0801_15"]
+    d0, d1 = (lab[:4] for lab in T15)
+    times = [f"{d0}_09", f"{d0}_12", f"{d0}_15", f"{d0}_18", f"{d1}_15"]
     d = df[df.network_dist_m >= 300]
     fig, ax = plt.subplots(2, 2, figsize=(15, 9))
     for j, smp in enumerate(("city", "station")):

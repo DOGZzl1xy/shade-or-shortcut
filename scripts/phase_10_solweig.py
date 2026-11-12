@@ -1051,50 +1051,87 @@ def city_frontier(cfg):
     print("figure:", out)
 
 
+def demo_utci(cfg, date):
+    """UTCI per demo network edge (site/app/data/demo_network.json, current build) and report hour from the city run
+    of `date`: points every 2 m (demo_points); off bridges the nearest pixel with UTCI in the server's core rasters
+    (as the server's post-processing does), on bridge decks the nearest point the server sampled on a deck (deck UTCI
+    from the deck pixel's Tmrt) within 5 m, else the raster. Returns {label: array per edge} (NaN on indoor parts)."""
+    from scipy.spatial import cKDTree
+    s = cfg["solweig"]
+    d = city_folder(cfg)
+    out_dir = d / "results" / date / "out"
+    edges, _, _, px, py, eid, seg, on_b = demo_points(cfg)
+    rr, k_ = city_runs(cfg), s["city"]["core_m"]
+    x0, y0 = min(r["core"][0] for r in rr.values()), min(r["core"][1] for r in rr.values())
+    keys = np.array([f"x{a:02d}_y{b:02d}" for a, b in zip(np.floor((px - x0) / k_).astype(int), np.floor((py - y0) / k_).astype(int))])
+    hours = s["hours"]
+    vals = np.full((len(px), len(hours)), np.nan)
+    for key in np.unique(keys):
+        sel = np.where(keys == key)[0]
+        with rasterio.open(out_dir / f"utci_{key}.tif") as f:
+            met_hours = [int(h) for h in f.tags()["hours"].split(",")]
+            arr = f.read().astype(np.float64)
+            arr[arr == f.nodata] = np.nan
+            arr /= s["city"]["utci_scale"]
+            T = f.transform
+        r = np.clip(((T.f - py[sel]) / -T.e).astype(int), 0, arr.shape[1] - 1)
+        c = np.clip(((px[sel] - T.c) / T.a).astype(int), 0, arr.shape[2] - 1)
+        _, (ir, ic) = ndimage.distance_transform_edt(np.isnan(arr[0]), return_indices=True)
+        for j, h in enumerate(hours):
+            vals[sel, j] = arr[met_hours.index(h), ir[r, c], ic[r, c]]
+    if on_b.any():                                   # bridge decks: nearest server deck point
+        cols = [f"utci_{h:02d}" for h in hours]
+        sol = pd.concat([pd.read_parquet(f, columns=["pid", *cols]) for f in sorted(out_dir.glob("points_*.parquet"))])
+        bp = pd.read_parquet(d / "points_city.parquet", columns=["pid", "x", "y", "on_bridge"])
+        if (d / "demo_points.parquet").exists():
+            bp = pd.concat([bp, pd.read_parquet(d / "demo_points.parquet", columns=["pid", "x", "y", "on_bridge"])])
+        bp = bp[bp.on_bridge].merge(sol, on="pid")
+        dist, k = cKDTree(bp[["x", "y"]].to_numpy()).query(np.c_[px[on_b], py[on_b]])
+        near = dist <= 5
+        vals[np.where(on_b)[0][near]] = bp[cols].to_numpy()[k[near]]
+    n = len(edges)
+    w = np.bincount(eid, seg, n)
+    out = {}
+    for j, h in enumerate(hours):
+        ok = np.isfinite(vals[:, j])
+        wt = np.bincount(eid[ok], seg[ok], n)
+        out[label(cfg, h, date)] = np.bincount(eid[ok], seg[ok] * vals[ok, j], n) / np.where(wt > 0, wt, np.nan)
+    out["_points"] = {"points": len(px), "bridge": int(on_b.sum()), "edges_sampled": int((w > 0).sum())}
+    return out
+
+
 def web_export(cfg):
     """UTCI for the website (site/app/data), on top of the phase-9 export.
 
     demo_network.json gains U (per time of `times`, per edge, 0.1 C; null on indoor parts) and heat (the relief
-    references u_sun / u_bldg per time, the clip range, the SOLWEIG date behind each shade date). The website keeps
-    its two shade dates (06-21, 08-01); UTCI comes from the SOLWEIG dates paired with them (solweig.dates, same
-    order). Demo edges: first date from the demo run (edges_heat.parquet), later dates from the demo points the server
-    sampled (pid >= the city points). city_shade.pmtiles is rebuilt with u0..u23 (UTCI x 10) next to s0..s23."""
+    references u_sun / u_bldg per time and the clip range); demo UTCI from the city run of each date (demo_utci).
+    The study dates are the SOLWEIG dates (config study.dates), so a time label means the same moment for shade and
+    heat. city_shade.pmtiles is rebuilt with u0..u23 (UTCI x 10) next to s0..s23."""
     import subprocess
-    from coolpath.export import KIND_CODES  # noqa: F401  (kind 2 = indoor)
     s = cfg["solweig"]
     app = ROOT / "site" / "app" / "data"
     path = app / "demo_network.json"
     net = json.loads(path.read_text())
     times = net["times"]
-    shade_days = [d[5:].replace("-", "") for d in cfg["study"]["dates"]]
-    pair = dict(zip(shade_days, s["dates"]))                    # "0621" -> "2025-06-24", "0801" -> "2025-07-29"
-    lab_of = {t: label(cfg, int(t[-2:]), pair[t[:4]]) for t in times}
+    assert set(t[:4] for t in times) == {d[5:].replace("-", "") for d in s["dates"]}, \
+        "demo_network.json times are not the SOLWEIG dates: rerun phases 3-9 with study.dates = solweig.dates"
+    lab_of = {t: t for t in times}
     refs = city_refs(cfg)
     kind = np.asarray(net["edges"]["kind"])
     n = len(kind)
-    # per demo edge and SOLWEIG label: length-weighted mean UTCI
-    U = {}
-    demo1 = pd.read_parquet(folder(cfg) / "edges_heat.parquet")
-    for h in s["hours"]:
-        U[label(cfg, h, s["dates"][0])] = demo1[f"utci_{label(cfg, h, s['dates'][0])}"].to_numpy(np.float64)
-    dp = pd.read_parquet(city_folder(cfg) / "demo_points.parquet", columns=["pid", "edge", "seg_m"])
-    for date in s["dates"][1:]:
-        sol = pd.concat([pd.read_parquet(f, columns=["pid", *[f"utci_{h:02d}" for h in s["hours"]]])
-                         for f in sorted((city_folder(cfg) / "results" / date / "out").glob("points_*.parquet"))])
-        m = dp.merge(sol, on="pid", how="left")
-        w = np.bincount(m.edge, m.seg_m, n)
-        for h in s["hours"]:
-            ok = m[f"utci_{h:02d}"].notna().to_numpy()
-            U[label(cfg, h, date)] = np.bincount(m.edge[ok], m.seg_m[ok] * m[f"utci_{h:02d}"][ok], n) / np.where(w > 0, w, np.nan)
+    U, pts_info = {}, {}
+    for date in s["dates"]:
+        r = demo_utci(cfg, date)
+        pts_info[date] = r.pop("_points")
+        U.update(r)
     rnd = lambda a: [None if (k == 2 or not np.isfinite(x)) else round(float(x), 1) for x, k in zip(a, kind)]
     net["U"] = [rnd(U[lab_of[t]]) for t in times]
     net["heat"] = {"u_sun": [round(refs[lab_of[t]][0], 2) for t in times], "u_bldg": [round(refs[lab_of[t]][1], 2) for t in times],
-                   "clip": [-1, 1.5], "solweig_dates": pair,
-                   "note": "UTCI from SOLWEIG for the hottest clear day near each shade date; sun at h - 0:30"}
+                   "clip": [-1, 1.5], "note": "UTCI from SOLWEIG (city run); sun of hour h at h - 0:30, as the shade"}
     missing = sum(v is None for t in net["U"] for v, k in zip(t, kind) if k != 2)
     path.write_text(json.dumps(net, separators=(",", ":"), allow_nan=False))
     print(f"demo_network.json: U for {len(times)} times x {n} edges, {missing} outdoor values missing, "
-          f"{path.stat().st_size / 1e6:.1f} MB")
+          f"{path.stat().st_size / 1e6:.1f} MB; points {pts_info}")
 
     # city sidewalks: shade share s0..s23 (phase-9 definition) and UTCI x 10 u0..u23, one feature per graph edge
     proc = cfg["paths"]["processed"]

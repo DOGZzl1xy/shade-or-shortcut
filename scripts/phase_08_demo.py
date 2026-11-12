@@ -37,6 +37,7 @@ from coolpath import load_config
 from coolpath.network import edge_components, node_lines
 from coolpath.routing import CSR, search, theta_params, tree_totals
 from coolpath.shadow import sample_points
+from coolpath.sun import key_labels
 from coolpath.transit import home_stops
 from scripts.phase_02_spotcheck import ortho
 from scripts.phase_03_shadow import cast_points
@@ -577,7 +578,7 @@ def figure(cfg, e, G, trips_, labels):
     figs, tabs = cfg["paths"]["figures"], cfg["paths"]["tables"]
     rc = cfg["routing"]
     tp = theta_params(cfg)
-    lab = "0621_15"
+    lab = key_labels(cfg)[0]
     sq = demo_square(cfg)
     b = sq.bounds
     camp = trips_[trips_.set == "campus"]

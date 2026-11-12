@@ -27,16 +27,16 @@ export function handoff() {
   return b && b.length === 4 && b.every(Number.isFinite) ? [[b[0], b[1]], [b[2], b[3]]] : null;
 }
 
-export function timeName(label) {          // "0621_15" -> "June 21, 15:00"
-  const m = { "0621": "June 21", "0801": "Aug 1" };
+export function timeName(label) {          // "0624_15" -> "June 24, 15:00"
+  const m = { "0624": "June 24", "0729": "July 29" };
   return `${m[label.slice(0, 4)]}, ${label.slice(5)}:00`;
 }
 
-// date toggle + hour slider; time index = day * 12 + (hour - 8), as in the exported "0621_08" ... "0801_19" order
+// date toggle + hour slider; time index = day * 12 + (hour - 8), as in the exported "0624_08" ... "0729_19" order
 export function timeControl(el, t, onChange) {
   let day = Math.floor(t / 12), hour = 8 + (t % 12);
   el.innerHTML = `<div class="row"><span class="label">Date</span>
-      <div class="seg seg-sm"><button data-d="0">June 21</button><button data-d="1">Aug 1</button></div></div>
+      <div class="seg seg-sm"><button data-d="0">June 24</button><button data-d="1">July 29</button></div></div>
     <div class="row" style="margin-top:8px"><span class="label">Hour</span><span class="num tc-hour"></span></div>
     <input type="range" min="8" max="19" step="1" value="${hour}" aria-label="hour of day">`;
   const btns = el.querySelectorAll("button"), slider = el.querySelector("input"), lab = el.querySelector(".tc-hour");
@@ -130,7 +130,7 @@ export const UTCI_STOPS = [320, COLORS.cool, 380, "#6fb0c8", 420, "#e9b36a", 460
 export function utciRamp(prop) {
   return ["interpolate", ["linear"], ["get", prop], ...UTCI_STOPS];
 }
-export const UTCI_NOTE = "UTCI: SOLWEIG for 24 June / 29 July 2025, the hottest clear days near each shade date (sun at hour − 0:30)";
+export const UTCI_NOTE = "Heat (UTCI) from the SOLWEIG model on two hot, clear days, June 24 and July 29, 2025; the hour shown is the hour ending then (sun at hour − 0:30), for shade and heat alike";
 
 // numbers in text use a true minus sign (U+2212)
 export const pct = (x, d = 1) => `${(100 * x).toFixed(d)}%`.replace("-", "\u2212");

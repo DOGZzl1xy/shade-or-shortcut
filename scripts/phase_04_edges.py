@@ -23,6 +23,7 @@ from shapely.geometry import LineString
 from coolpath import load_config
 from coolpath.network import bridge_deck, edge_components, node_lines
 from coolpath.shadow import sample_points
+from coolpath.sun import key_labels
 from scripts.phase_03_shadow import cast_points
 
 
@@ -147,16 +148,17 @@ def main():
                 "covered_edges_total": int(allv.covered.sum()), "covered_km_total": float(allv.length[allv.covered].sum() / 1e3),
                 "lcc_edge_share": float(lcc.mean()), "components": int(allv.component.max() + 1),
                 "table_columns": len(tab.columns), "table_MB": float((proc / "edges_shade.parquet").stat().st_size / 1e6)})
-    i15 = labels.index("0621_15")
+    k15 = key_labels(cfg)[0]
+    i15 = labels.index(k15)
     for k in ("sun", "tree", "bldg"):
-        res[f"share_{k}_0621_15"] = float(tab[f"L_{k}_0621_15"].sum() / tab.length.sum())
+        res[f"share_{k}_{k15}"] = float(tab[f"L_{k}_{k15}"].sum() / tab.length.sum())
     (cfg["paths"]["tables"] / "phase_04_stats.json").write_text(json.dumps(res, indent=2))
     print(json.dumps(res, indent=2))
 
     # figure: Center City covered edges + 15:00 edge shade share
     x0, y0, x1, y1 = 484400, 4421600, 487200, 4423600
-    v = allv.cx[x0:x1, y0:y1].merge(tab[["edge_id", "L_sun_0621_15", "length"]].rename(columns={"length": "Ltab"}), on="edge_id")
-    v["shade"] = 1 - v.L_sun_0621_15 / v.Ltab.clip(lower=1e-6)
+    v = allv.cx[x0:x1, y0:y1].merge(tab[["edge_id", f"L_sun_{k15}", "length"]].rename(columns={"length": "Ltab"}), on="edge_id")
+    v["shade"] = 1 - v[f"L_sun_{k15}"] / v.Ltab.clip(lower=1e-6)
     fig, ax = plt.subplots(1, 2, figsize=(20, 9))
     v.plot(ax=ax[0], color="#ccc", lw=0.5)
     v[v.covered & (v.source == "dvrpc")].plot(ax=ax[0], color="#e4002b", lw=2.5, label="DVRPC edge flagged covered")

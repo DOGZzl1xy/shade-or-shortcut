@@ -8,7 +8,7 @@
       "osm_entrances_used": 0,
       "footprint_centroids_used": 60,
       "destinations": 60,
-      "median_network_dist_m": 739.5908687454144
+      "median_network_dist_m": 687.2209272968048
     },
     {
       "station": "15th St/City Hall",
@@ -18,7 +18,7 @@
       "osm_entrances_used": 26,
       "footprint_centroids_used": 34,
       "destinations": 60,
-      "median_network_dist_m": 811.0982799032627
+      "median_network_dist_m": 852.2423280763985
     },
     {
       "station": "Highland",
@@ -28,7 +28,7 @@
       "osm_entrances_used": 0,
       "footprint_centroids_used": 60,
       "destinations": 60,
-      "median_network_dist_m": 848.3790694419931
+      "median_network_dist_m": 774.307906103686
     },
     {
       "station": "Penn Medicine Station",
@@ -38,17 +38,17 @@
       "osm_entrances_used": 11,
       "footprint_centroids_used": 49,
       "destinations": 60,
-      "median_network_dist_m": 829.5820410907406
+      "median_network_dist_m": 835.6562210166959
     },
     {
       "station": "NRG Station",
       "mode": "BSL",
-      "snap_m": 14.549329495960817,
+      "snap_m": 14.549329496819151,
       "osm_entrances_available": 0,
       "osm_entrances_used": 0,
       "footprint_centroids_used": 60,
       "destinations": 60,
-      "median_network_dist_m": 839.1575656373
+      "median_network_dist_m": 856.0793246905645
     },
     {
       "station": "Carpenter",
@@ -58,7 +58,7 @@
       "osm_entrances_used": 0,
       "footprint_centroids_used": 60,
       "destinations": 60,
-      "median_network_dist_m": 750.2151702252497
+      "median_network_dist_m": 767.7850255438316
     },
     {
       "station": "Snyder",
@@ -68,7 +68,7 @@
       "osm_entrances_used": 2,
       "footprint_centroids_used": 58,
       "destinations": 60,
-      "median_network_dist_m": 764.5724847310147
+      "median_network_dist_m": 733.0898096465668
     },
     {
       "station": "63rd St",
@@ -78,7 +78,7 @@
       "osm_entrances_used": 1,
       "footprint_centroids_used": 59,
       "destinations": 60,
-      "median_network_dist_m": 808.3098050761859
+      "median_network_dist_m": 714.5553917364764
     },
     {
       "station": "2nd St",
@@ -88,7 +88,7 @@
       "osm_entrances_used": 12,
       "footprint_centroids_used": 48,
       "destinations": 60,
-      "median_network_dist_m": 763.1395091993635
+      "median_network_dist_m": 758.6930693388156
     },
     {
       "station": "Ryers",
@@ -98,7 +98,7 @@
       "osm_entrances_used": 0,
       "footprint_centroids_used": 60,
       "destinations": 60,
-      "median_network_dist_m": 711.2769873301913
+      "median_network_dist_m": 793.0901974983285
     }
   ],
   "city": {
@@ -121,39 +121,39 @@
       "bus": 1605,
       "rapid": 116
     },
-    "stop_snap_m_median": 4.839394687265162,
-    "parcels_residential": 522749,
-    "parcel_snap_m_median": 37.262697718652504,
-    "parcels_within_1200m": 431100,
-    "parcels_uncovered": 91649,
-    "parcels_uncovered_share": 0.1753212344739062,
+    "stop_snap_m_median": 4.839394687624177,
+    "parcels_residential": 522773,
+    "parcel_snap_m_median": 37.26256546973749,
+    "parcels_within_1200m": 431114,
+    "parcels_uncovered": 91659,
+    "parcels_uncovered_share": 0.1753323144079744,
     "stations_with_parcels": 1568,
     "parcels_per_station_quantiles": {
       "0.1": 12.0,
       "0.5": 145.0,
       "0.9": 643.0,
-      "1.0": 5888.0
+      "1.0": 5889.0
     },
-    "trips": 431100,
+    "trips": 431114,
     "trips_by_mode": {
-      "bus": 353755,
-      "rapid": 77345
+      "bus": 353763,
+      "rapid": 77351
     },
     "trips_by_length_bin": {
-      "<300": 202298,
-      "300-800": 180772,
-      "800-1200": 48030
+      "<300": 202304,
+      "300-800": 180779,
+      "800-1200": 48031
     },
     "trips_by_mode_and_bin": {
       "bus": {
-        "<300": 185224,
-        "300-800": 135384,
+        "<300": 185230,
+        "300-800": 135386,
         "800-1200": 33147
       },
       "rapid": {
         "<300": 17074,
-        "300-800": 45388,
-        "800-1200": 14883
+        "300-800": 45393,
+        "800-1200": 14884
       }
     },
     "stop_dist_quantiles_m": {
@@ -161,35 +161,35 @@
       "0.25": 166.1,
       "0.5": 321.4,
       "0.75": 551.8,
-      "0.9": 826.7
+      "0.9": 826.6
     },
     "stop_dist_quantiles_all_covered_parcels_m": {
       "0.1": 70.5,
       "0.25": 166.1,
       "0.5": 321.4,
       "0.75": 551.8,
-      "0.9": 826.7
+      "0.9": 826.6
     },
     "origin_stops_used": 1600
   },
   "direction_check": {
     "trips": 500,
     "pairs": 12000,
-    "sun_red_mean_stop_to_home": 0.14245322583130884,
-    "sun_red_mean_home_to_stop": 0.14190424433734283,
-    "sun_red_mean_abs_diff": 0.004746441810836561,
-    "sun_red_corr": 0.9895986963270668,
-    "detour_mean_stop_to_home": 0.006004741350787703,
-    "detour_mean_home_to_stop": 0.005913172764897526,
+    "sun_red_mean_stop_to_home": 0.13763415234772816,
+    "sun_red_mean_home_to_stop": 0.13754728222068027,
+    "sun_red_mean_abs_diff": 0.0041097183264309466,
+    "sun_red_corr": 0.9915135102675808,
+    "detour_mean_stop_to_home": 0.0054377518332325995,
+    "detour_mean_home_to_stop": 0.005444499198311658,
     "same_shortest_length_share": 1.0,
-    "exposure_red_mean_stop_to_home": 0.015322277675479645,
-    "exposure_red_mean_home_to_stop": 0.015125554667540972,
-    "same_shade_path_length_share": 0.9384166666666667,
+    "exposure_red_mean_stop_to_home": 0.01545831534293159,
+    "exposure_red_mean_home_to_stop": 0.015185360975253028,
+    "same_shade_path_length_share": 0.9445,
     "trip_length_m_quantiles": {
-      "0.1": 439.1,
-      "0.5": 631.7,
-      "0.9": 1021.3
+      "0.1": 431.3,
+      "0.5": 606.4,
+      "0.9": 1023.5
     }
   },
-  "wall_s": 78.8974678516388
+  "wall_s": 168.0627999305725
 }

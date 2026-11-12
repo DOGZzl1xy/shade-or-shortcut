@@ -27,10 +27,12 @@ from rasterio.windows import from_bounds
 from scipy.ndimage import maximum_filter
 
 from coolpath import load_config
+from coolpath.sun import key_labels
 from coolpath.routing import load_city_graph, path_edges, search, theta_params
 from scripts.phase_02_spotcheck import ortho
 
-LABEL, BIN, TOP = "0621_15", "300-800", 5
+LABEL, BIN, TOP = key_labels(load_config())[0], "300-800", 5
+DAY = pd.Timestamp(load_config()["study"]["dates"][0]).strftime("%B %-d")
 NEAR_M = 15        # "next to a structure": within 15 m of a building_source = 3 pixel
 
 
@@ -141,7 +143,7 @@ def main():
                               Line2D([], [], color="white", marker="s", ls="", mec="k", ms=9, label="station"),
                               Line2D([], [], color="white", marker="o", ls="", mec="k", ms=9, label="home")],
                      loc="upper center", bbox_to_anchor=(0.5, -0.01), ncol=2, fontsize=19, facecolor=BG, edgecolor=DIM, labelcolor=INK, framealpha=0.85)
-        ax[0].set_title(f"{name.split(': ')[1].replace('-', '–')}: one walk home, June 21, 15:00", fontsize=21, color=INK)
+        ax[0].set_title(f"{name.split(': ')[1].replace('-', '–')}: one walk home, {DAY}, 15:00", fontsize=21, color=INK)
         b = shapely.union_all(geom[np.r_[only_c, only_s, np.where(use_c > 0)[0]]]).buffer(80).bounds
         near = np.where(shapely.intersects(geom, shapely.box(*b)))[0]
         ax[1].set_facecolor(BG)

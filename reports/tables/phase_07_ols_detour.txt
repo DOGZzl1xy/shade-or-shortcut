@@ -1,26 +1,26 @@
                             OLS Regression Results                            
 ==============================================================================
-Dep. Variable:         detour_300-800   R-squared:                       0.196
-Model:                            OLS   Adj. R-squared:                  0.191
-Method:                 Least Squares   F-statistic:                     19.97
-Date:                Sun, 25 Oct 2026   Prob (F-statistic):           3.02e-12
-Time:                        16:31:09   Log-Likelihood:                 2054.2
-No. Observations:                 510   AIC:                            -4100.
-Df Residuals:                     506   BIC:                            -4083.
+Dep. Variable:         detour_300-800   R-squared:                       0.199
+Model:                            OLS   Adj. R-squared:                  0.194
+Method:                 Least Squares   F-statistic:                     16.37
+Date:                Thu, 12 Nov 2026   Prob (F-statistic):           3.63e-10
+Time:                        13:13:41   Log-Likelihood:                 2099.3
+No. Observations:                 510   AIC:                            -4191.
+Df Residuals:                     506   BIC:                            -4174.
 Df Model:                           3                                         
 Covariance Type:                  HC3                                         
 ======================================================================================
                          coef    std err          z      P>|z|      [0.025      0.975]
 --------------------------------------------------------------------------------------
-const                  0.0031      0.000     16.262      0.000       0.003       0.004
-bldg_height_mean_m     0.0011      0.000      2.822      0.005       0.000       0.002
-canopy_cover       -1.446e-05      0.000     -0.067      0.946      -0.000       0.000
-network_km_per_km2     0.0017      0.000      6.482      0.000       0.001       0.002
+const                  0.0027      0.000     14.963      0.000       0.002       0.003
+bldg_height_mean_m     0.0012      0.000      2.932      0.003       0.000       0.002
+canopy_cover           0.0001      0.000      0.546      0.585      -0.000       0.001
+network_km_per_km2     0.0015      0.000      5.892      0.000       0.001       0.002
 ==============================================================================
-Omnibus:                      259.547   Durbin-Watson:                   1.547
-Prob(Omnibus):                  0.000   Jarque-Bera (JB):             1610.343
-Skew:                           2.189   Prob(JB):                         0.00
-Kurtosis:                      10.524   Cond. No.                         1.74
+Omnibus:                      324.236   Durbin-Watson:                   1.538
+Prob(Omnibus):                  0.000   Jarque-Bera (JB):             3567.274
+Skew:                           2.647   Prob(JB):                         0.00
+Kurtosis:                      14.826   Cond. No.                         1.74
 ==============================================================================
 
 Notes:
