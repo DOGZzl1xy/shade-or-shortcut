@@ -200,18 +200,20 @@ const gradient = (stops, lo, hi) => {     // CSS gradient of a value -> colour l
   for (let i = 0; i < stops.length; i += 2) out.push(`${stops[i + 1]} ${((100 * (stops[i] - lo)) / (hi - lo)).toFixed(1)}%`);
   return `linear-gradient(to right, ${out.join(", ")})`;
 };
-// a colour bar with ticks: stops = [value, colour, ...]; ticks = [[value, text], ...]
-export function rampHTML(stops, ticks, { lo = stops[0], hi = stops[stops.length - 2], title = "", note = "" } = {}) {
+// a colour bar with ticks: stops = [value, colour, ...]; ticks = [[value, text], ...]; ends = what the two ends mean,
+// in their own colours ([[text, colour], [text, colour]])
+export function rampHTML(stops, ticks, { lo = stops[0], hi = stops[stops.length - 2], title = "", note = "", ends = null } = {}) {
   return `${title ? `<div class="legend-title">${title}</div>` : ""}<div class="ramp" style="background:${gradient(stops, lo, hi)}"></div>
     <div class="ticks">${ticks.map(([v, s]) => `<span style="left:${(100 * (v - lo)) / (hi - lo)}%">${s}</span>`).join("")}</div>
+    ${ends ? `<div class="ends2"><span style="color:${ends[0][1]}">← ${ends[0][0]}</span><span style="color:${ends[1][1]}">${ends[1][0]} →</span></div>` : ""}
     ${note ? `<p class="note">${note}</p>` : ""}`;
 }
 export function sidewalkLegend(m, { note = true } = {}) {
   return m === "heat"
     ? rampHTML(UTCI_STOPS, [[360, "≤36"], [400, "40"], [430, "43"], [460, "46 °C+"]],
-      { title: "Sidewalk heat · UTCI", note: note ? UTCI_NOTE : "" })
-    : rampHTML(SHADE_STOPS, [[0, "0%"], [50, "50%"], [100, "100% shaded"]],
-      { title: "Sidewalk shade · share of length", note: note ? SHADE_NOTE : "" });
+      { title: "Sidewalk heat · UTCI (felt temperature)", note: note ? UTCI_NOTE : "", ends: [["cooler", COLORS.cool], ["hotter", COLORS.sun]] })
+    : rampHTML(SHADE_STOPS, [[0, "0%"], [50, "50%"], [100, "100%"]],
+      { title: "Sidewalk shade · share of each sidewalk in shade", note: note ? SHADE_NOTE : "", ends: [["sunny", COLORS.sun], ["shaded", COLORS.cool]] });
 }
 
 // numbers in text use a true minus sign (U+2212)
@@ -222,13 +224,13 @@ export const degC = (x, d = 1) => `${x.toFixed(d)} °C`.replace("-", "−");
 // (less sun, cooler, extreme heat avoided) always runs dark -> cyan; "how exposed" runs cyan -> orange.
 const HELP = ["#1d2733", "#2f6f7a"];
 export const GRID_RAMPS = {
-  sun_red: { stops: [0, HELP[0], 0.1, HELP[1], 0.25, COLORS.cool], ticks: [[0, "0%"], [0.1, "10%"], [0.25, "25%+"]] },
-  no_alt_share: { stops: [0.2, COLORS.cool, 0.6, "#c9a36a", 1, COLORS.sun], ticks: [[0.2, "20%"], [0.6, "60%"], [1, "100%"]] },
-  sun_share: { stops: [0.4, COLORS.cool, 0.7, "#c9a36a", 0.95, COLORS.sun], ticks: [[0.4, "40%"], [0.7, "70%"], [0.95, "95%"]] },
-  network_km_km2: { stops: [10, "#1d2733", 30, "#4b6b8a", 55, "#cfe3ff"], ticks: [[10, "10"], [30, "30"], [55, "55 km/km²"]] },
-  u_short: { stops: [42.5, COLORS.cool, 44, "#f0c26a", 45.5, COLORS.sun], ticks: [[42.5, "42.5"], [44, "44"], [45.5, "45.5 °C"]] },
-  u_cool: { stops: [0, HELP[0], 0.3, HELP[1], 1, COLORS.cool], ticks: [[0, "0"], [0.3, "0.3"], [1, "1 °C+"]] },
-  ext_red: { stops: [0, HELP[0], 0.2, HELP[1], 0.5, COLORS.cool], ticks: [[0, "0%"], [0.2, "20%"], [0.5, "50%+"]] },
+  sun_red: { stops: [0, HELP[0], 0.1, HELP[1], 0.25, COLORS.cool], ticks: [[0, "0%"], [0.1, "10%"], [0.25, "25%+"]], ends: [["no less sun", COLORS.dim], ["much less sun", COLORS.cool]] },
+  no_alt_share: { stops: [0.2, COLORS.cool, 0.6, "#c9a36a", 1, COLORS.sun], ticks: [[0.2, "20%"], [0.6, "60%"], [1, "100%"]], ends: [["most have a choice", COLORS.cool], ["most have none", COLORS.sun]] },
+  sun_share: { stops: [0.4, COLORS.cool, 0.7, "#c9a36a", 0.95, COLORS.sun], ticks: [[0.4, "40%"], [0.7, "70%"], [0.95, "95%"]], ends: [["shadier", COLORS.cool], ["sunnier", COLORS.sun]] },
+  network_km_km2: { stops: [10, "#1d2733", 30, "#4b6b8a", 55, "#cfe3ff"], ticks: [[10, "10"], [30, "30"], [55, "55 km/km²"]], ends: [["sparse", COLORS.dim], ["dense", "#cfe3ff"]] },
+  u_short: { stops: [42.5, COLORS.cool, 44, "#f0c26a", 45.5, COLORS.sun], ticks: [[42.5, "42.5"], [44, "44"], [45.5, "45.5 °C"]], ends: [["cooler", COLORS.cool], ["hotter", COLORS.sun]] },
+  u_cool: { stops: [0, HELP[0], 0.3, HELP[1], 1, COLORS.cool], ticks: [[0, "0"], [0.3, "0.3"], [1, "1 °C+"]], ends: [["no cooler", COLORS.dim], ["much cooler", COLORS.cool]] },
+  ext_red: { stops: [0, HELP[0], 0.2, HELP[1], 0.5, COLORS.cool], ticks: [[0, "0%"], [0.2, "20%"], [0.5, "50%+"]], ends: [["none avoided", COLORS.dim], ["half or more", COLORS.cool]] },
 };
 export const rampExpr = (key, prop = key) =>
   ["interpolate", ["linear"], ["coalesce", ["get", prop], GRID_RAMPS[key].stops[0]], ...GRID_RAMPS[key].stops];

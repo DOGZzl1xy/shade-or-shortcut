@@ -75,14 +75,14 @@ function gridStyle() {
   }
   const r = GRID_RAMPS[gridvar];
   map.setPaintProperty("grid", "fill-color", rampExpr(gridvar));
-  $("glegend").innerHTML = rampHTML(r.stops, r.ticks, { title: def[2] });
+  $("glegend").innerHTML = rampHTML(r.stops, r.ticks, { title: def[2], ends: r.ends });
 }
 function stationStyle() {
   if (!ready) return;
   const [key, title] = STATION[measure], r = GRID_RAMPS[key], col = rampExpr(key, `${key}_${BIN}`);
   map.setPaintProperty("st", "circle-color", col);
   map.setPaintProperty("st", "circle-stroke-color", ["case", ["get", "small"], col, "#e8e6df"]);
-  $("slegend").innerHTML = rampHTML(r.stops, r.ticks, { title: title.replace("Stations · ", "") }) +
+  $("slegend").innerHTML = rampHTML(r.stops, r.ticks, { title: title.replace("Stations · ", ""), ends: r.ends }) +
     `<p class="note"><span class="hollow"></span>fewer than ${summary.min_trips_station_rank} walks: small sample</p>`;
 }
 const setTime = () => { if (map.getLayer("city")) map.setPaintProperty("city", "line-color", sidewalkColor(measure, t)); writeState({ t, m: measure }); };

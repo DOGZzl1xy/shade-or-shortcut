@@ -1308,49 +1308,76 @@ def web_story(cfg):
     e = walk["hours"][0]
     wx, wy = to_xy.transform(e["short"]["lon"] + e["cool"]["lon"], e["short"]["lat"] + e["cool"]["lat"])
     cx, cy = (min(wx) + max(wx)) / 2, (min(wy) + max(wy)) / 2
-    W, H = 2600, 1700                                 # metres = pixels
-    x0, y1 = round(cx - W / 2), round(cy + H / 2)
     rr, k_ = city_runs(cfg), s["city"]["core_m"]
     gx0, gy0 = min(r["core"][0] for r in rr.values()), min(r["core"][1] for r in rr.values())
-    out_dir = city_folder(cfg) / "results" / date / "out"
     hours = s["hours"]
-    mos = np.full((len(hours), H, W), np.nan, np.float32)
-    for ix in range(int((x0 - gx0) // k_), int((x0 + W - 1 - gx0) // k_) + 1):
-        for iy in range(int((y1 - H - gy0) // k_), int((y1 - 1 - gy0) // k_) + 1):
-            f_ = out_dir / f"utci_x{ix:02d}_y{iy:02d}.tif"
-            if not f_.exists():
-                continue
-            with rasterio.open(f_) as f:
-                hrs = [int(h) for h in f.tags()["hours"].split(",")]
-                a = f.read().astype(np.float32)
-                a[a == f.nodata] = np.nan
-                a /= s["city"]["utci_scale"]
-                T = f.transform
-            # overlap of this core with the box, in box pixels
-            cx0, cy1 = T.c, T.f
-            bx0, bx1 = max(x0, cx0), min(x0 + W, cx0 + a.shape[2])
-            by1, by0 = min(y1, cy1), max(y1 - H, cy1 - a.shape[1])
-            if bx1 <= bx0 or by1 <= by0:
-                continue
-            for j, h in enumerate(hours):
-                mos[j, int(y1 - by1):int(y1 - by0), int(bx0 - x0):int(bx1 - x0)] = \
-                    a[hrs.index(h), int(cy1 - by1):int(cy1 - by0), int(bx0 - cx0):int(bx1 - cx0)]
-    tdir = app / "thermal"
-    tdir.mkdir(exist_ok=True)
+    dirs = [city_folder(cfg) / "results" / date / "out", city_folder(cfg) / "results" / "extra" / f"empty_{date[5:7]}{date[8:10]}" / "out"]
+
+    def mosaic(x0, y1, W, H, res, hrs_out):
+        """UTCI (hours x rows x cols) on a res-m grid with its north-west corner at (x0, y1): the cores with sidewalk
+        points, then the cores without (run for the maps); res-m cells are the mean of their 1 m pixels when at least
+        half of them have a value (buildings have none)."""
+        out = np.full((len(hrs_out), H // res, W // res), np.nan, np.float32)
+        for ix in range(int((x0 - gx0) // k_), int((x0 + W - 1 - gx0) // k_) + 1):
+            for iy in range(int((y1 - H - gy0) // k_), int((y1 - 1 - gy0) // k_) + 1):
+                f_ = next((d_ / f"utci_x{ix:02d}_y{iy:02d}.tif" for d_ in dirs if (d_ / f"utci_x{ix:02d}_y{iy:02d}.tif").exists()), None)
+                if f_ is None:
+                    continue
+                with rasterio.open(f_) as f:
+                    hrs = [int(h) for h in f.tags()["hours"].split(",")]
+                    a = f.read([hrs.index(h) + 1 for h in hrs_out]).astype(np.float32)
+                    a[a == f.nodata] = np.nan
+                    a /= s["city"]["utci_scale"]
+                    T = f.transform
+                bx0, bx1 = max(x0, T.c), min(x0 + W, T.c + a.shape[2])
+                by1, by0 = min(y1, T.f), max(y1 - H, T.f - a.shape[1])
+                if bx1 <= bx0 or by1 <= by0:
+                    continue
+                blk = a[:, int(T.f - by1):int(T.f - by0), int(bx0 - T.c):int(bx1 - T.c)]
+                if res > 1:
+                    n_, h_, w_ = blk.shape
+                    blk = blk.reshape(n_, h_ // res, res, w_ // res, res)
+                    cnt = np.isfinite(blk).sum(axis=(2, 4))
+                    with np.errstate(invalid="ignore"):
+                        blk = np.where(cnt * 2 >= res * res, np.nanmean(blk, axis=(2, 4)), np.nan)
+                out[:, int(y1 - by1) // res:int(y1 - by0) // res, int(bx0 - x0) // res:int(bx1 - x0) // res] = blk
+        return out
+
     vs = np.array([v for v, _ in STORY_UTCI_STOPS])
     cs = np.array([[int(c[i:i + 2], 16) for i in (1, 3, 5)] for _, c in STORY_UTCI_STOPS], float)
-    images, size = {}, 0
-    for j, h in enumerate(hours):
-        u = np.clip(mos[j], vs[0], vs[-1])
+    tdir = app / "thermal"
+    tdir.mkdir(exist_ok=True)
+    for old in tdir.glob("*.webp"):
+        old.unlink()
+    size = 0
+
+    def save(u0, name):
+        nonlocal size
+        u = np.clip(u0, vs[0], vs[-1])
         rgb = np.stack([np.interp(u, vs, cs[:, i]) for i in range(3)], -1)
-        alpha = np.where(np.isfinite(mos[j]), 255, 0).astype(np.uint8)
-        img = Image.fromarray(np.dstack([np.nan_to_num(rgb).astype(np.uint8), alpha]), "RGBA")
-        lab = label(cfg, h, date)
-        p_ = tdir / f"utci_{lab}.webp"
-        img.save(p_, "WEBP", quality=82, method=6)
-        images[lab] = f"thermal/{p_.name}"
-        size += p_.stat().st_size
-    corners = [to_ll.transform(x, y) for x, y in ((x0, y1), (x0 + W, y1), (x0 + W, y1 - H), (x0, y1 - H))]
+        alpha = np.where(np.isfinite(u0), 255, 0).astype(np.uint8)
+        Image.fromarray(np.dstack([np.nan_to_num(rgb).astype(np.uint8), alpha]), "RGBA").save(tdir / name, "WEBP", quality=82, method=6)
+        size += (tdir / name).stat().st_size
+        return f"thermal/{name}"
+
+    corners_of = lambda x0, y1, W, H: [[round(a, 6), round(b, 6)] for a, b in
+                                       (to_ll.transform(x, y) for x, y in ((x0, y1), (x0 + W, y1), (x0 + W, y1 - H), (x0, y1 - H)))]
+    snap2 = lambda v, g0: g0 + 2 * round((v - g0) / 2)
+    # wide: 7.2 x 4.4 km at 2 m around the walk (University City to Center City), every hour, fills the window
+    WW, WH = 7200, 4400
+    wx0, wy1 = snap2(cx - WW / 2, gx0), snap2(cy + WH / 2, gy0)
+    wide = mosaic(wx0, wy1, WW, WH, 2, hours)
+    wide_imgs = {label(cfg, h, date): save(wide[j], f"utci_wide_{label(cfg, h, date)}.webp") for j, h in enumerate(hours)}
+    del wide
+    # close-up: 2.6 x 1.7 km at 1 m, the key hour (the three-sidewalks screen)
+    W, H = 2600, 1700
+    x0, y1 = round(cx - W / 2), round(cy + H / 2)
+    lab_k = label(cfg, key_h, date)
+    detail_img = save(mosaic(x0, y1, W, H, 1, [key_h])[0], f"utci_detail_{lab_k}.webp")
+    out_dir = dirs[0]
+    thermal = {"wide": {"corners": corners_of(wx0, wy1, WW, WH), "images": wide_imgs, "size_m": [WW, WH], "res_m": 2},
+               "detail": {"corners": corners_of(x0, y1, W, H), "image": detail_img, "label": lab_k, "size_m": [W, H], "res_m": 1},
+               "stops": STORY_UTCI_STOPS}
 
     # three spots at the key hour: sun / tree / building shade, each near its class's city median, close together
     lab = label(cfg, key_h, date)
@@ -1396,8 +1423,7 @@ def web_story(cfg):
     rt = pd.read_parquet(city_folder(cfg) / "routes_city.parquet", columns=["mode", "length_bin", "time", "heat_dutci"])
     du = -rt[(rt["mode"] == "bus") & (rt.length_bin == cb) & rt.time.isin(keys)].heat_dutci
     share = lambda x, edges: [round(float(((x >= a) & (x < b)).mean()), 4) for a, b in zip(edges[:-1], edges[1:])]
-    res = {"thermal": {"corners": [[round(a, 6), round(b, 6)] for a, b in corners], "images": images, "size_m": [W, H],
-                       "stops": STORY_UTCI_STOPS},
+    res = {"thermal": thermal,
            "spots": {"label": lab, **{k: round(med[i], 2) for k, i in (("u_sun", 0), ("u_tree", 1), ("u_bldg", 2))}, "points": spots},
            "sun": [{"label": r.label, "azimuth": round(float(r.azimuth), 1), "elevation": round(float(r.elevation), 1)} for r in sun.itertuples()],
            "waffle": {"labels": keys, "band": cb,
@@ -1405,7 +1431,7 @@ def web_story(cfg):
                       "cooler": {"edges": [0, 0.1, 0.5, 1.5, 99], "shares": share(du.to_numpy(), [-99, 0.1, 0.5, 1.5, 99]), "n": int(len(du))}}}
     (app / "story.json").write_text(json.dumps(res, separators=(",", ":")))
     print(json.dumps({k: v for k, v in res.items() if k not in ("sun", "thermal")}, indent=1))
-    print(f"thermal: {len(images)} images, {size / 1e6:.1f} MB; corners {res['thermal']['corners']}")
+    print(f"thermal: {len(wide_imgs) + 1} images, {size / 1e6:.1f} MB; wide corners {thermal['wide']['corners']}")
 
 
 def main(args):

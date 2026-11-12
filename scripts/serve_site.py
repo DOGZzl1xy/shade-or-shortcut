@@ -14,6 +14,12 @@ from coolpath import ROOT
 
 
 class RangeHandler(SimpleHTTPRequestHandler):
+    def end_headers(self):
+        # local preview: the browser revalidates every file, so an edited script or stylesheet is never mixed with a
+        # cached old one (the published site gets a new ?v= key per commit instead, see publish_site.sh)
+        self.send_header("Cache-Control", "no-cache")
+        super().end_headers()
+
     def send_head(self):
         rng = self.headers.get("Range")
         path = self.translate_path(self.path)

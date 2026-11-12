@@ -113,6 +113,7 @@ button.ghost:hover { border-color: var(--cool); }
 .ticks span:first-child { transform: none; margin-left: -4px; }
 .ticks span:last-child { transform: translateX(-100%); margin-left: 4px; }
 .note { font-size: 11px; line-height: 1.4; color: var(--dim); margin: 4px 0 0; }
+.ends2 { display: flex; justify-content: space-between; font: 11px var(--mono); margin-top: 1px; }
 .swatches { display: grid; gap: 4px; font-size: 12px; }
 .swatches i { display: inline-block; width: 14px; height: 10px; border-radius: 2px; margin-right: 8px; vertical-align: -1px; }
 .chips { display: flex; flex-wrap: wrap; gap: 6px; }

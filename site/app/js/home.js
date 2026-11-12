@@ -1,5 +1,5 @@
 // Story page: one fixed map under 17 screens in 6 chapters. Each screen sets the map (view, layers, labels) for its one
-// sentence; the two "scrub" screens are taller than the window and move the clock as the reader scrolls through them.
+// sentence; on two screens the day plays by itself (08:00 -> 19:00).
 // Colours, ramps, legends and route styles are the shared ones of common.js, as on the route tool and the city map.
 import { VERSION, nav, baseStyle, getJSON, pmtilesProtocol, COLORS, CLUSTERS, GRID_RAMPS, ATTR, pct, degC, newMap, routeLayers,
   ROUTE_LAYERS, sidewalkColor, sidewalkLegend, SIDEWALK_WIDTH, rampHTML, rampExpr, UTCI_STOPS } from "./common.js?v=dev";
@@ -71,7 +71,6 @@ const PART = { 2: "half", 3: "a third", 4: "a quarter", 5: "a fifth", 6: "a sixt
 const part = (x) => { const n = Math.round(1 / x); return PART[n] ? `about ${PART[n]}` : pct(x, 0); };
 const inTen = (x) => { const n = Math.round(10 * x); return n >= 1 && n <= 9 ? `${NUM[n]} in ten` : pct(x, 0); };
 const oneIn = (x) => { const n = Math.round(1 / x); return n >= 2 && n <= 10 ? `about one in ${NUM[n]}` : pct(x, 0) + " of"; };
-const cap1 = (s) => s[0].toUpperCase() + s.slice(1);
 const m = (x) => `${Math.round(x).toLocaleString("en-US")} m`;
 const b6 = summary.phase6_at_15h.find((r) => r.sample === "city" && r.mode === "bus" && r.length_bin === "300-800");
 const b7 = summary.phase7_by_mode_bin_15h.find((r) => r.mode === "bus" && r.length_bin === "300-800");
@@ -112,8 +111,11 @@ set("ex-short", m(PERSONA.shortest.length)); set("ex-short-cap", `shortest · ${
 set("ex-cool", m(PERSONA.coolest.length)); set("ex-cool-cap", `shadiest · ${sunPct(PERSONA.coolest)} in the sun`);
 $("ex-detail").innerHTML = `${Math.round(PERSONA.coolest.length - PERSONA.shortest.length)} m more walking, <b>${m(PERSONA.shortest.sun - PERSONA.coolest.sun)}</b> less in the sun: the shadiest walk keeps to the building-shaded side of Chestnut Street.`;
 set("s-sun", pct(b6.short_sun_share, 0));
-set("w-red", part(b6.sun_red_mean)); set("w-red-n", "−" + pct(b6.sun_red_mean, 1)); set("w-det", "+" + pct(b6.detour_mean, 1));
-set("w-noalt", `${inTen(b7.no_alt_share)}`);
+set("w-noalt", inTen(b7.no_alt_share));
+const WS = story.waffle.sun_red.shares;
+$("w-detail").innerHTML = `For the others a shadier street is close, and it can help a lot: for <b class="cool">${Math.round(100 * WS[3])} in 100</b>
+  the shadiest walk avoids a quarter of the sun or more. Averaged over all walks, the shadiest walk has <b>${pct(b6.sun_red_mean, 1)} less sun</b>
+  for <b>${pct(b6.detour_mean, 1)} more distance</b>.`;
 const prof = Object.fromEntries(CLUSTERS.map(([k]) => [k, grid.features.filter((f) => f.properties.cluster === k)]));
 const avg = (fs, k) => fs.reduce((a, f) => a + f.properties[k], 0) / fs.length;
 $("cl-detail").innerHTML = `In <b class="c-choice">${prof[1].length} cells</b> a shadier walk is usually within reach: about ${Math.round(avg(prof[1], "network_km_km2"))} km of sidewalk per km² against ${Math.round(avg(prof[0], "network_km_km2"))} where there is <b class="c-noalt">no cooler option</b>.`;
@@ -136,11 +138,14 @@ set("ch-ext-w", part(h10.heat_extreme_red));
 $("ch-detail").innerHTML = `For ${pct(h10.heat_eq_shade, 0)} of walks the coolest walk is the shadiest walk. Where they differ, it takes the tree-lined street the shade cost undervalues; the shadiest walk alone cuts the extreme-heat metres by ${pct(h10.shade_extreme_red, 0)}.`;
 // chapter 5, 6
 set("s-ind-words", oneIn(indoorShare));
-$("takeaways").innerHTML = [
-  `${cap1(inTen(b7.no_alt_share))} walks home from a frequent bus stop have no cooler option; where the street grid is dense, a shadier walk costs almost nothing.`,
-  `A step into shade takes about ${Math.round(r15.u_sun - (r15.u_bldg + r15.u_tree) / 2)} °C off the felt heat, and tree shade counts as much as building shade.`,
-  `Where the shortest walk is sunny and no other exists (<span class="c-noalt">orange</span>), shade has to be added: trees, awnings, shelters.`,
-].map((s) => `<li>${s}</li>`).join("");
+{
+  const c0 = prof[0], all = grid.features, wsum = (fs, k) => fs.reduce((a, f) => a + f.properties.trips * (k ? f.properties[k] : 1), 0);
+  const n0 = wsum(c0);
+  $("end-detail").innerHTML = `In <b class="c-noalt">${c0.length} of ${all.length}</b> half-kilometre cells, the walk home from a frequent bus
+    stop is <b>${pct(wsum(c0, "sun_share") / n0, 0)}</b> in the sun, and for <b>${pct(wsum(c0, "no_alt_share") / n0, 0)}</b> of these walks no
+    street nearby is shadier: ${pct(n0 / wsum(all), 0)} of all walks of 300–800 m. Choosing a route cannot help here; shade has to be added,
+    by street trees, awnings or shelters.`;
+}
 
 // ---- small graphics: sun dial, felt temperature, UTCI by hour, waffle
 const SUN = Object.fromEntries(story.sun.map((s) => [s.label, s]));
@@ -199,15 +204,17 @@ function hourChart(h) {
        <circle cx="${X(h)}" cy="${Y(H24[h - 8][k])}" r="3.5" fill="${c}"/>`).join("")}`;
 }
 (function waffle() {
+  // 100 walks in four groups by how much sun the shadiest walk avoids; one square = one walk
   const W = story.waffle.sun_red, cols = ["#d47519", "#2f6f7a", "#3fa3ae", COLORS.cool];
-  const names = ["no cooler option (under 2% less sun)", "2–10% less sun", "10–25% less sun", "25% or more less sun"];
-  const raw = W.shares.map((s) => 100 * s), n = raw.map(Math.floor);
+  const text = ["<b>No shadier way home</b>: the shadiest walk avoids less than 2% of the sun", "<b>A little shade</b>: 2–10% less sun",
+    "<b>Noticeably shadier</b>: 10–25% less sun", "<b>Much shadier</b>: a quarter of the sun or more avoided"];
+  const raw = W.shares.map((x) => 100 * x), n = raw.map(Math.floor);
   let rest = 100 - n.reduce((a, b) => a + b, 0);
   raw.map((v, i) => [v - Math.floor(v), i]).sort((a, b) => b[0] - a[0]).forEach(([, i]) => { if (rest > 0) { n[i] += 1; rest -= 1; } });
-  const cells = n.flatMap((k, i) => Array(k).fill(i));
-  $("waffle-sun").innerHTML = cells.map((c, i) => `<rect x="${(i % 10) * 22}" y="${Math.floor(i / 10) * 22}" width="20" height="20" rx="3" fill="${cols[c]}"
-    style="transition-delay:${(i * 14) / 1000}s"/>`).join("");
-  $("waffle-sun-legend").innerHTML = n.map((k, i) => `<div><i style="background:${cols[i]}"></i><b style="color:var(--ink)">${k}</b> ${names[i]}</div>`).join("");
+  let k = 0;
+  $("waffle").innerHTML = `<div class="label" style="margin-bottom:6px">100 walks home · one square = one walk</div>` + n.map((c, i) =>
+    `<div class="wrow"><div class="wn" style="color:${cols[i]}">${c}</div><div><div class="wt">${text[i]}</div>
+      <div class="sq">${Array.from({ length: c }, () => `<i style="background:${cols[i]};transition-delay:${(k++ * 12) / 1000}s"></i>`).join("")}</div></div></div>`).join("");
 })();
 
 // ---- labels on the map
@@ -346,16 +353,23 @@ function fitPair(p, panel = null, labels = false, tilt = false) {
 }
 
 // ---- sources added once the style is in: the Landsat image, the heat images (one per hour), the walk
-let walk = null, ready = false;
-const TH = Object.keys(story.thermal.images).sort();
+let walk = null, ready = false, heatLoaded = false;
+const TH = Object.keys(story.thermal.wide.images).sort();
+function loadHeat() {                       // 12 hourly images of about 1.5 MB: only when the reader gets near them
+  if (heatLoaded || !ready) return;
+  heatLoaded = true;
+  const order = [T15, ...TH.keys()].filter((v, i, a) => a.indexOf(v) === i);       // 15:00 first
+  for (const i of order) {
+    map.addSource(`th${i}`, { type: "image", url: `data/${story.thermal.wide.images[TH[i]]}?v=${VERSION}`, coordinates: story.thermal.wide.corners });
+    map.addLayer({ id: `th${i}`, type: "raster", source: `th${i}`, layout: { visibility: "none" },
+      paint: { "raster-opacity": 0, "raster-opacity-transition": { duration: 350 }, "raster-fade-duration": 0 } }, "lines");
+  }
+  map.addSource("thd", { type: "image", url: `data/${story.thermal.detail.image}?v=${VERSION}`, coordinates: story.thermal.detail.corners });
+  map.addLayer({ id: "thd", type: "raster", source: "thd", layout: { visibility: "none" }, paint: { "raster-opacity": 0.95, "raster-fade-duration": 0 } }, "lines");
+}
 styleReady.then(() => {
   map.addSource("lst", { type: "image", url: `data/${L.image}?v=${VERSION}`, coordinates: L.coordinates });
   map.addLayer({ id: "lst", type: "raster", source: "lst", layout: { visibility: "none" }, paint: { "raster-opacity": 0.9, "raster-fade-duration": 0 } }, "lines");
-  TH.forEach((lab, i) => {
-    map.addSource(`th${i}`, { type: "image", url: `data/${story.thermal.images[lab]}?v=${VERSION}`, coordinates: story.thermal.corners });
-    map.addLayer({ id: `th${i}`, type: "raster", source: `th${i}`, layout: { visibility: "none" },
-      paint: { "raster-opacity": 0, "raster-opacity-transition": { duration: 350 }, "raster-fade-duration": 0 } }, "lines");
-  });
   map.moveLayer("ref", "mass");
   map.getSource("grid").setData(grid);
   map.getSource("bld").setData(layers.buildings);
@@ -387,8 +401,19 @@ const gridBy = (key, focus = null) => {
   map.setPaintProperty("grid", "fill-opacity", focus === null ? 0.78 : ["case", ["==", ["get", "cluster"], focus], 0.85, 0.12]);
   vis("grid", true);
 };
-let thermal = -1;
-const showThermal = (i) => { TH.forEach((_, j) => { vis(`th${j}`, i >= 0); map.setPaintProperty(`th${j}`, "raster-opacity", j === i ? 0.92 : 0); }); thermal = i; };
+const showThermal = (i, detail = false) => {
+  if (i >= 0) loadHeat();
+  if (!heatLoaded) return;
+  TH.forEach((_, j) => { vis(`th${j}`, i >= 0); map.setPaintProperty(`th${j}`, "raster-opacity", j === i ? 0.92 : 0); });
+  vis("thd", detail);
+};
+// heat screens: the wide image fills the window; at least zoom z, centred on the image
+const [[wx0, wy1], , [wx1, wy0]] = story.thermal.wide.corners;
+function heatView(z = 15.3) {
+  const lat = (wy0 + wy1) / 2, C = 156543.03 * Math.cos((lat * Math.PI) / 180);
+  const mpp = Math.min(story.thermal.wide.size_m[0] / window.innerWidth, story.thermal.wide.size_m[1] / window.innerHeight) * 0.92;
+  return { center: [(wx0 + wx1) / 2, (wy0 + wy1) / 2], zoom: Math.max(z, Math.log2(C / mpp)), padding: { left: 0, top: 0, right: 0, bottom: 0 } };
+}
 const fly = (view) => {                      // centre a view in the part of the screen the text panel leaves free
   const p = document.querySelector(`[data-step="${current}"] .panel`)?.getBoundingClientRect();
   map.flyTo({ pitch: 0, bearing: 0, ...view, padding: p ? { left: p.right + 40, top: 90, right: 0, bottom: 0 } : {} });
@@ -396,14 +421,15 @@ const fly = (view) => {                      // centre a view in the part of the
 const CITY = { center: [-75.135, 39.995], zoom: 10.9, duration: 2200 };
 const UC = { center: [-75.1915, 39.9532], zoom: 15.6, duration: 1800 };
 function scene({ city = false, lines = false, grid = false, bld = false, route = false, mass = false, types = false, st = false,
-  ring = false, pins = false, th = -1, spots = false, cityOpacity = 0.9, measure = "shade", t = T15 } = {}) {
+  ring = false, pins = false, th = -1, detail = false, spots = false, cityOpacity = 0.9, measure = "shade", t = T15 } = {}) {
   vis("lines", lines); vis("city", city); vis("bld", bld); vis("mass", mass); vis("st", st); vis("ring", ring); vis("spots", spots);
   vis("lst", current === "heat"); routes(route); if (!grid) vis("grid", false);
   for (const id of ["types", "types-in"]) { vis(id, true); map.setPaintProperty(id, "line-opacity", types ? 1 : 0); }
   showPills(typePills, types); showPills(spotPills, spots); showPins(pins);
   map.setPaintProperty("city", "line-opacity", cityOpacity);
   map.setPaintProperty("city", "line-color", sidewalkColor(measure, t));
-  showThermal(th);
+  showThermal(th, detail);
+  if (current !== "hours" && current !== "heatday") stopDay();
   if (current !== "example" && current !== "indoor") hideTags();
   if (current !== "walk") walk?.clear();
   if (current !== "hero" && current !== "example") stopDraw();
@@ -417,25 +443,26 @@ const STEPS = {
   },
   sources: () => { scene({ lines: true }); fly({ center: hero.types_focus.center, zoom: 17, duration: 2000 }); },
   types: () => { scene({ lines: true, types: true }); fly({ center: hero.types_focus.center, zoom: 17, duration: 1200 }); },
-  hours: () => { scene({ city: true, t: 0 }); fly({ center: [-75.1652, 39.9502], zoom: 15.3, duration: 2000 }); scrubHours(0); },
+  hours: () => { scene({ city: true, t: 0 }); fly({ center: [-75.1652, 39.9502], zoom: 15.3, duration: 2000 }); playDay(dayHours); },
   example: () => {
     scene({ route: true, pins: true }); placeTags(PERSONA, false); hideTags(); draw("example");
     fitPair(PERSONA, document.querySelector('[data-step="example"] .panel'), true);
   },
   sunny: () => { scene({ grid: true }); gridBy("sun_share"); fly(CITY); },
-  waffle: () => { scene({ grid: true }); gridBy("sun_red"); map.setPaintProperty("grid", "fill-opacity", 0.25); fly({ ...CITY, center: [-75.08, 39.995] }); },
+  waffle: () => { scene(); fly({ ...CITY, center: [-75.08, 39.995] }); },
   clusters: () => { scene({ grid: true }); gridBy("cluster", 1); fly(CITY); },
-  felt: () => { scene({ th: T15 }); fly({ ...UC, zoom: 15.2 }); },
-  heatday: () => { scene({ th: 0 }); fly({ ...UC, zoom: 15.4 }); scrubHeat(0); },
+  felt: () => { scene({ th: T15 }); map.flyTo({ ...heatView(), duration: 1800 }); },
+  heatday: () => { scene({ th: 0 }); map.flyTo({ ...heatView(15.5), duration: 1200 }); playDay(dayHeat); },
   trees: () => {
-    scene({ th: T15, spots: true });
+    scene({ th: T15, detail: true, spots: true });
     const c = story.spots.points.reduce((a, p) => [a[0] + p.lon / 3, a[1] + p.lat / 3], [0, 0]);
     fly({ center: c, zoom: 17.6, duration: 2000 });
   },
   walk: () => {
     scene({ th: -1, lines: true });
     const e = PW, b = walk.bounds(e), panel = document.querySelector('[data-step="walk"] .panel').getBoundingClientRect();
-    map.fitBounds(b, { padding: { left: panel.right + 40, right: 40, top: 110, bottom: 280 }, duration: 1200, maxZoom: 17 });
+    const box = document.querySelector(".walkbox").getBoundingClientRect();
+    map.fitBounds(b, { padding: { left: panel.right + 40, right: 60, top: 110, bottom: window.innerHeight - box.top + 30 }, duration: 1200, maxZoom: 17 });
     $("wk-end").classList.remove("on");
     const W = walk.play(e);
     $("wk-head").innerHTML = `On the shortest walk home, <b class="sun">${m(W.short.ext)}</b> are in extreme heat stress. On the coolest, <b class="cool">${m(W.cool.ext)}</b>.`;
@@ -458,27 +485,27 @@ const STEPS = {
 };
 $("wk-replay").addEventListener("click", () => { if (current === "walk") STEPS.walk(); });
 
-// ---- scrub screens: the clock follows the scroll position through the screen
-const clockOf = (sec) => sec.querySelector("[data-clock]");
+// ---- the day plays by itself on two screens: 08:00 -> 19:00, one hour every 0.9 s, a pause, again
 function setClock(sec, h) {
-  clockOf(sec).textContent = `${String(h).padStart(2, "0")}:00`;
+  sec.querySelector("[data-clock]").textContent = `${String(h).padStart(2, "0")}:00`;
   dial(sec.querySelector("[data-dial]"), `0624_${String(h).padStart(2, "0")}`);
   sec.querySelector("[data-hours]")?.querySelectorAll("i").forEach((el, i) => el.classList.toggle("on", i <= h - 8));
 }
 document.querySelectorAll("[data-hours]").forEach((el) => { el.innerHTML = "<i></i>".repeat(12); });
-let lastHour = { hours: -1, heatday: -1 };
-function scrubHours(i) {
-  if (lastHour.hours === i) return; lastHour.hours = i;
+const dayHours = (i) => {
   setClock(document.querySelector('[data-step="hours"]'), 8 + i);
   if (ready) map.setPaintProperty("city", "line-color", sidewalkColor("shade", i));
+};
+const dayHeat = (i) => { setClock(document.querySelector('[data-step="heatday"]'), 8 + i); hourChart(8 + i); if (ready) showThermal(i); };
+let dayTimer = null;
+function playDay(show) {
+  stopDay();
+  let i = 0;
+  show(i);
+  if (reduce) { show(T15); return; }
+  dayTimer = setInterval(() => { i = i >= 13 ? 0 : i + 1; if (i <= 11) show(i); }, 900);   // 12-13: hold 19:00
 }
-function scrubHeat(i) {
-  if (lastHour.heatday === i) return; lastHour.heatday = i;
-  setClock(document.querySelector('[data-step="heatday"]'), 8 + i);
-  hourChart(8 + i);
-  if (ready) showThermal(i);
-}
-const SCRUB = { hours: scrubHours, heatday: scrubHeat };
+function stopDay() { clearInterval(dayTimer); dayTimer = null; }
 setClock(document.querySelector('[data-step="hours"]'), 8); setClock(document.querySelector('[data-step="heatday"]'), 8); hourChart(8);
 
 // ---- chapters and the scroll controller
@@ -512,11 +539,7 @@ function onScroll() {
   const y = window.innerHeight * 0.45;
   const sec = SECS.find((s) => { const r = s.getBoundingClientRect(); return r.top <= y && r.bottom > y; }) ?? SECS[0];
   enter(sec.dataset.step);
-  const scrub = SCRUB[sec.dataset.step];
-  if (scrub) {
-    const r = sec.getBoundingClientRect(), p = Math.min(1, Math.max(0, -r.top / (r.height - window.innerHeight)));
-    scrub(Math.round(p * 11));
-  }
+  if (+sec.dataset.ch >= 3) loadHeat();        // the heat images load while the reader is in the sun chapter
 }
 let ticking = false;
 addEventListener("scroll", () => { if (!ticking) { ticking = true; requestAnimationFrame(() => { ticking = false; onScroll(); }); } }, { passive: true });
@@ -529,18 +552,14 @@ document.querySelectorAll(".cta a").forEach((a) => a.addEventListener("click", (
   a.href = `${a.getAttribute("href").split("#")[0]}#${q}`;
 }));
 
-// keys and presentation clickers move one screen (inside a scrub screen: one window height)
+// keys and presentation clickers move one screen
 const KEYS = { PageDown: 1, ArrowDown: 1, ArrowRight: 1, PageUp: -1, ArrowUp: -1, ArrowLeft: -1 };
 addEventListener("keydown", (e) => {
   if (e.altKey || e.ctrlKey || e.metaKey || /^(INPUT|TEXTAREA|SELECT|BUTTON|A)$/.test(e.target.tagName)) return;
   const step = e.key === " " ? (e.shiftKey ? -1 : 1) : KEYS[e.key];
   if (!step) return;
   e.preventDefault();
-  const sec = SECS.find((s) => s.dataset.step === current), r = sec.getBoundingClientRect(), H = window.innerHeight;
-  if (SCRUB[current] && ((step > 0 && r.bottom - H > 4) || (step < 0 && r.top < -4))) {
-    window.scrollBy({ top: step * H, behavior: reduce ? "auto" : "smooth" }); return;
-  }
-  const i = SECS.indexOf(sec), next = SECS[Math.max(0, Math.min(SECS.length - 1, i + step))];
-  const top = next.getBoundingClientRect().top + window.scrollY + (step < 0 && SCRUB[next.dataset.step] ? next.offsetHeight - H : 0);
-  window.scrollTo({ top, behavior: reduce ? "auto" : "smooth" });
+  const sec = SECS.find((s) => s.dataset.step === current);
+  const next = SECS[Math.max(0, Math.min(SECS.length - 1, SECS.indexOf(sec) + step))];
+  window.scrollTo({ top: next.getBoundingClientRect().top + window.scrollY, behavior: reduce ? "auto" : "smooth" });
 });

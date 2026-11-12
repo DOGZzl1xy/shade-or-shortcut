@@ -31,7 +31,7 @@ const at = (w, dist) => {                // index of the last point walked at di
   return lo;
 };
 
-export function createWalk(map, data, chart, { onStep = () => {}, onEnd = () => {} } = {}) {
+export function createWalk(map, data, chart, { onStep = () => {}, onEnd = () => {}, height = 180 } = {}) {
   map.addSource("walk-track", { type: "geojson", data: EMPTY });
   map.addSource("walk-trail", { type: "geojson", data: EMPTY });
   map.addSource("walk-now", { type: "geojson", data: EMPTY });
@@ -74,9 +74,11 @@ export function createWalk(map, data, chart, { onStep = () => {}, onEnd = () => 
   }
 
   // ---- profile chart (SVG): UTCI against distance walked, both walks, the heat-stress bands behind
-  const WD = 760, HT = 214, M = { l: 40, r: 92, t: 22, b: 26 };
-  let x, y, lines = {}, dots = {}, clip;
+  const M = { l: 40, r: 92, t: 22, b: 26 };
+  let x, y, dots = {}, clip, WD = 760, HT = height;
   function drawChart() {
+    // drawn at the size of its box (1 unit = 1 px), so the text keeps its size on any screen
+    WD = Math.max(480, chart.clientWidth || 760);
     const maxD = Math.max(W.short.total, W.cool.total);
     const all = [...W.short.sm, ...W.cool.sm].filter((v) => v !== null);
     const lo = Math.floor(Math.min(34, ...all) - 0.5), hi = Math.ceil(Math.max(47, ...all) + 0.5);
@@ -88,7 +90,7 @@ export function createWalk(map, data, chart, { onStep = () => {}, onEnd = () => 
     for (let u = Math.ceil(lo / 2) * 2; u <= hi; u += 2) yt.push(`<text x="${M.l - 8}" y="${y(u) + 4}" text-anchor="end">${u}</text><line x1="${M.l}" x2="${WD - M.r}" y1="${y(u)}" y2="${y(u)}" class="wc-grid"/>`);
     for (let d = 0; d <= maxD; d += 200) xt.push(`<text x="${x(d)}" y="${HT - 6}" text-anchor="middle">${d === 0 ? "0 m" : d}</text>`);
     const path = (w) => w.sm.map((u, i) => (u === null ? "" : `${i && w.sm[i - 1] !== null ? "L" : "M"}${x(w.d[i]).toFixed(1)},${y(u).toFixed(1)}`)).join("");
-    chart.innerHTML = `<svg viewBox="0 0 ${WD} ${HT}" width="100%" role="img" aria-label="UTCI along the shortest and the coolest walk">
+    chart.innerHTML = `<svg viewBox="0 0 ${WD} ${HT}" width="${WD}" height="${HT}" role="img" aria-label="UTCI along the shortest and the coolest walk">
       <defs><clipPath id="wc-clip"><rect x="0" y="0" width="0" height="${HT}"/></clipPath></defs>
       ${band(46, 99, "rgba(255,138,61,0.20)", "extreme")}${band(38, 46, "rgba(255,138,61,0.07)", "very strong")}${band(32, 38, "rgba(255,255,255,0.02)", "strong")}
       <g class="wc-axis">${yt.join("")}${xt.join("")}<text x="${M.l - 8}" y="10" text-anchor="end">°C</text></g>

@@ -16,7 +16,7 @@
   addEventListener("pagereveal", quiet); addEventListener("pageswap", quiet);
 </script>
 <style>
-  /* one screen per step; the two "scrub" screens are three screens tall and move the clock as you scroll through them */
+  /* one screen per step */
   html { scroll-snap-type: y mandatory; }
   :root { --chap-h: 34px; --top: calc(var(--nav-h) + var(--chap-h)); }
   #map { position: fixed; inset: 0; }
@@ -25,8 +25,6 @@
   main { position: relative; z-index: 2; pointer-events: none; }
   section { min-height: 100vh; scroll-snap-align: start; position: relative;
     display: flex; align-items: center; padding: calc(var(--top) + 24px) 5vw 32px 28px; }
-  section.scrub { min-height: 320vh; align-items: flex-start; }
-  section.scrub .panel { position: sticky; top: calc(var(--top) + 24px); }
   section .panel { pointer-events: auto; max-width: 440px; }
 
   /* chapter bar under the navigation: where we are in the story; click to jump */
@@ -66,11 +64,6 @@
   .mini-legend { margin-top: 14px; max-width: 300px; }
   .cta a { display: inline-block; margin: 14px 10px 0 0; }
   .ls-open { height: 10px; background: #c9b6f2; }
-  .takeaways { margin: 14px 0 0; padding: 0; list-style: none; counter-reset: k; }
-  .takeaways li { position: relative; padding: 0 0 10px 30px; font-size: 15px; line-height: 1.45; color: #d6d4cd; counter-increment: k; }
-  .takeaways li::before { content: counter(k); position: absolute; left: 0; top: 1px; width: 20px; height: 20px; border-radius: 50%;
-    border: 1px solid var(--line-strong); font: 11px/18px var(--mono); text-align: center; color: var(--cool); }
-
   /* opening diagrams: tree, building and indoor shade, shadows grow when the screen comes in */
   section .panel.wide { max-width: 760px; }
   .diagrams { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 14px; }
@@ -95,7 +88,7 @@
   .active .diagrams .in-fill { opacity: 0.22; }
   .active .diagrams .walk, .active .diagrams .who { opacity: 1; }
 
-  /* clock with sun dial (screens 5 and 11) */
+  /* clock with sun dial (screens 5 and 11): the day plays by itself while the screen is on */
   .clock { display: flex; align-items: center; gap: 18px; margin-top: 16px; }
   .clock .big { font-size: 46px; }
   .dial { width: 92px; height: 56px; overflow: visible; }
@@ -105,7 +98,6 @@
   .hours { display: flex; gap: 3px; margin-top: 12px; max-width: 320px; }
   .hours i { flex: 1; height: 4px; border-radius: 2px; background: var(--line-strong); transition: background 0.2s; }
   .hours i.on { background: var(--ink); }
-  .scrub-hint { font: 11px var(--mono); letter-spacing: 0.1em; text-transform: uppercase; color: var(--dim); margin-top: 12px; }
 
   /* felt temperature (screen 10) */
   .felt { margin-top: 14px; }
@@ -117,13 +109,16 @@
   .active .felt .fig { opacity: 1; transform: none; }
   .active .felt .fig.f2 { transition-delay: 0.25s; } .active .felt .fig.f3 { transition-delay: 0.5s; }
 
-  /* waffle of 100 walks (screen 8): right of the card */
-  .waffle { position: absolute; right: 7vw; top: 50%; transform: translateY(-38%); width: min(36vw, 460px); pointer-events: none; }
-  .waffle svg { width: 100%; height: auto; display: block; }
-  .waffle rect { opacity: 0; transition: opacity 0.35s; }
-  .active .waffle rect { opacity: 1; }
-  .waffle .wl { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 18px; margin-top: 14px; font-size: 12px; color: var(--dim); }
-  .waffle .wl i { display: inline-block; width: 11px; height: 11px; border-radius: 2px; margin-right: 8px; vertical-align: -1px; }
+  /* 100 walks in four groups (screen 8), in a panel right of the card */
+  section .waffle { position: absolute; right: 6vw; top: 50%; transform: translateY(-45%); width: 560px; max-width: none; pointer-events: none; padding: 18px 22px; }
+  .waffle .wrow { display: grid; grid-template-columns: 64px 1fr; gap: 14px; align-items: start; padding: 12px 0; border-top: 1px solid var(--line); }
+  .waffle .wrow:first-of-type { border-top: 0; }
+  .waffle .wn { font: 500 34px/1 var(--mono); }
+  .waffle .wt { font-size: 13px; color: #c9c7c0; margin-bottom: 8px; line-height: 1.35; }
+  .waffle .wt b { color: var(--ink); font-weight: 500; }
+  .waffle .sq { display: flex; flex-wrap: wrap; gap: 3px; max-width: 440px; }
+  .waffle .sq i { width: 15px; height: 15px; border-radius: 3px; opacity: 0; transform: scale(0.6); transition: opacity 0.3s, transform 0.3s; }
+  .active .waffle .sq i { opacity: 1; transform: none; }
 
   /* mini chart of UTCI by hour (screen 11) */
   .hourchart { margin-top: 14px; }
@@ -131,7 +126,7 @@
   .hourchart text { font: 10px var(--mono); fill: var(--dim); }
 
   /* walk screen (13): profile panel at the bottom right */
-  section .walkbox { position: absolute; left: 500px; right: 28px; bottom: 30px; padding: 12px 16px 8px; pointer-events: auto; max-width: none; }
+  section .walkbox { position: absolute; right: 28px; bottom: 28px; width: min(860px, calc(100vw - 560px)); padding: 10px 14px 6px; pointer-events: auto; max-width: none; }
   .walkbox .row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
   .wc-axis text, .wc-band { font: 10px var(--mono); fill: var(--dim); }
   .wc-band { text-transform: uppercase; letter-spacing: 0.08em; }
@@ -257,7 +252,7 @@
     </div>
   </section>
 
-  <section class="scrub" data-step="hours" data-ch="2">
+  <section data-step="hours" data-ch="2">
     <div class="panel step">
       <div class="label">Center City · June 24</div>
       <h2>Every sidewalk, <em>every hour</em>.</h2>
@@ -265,7 +260,6 @@
       <div class="clock"><div class="big num" data-clock>08:00</div><svg class="dial" data-dial viewBox="0 0 92 56"></svg></div>
       <div class="hours" data-hours></div>
       <div class="mini-legend" data-legend="shade"></div>
-      <div class="scrub-hint">Scroll to move the sun ↓</div>
     </div>
   </section>
 
@@ -293,14 +287,11 @@
 
   <section data-step="waffle" data-ch="3">
     <div class="panel step">
-      <div class="label">100 walks home from frequent bus stops · 300–800 m</div>
-      <h2>The shadiest walk avoids <em class="cool" id="w-red">–</em> of the sun for <em>almost no extra distance</em>. But <em class="c-noalt" id="w-noalt">–</em> have no cooler option.</h2>
-      <div class="stat">
-        <div><div class="big num cool" id="w-red-n">–</div><div class="cap">sun on the shadiest walk</div></div>
-        <div><div class="big num" id="w-det">–</div><div class="cap">extra distance</div></div>
-      </div>
+      <div class="label">Walks home from frequent bus stops · 300–800 m · 15:00</div>
+      <h2>For <em class="c-noalt" id="w-noalt">–</em> walks there is <em class="c-noalt">no shadier way home</em>.</h2>
+      <p class="detail" id="w-detail"></p>
     </div>
-    <div class="waffle"><svg id="waffle-sun" viewBox="0 0 220 220"></svg><div class="wl" id="waffle-sun-legend"></div></div>
+    <div class="panel waffle" id="waffle"></div>
   </section>
 
   <section data-step="clusters" data-ch="3">
@@ -322,14 +313,13 @@
     </div>
   </section>
 
-  <section class="scrub" data-step="heatday" data-ch="4">
+  <section data-step="heatday" data-ch="4">
     <div class="panel step">
       <div class="label">University City · June 24 · the felt temperature</div>
       <h2>From <span id="hd-from">10</span>:00 to <span id="hd-to">17</span>:00 even the shade is <em class="sun">very strong heat stress</em>.</h2>
       <div class="clock"><div class="big num" data-clock>08:00</div><svg class="dial" data-dial viewBox="0 0 92 56"></svg></div>
       <div class="hourchart"><svg id="hourchart" viewBox="0 0 400 150"></svg></div>
       <div class="mini-legend" data-legend="heat"></div>
-      <div class="scrub-hint">Scroll to move the sun ↓</div>
     </div>
   </section>
 
@@ -384,9 +374,10 @@
   <!-- 6 · Your walk -->
   <section data-step="end" data-ch="6">
     <div class="panel step cta">
-      <div class="label">What it adds up to</div>
-      <h2>Find your own <em class="cool">shade</em>.</h2>
-      <ul class="takeaways" id="takeaways"></ul>
+      <div class="label">Where shade is missing</div>
+      <h2>In the <em class="c-noalt">orange</em> neighbourhoods, no street home is shadier.</h2>
+      <p class="detail" id="end-detail"></p>
+      <p class="detail" style="margin-top:14px">Check your own walk, any hour of both days:</p>
       <a href="tool.html" data-to="tool"><button class="ghost">Open the route tool</button></a>
       <a href="map.html" data-to="map"><button class="ghost">Open the city map</button></a>
     </div>
