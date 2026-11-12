@@ -140,6 +140,12 @@ export function createWalk(map, data, chart, { onStep = () => {}, onEnd = () => 
       const xs = [...entry.short.lon, ...entry.cool.lon], ys = [...entry.short.lat, ...entry.cool.lat];
       return [[Math.min(...xs), Math.min(...ys)], [Math.max(...xs), Math.max(...ys)]];
     },
-    remove() { this.stop(); Object.values(tags).forEach((t) => t.mk.remove()); },
+    // take everything off the map (the story leaves the screen)
+    clear() {
+      this.stop();
+      Object.values(tags).forEach((t) => t.mk.remove());
+      for (const id of ["walk-track", "walk-trail", "walk-now"]) map.getSource(id).setData(EMPTY);
+    },
+    remove() { this.clear(); },
   };
 }

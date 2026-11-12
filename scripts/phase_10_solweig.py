@@ -1284,13 +1284,137 @@ def web_walk(cfg):
     print(f"walk.json: {(app / 'walk.json').stat().st_size / 1e3:.0f} kB")
 
 
+STORY_UTCI_STOPS = [(36.0, "#35d0e0"), (40.5, "#8fd0c4"), (43.5, "#f0c26a"), (46.0, "#ff8a3d")]   # as UTCI_STOPS in common.js
+
+
+def web_story(cfg):
+    """Data for the story page (site/app/data/story.json and thermal/*.webp).
+
+    thermal: 1 m UTCI of the city run around the story's walk (walk.json), every report hour of the first date, coloured
+    with the website's UTCI ramp, buildings (no UTCI) transparent; corners in lon / lat for a MapLibre image source.
+    spots: one sunlit, one tree-shaded and one building-shaded sidewalk point near each other in that area at the key
+    hour, each within 0.3 C of its class's city median. sun: azimuth / elevation per time label. waffle: walks home from
+    frequent bus stops in the cluster band at the key hour (both dates): shares by sun reduction (phase 6) and by how
+    much cooler the coolest walk is (routes_city)."""
+    from PIL import Image
+    from pyproj import Transformer
+    from scipy.spatial import cKDTree
+    s, st = cfg["solweig"], cfg["study"]
+    app = ROOT / "site" / "app" / "data"
+    walk = json.loads((app / "walk.json").read_text())
+    date, key_h = st["dates"][0], st["key_hour"]
+    to_xy = Transformer.from_crs(4326, cfg["project"]["crs"], always_xy=True)
+    to_ll = Transformer.from_crs(cfg["project"]["crs"], 4326, always_xy=True)
+    e = walk["hours"][0]
+    wx, wy = to_xy.transform(e["short"]["lon"] + e["cool"]["lon"], e["short"]["lat"] + e["cool"]["lat"])
+    cx, cy = (min(wx) + max(wx)) / 2, (min(wy) + max(wy)) / 2
+    W, H = 2600, 1700                                 # metres = pixels
+    x0, y1 = round(cx - W / 2), round(cy + H / 2)
+    rr, k_ = city_runs(cfg), s["city"]["core_m"]
+    gx0, gy0 = min(r["core"][0] for r in rr.values()), min(r["core"][1] for r in rr.values())
+    out_dir = city_folder(cfg) / "results" / date / "out"
+    hours = s["hours"]
+    mos = np.full((len(hours), H, W), np.nan, np.float32)
+    for ix in range(int((x0 - gx0) // k_), int((x0 + W - 1 - gx0) // k_) + 1):
+        for iy in range(int((y1 - H - gy0) // k_), int((y1 - 1 - gy0) // k_) + 1):
+            f_ = out_dir / f"utci_x{ix:02d}_y{iy:02d}.tif"
+            if not f_.exists():
+                continue
+            with rasterio.open(f_) as f:
+                hrs = [int(h) for h in f.tags()["hours"].split(",")]
+                a = f.read().astype(np.float32)
+                a[a == f.nodata] = np.nan
+                a /= s["city"]["utci_scale"]
+                T = f.transform
+            # overlap of this core with the box, in box pixels
+            cx0, cy1 = T.c, T.f
+            bx0, bx1 = max(x0, cx0), min(x0 + W, cx0 + a.shape[2])
+            by1, by0 = min(y1, cy1), max(y1 - H, cy1 - a.shape[1])
+            if bx1 <= bx0 or by1 <= by0:
+                continue
+            for j, h in enumerate(hours):
+                mos[j, int(y1 - by1):int(y1 - by0), int(bx0 - x0):int(bx1 - x0)] = \
+                    a[hrs.index(h), int(cy1 - by1):int(cy1 - by0), int(bx0 - cx0):int(bx1 - cx0)]
+    tdir = app / "thermal"
+    tdir.mkdir(exist_ok=True)
+    vs = np.array([v for v, _ in STORY_UTCI_STOPS])
+    cs = np.array([[int(c[i:i + 2], 16) for i in (1, 3, 5)] for _, c in STORY_UTCI_STOPS], float)
+    images, size = {}, 0
+    for j, h in enumerate(hours):
+        u = np.clip(mos[j], vs[0], vs[-1])
+        rgb = np.stack([np.interp(u, vs, cs[:, i]) for i in range(3)], -1)
+        alpha = np.where(np.isfinite(mos[j]), 255, 0).astype(np.uint8)
+        img = Image.fromarray(np.dstack([np.nan_to_num(rgb).astype(np.uint8), alpha]), "RGBA")
+        lab = label(cfg, h, date)
+        p_ = tdir / f"utci_{lab}.webp"
+        img.save(p_, "WEBP", quality=82, method=6)
+        images[lab] = f"thermal/{p_.name}"
+        size += p_.stat().st_size
+    corners = [to_ll.transform(x, y) for x, y in ((x0, y1), (x0 + W, y1), (x0 + W, y1 - H), (x0, y1 - H))]
+
+    # three spots at the key hour: sun / tree / building shade, each near its class's city median, close together
+    lab = label(cfg, key_h, date)
+    refs = {r["label"]: r for r in json.loads((cfg["paths"]["tables"] / "phase_10_city.json").read_text())["by_hour"]}[lab]
+    pts = pd.read_parquet(city_folder(cfg) / "points_city.parquet", columns=["pid", "x", "y"])
+    pts = pts[(pts.x > x0 + 150) & (pts.x < x0 + W - 150) & (pts.y < y1 - 150) & (pts.y > y1 - H + 150)]
+    pts = pts.merge(pd.read_parquet(city_folder(cfg) / "shade_states.parquet", columns=["pid", f"state_{lab}"]), on="pid")
+    sol = pd.concat([pd.read_parquet(f, columns=["pid", f"utci_{key_h:02d}"]) for f in sorted(out_dir.glob("points_*.parquet"))])
+    pts = pts.merge(sol, on="pid").rename(columns={f"state_{lab}": "state", f"utci_{key_h:02d}": "u"})
+    # patch check: the 6 nearest points (about 12 m of sidewalk) share the class
+    tree_ = cKDTree(pts[["x", "y"]].to_numpy())
+    _, nb = tree_.query(pts[["x", "y"]].to_numpy(), k=7)
+    pts["patch"] = (pts.state.to_numpy()[nb] == pts.state.to_numpy()[:, None]).all(axis=1)
+    med = {0: refs["u_sun"], 1: refs["u_tree"], 2: refs["u_bldg"]}
+    cand = {k: pts[(pts.state == k) & pts.patch & ((pts.u - m).abs() < 0.3)] for k, m in med.items()}
+    best = None
+    ct = cKDTree(cand[1][["x", "y"]].to_numpy())
+    for _, b in cand[2].iterrows():                  # each building-shade candidate: nearest good tree and sun points
+        for i in ct.query_ball_point([b.x, b.y], 220):
+            t_ = cand[1].iloc[i]
+            dt = np.hypot(t_.x - b.x, t_.y - b.y)
+            if dt < 50:
+                continue
+            ds = np.hypot(cand[0].x - (b.x + t_.x) / 2, cand[0].y - (b.y + t_.y) / 2)
+            ok = (np.hypot(cand[0].x - b.x, cand[0].y - b.y) > 50) & (np.hypot(cand[0].x - t_.x, cand[0].y - t_.y) > 50)
+            if not ok.any():
+                continue
+            j = ds[ok].idxmin()
+            score = dt + ds[j]
+            if best is None or score < best[0]:
+                best = (score, cand[0].loc[j], t_, b)
+    spots = []
+    for k, p_ in zip(("sun", "tree", "bldg"), best[1:]):
+        lo, la = to_ll.transform(p_.x, p_.y)
+        spots.append({"kind": k, "lon": round(lo, 6), "lat": round(la, 6), "u": round(float(p_.u), 1)})
+
+    # sun positions and the waffles
+    sun = pd.read_parquet(cfg["paths"]["processed"] / "sun.parquet")
+    keys = [label(cfg, key_h, d) for d in city_dates(cfg)]
+    cb, thr = cfg["metrics"]["cluster_length_bin"], cfg["metrics"]["no_alt_threshold"]
+    tm = pd.read_parquet(cfg["paths"]["processed"] / "trips_metrics.parquet", columns=["sample", "mode", "length_bin", "time", "theta", "sun_red"])
+    sr = tm[(tm["sample"] == "city") & (tm["mode"] == "bus") & (tm.length_bin == cb) & tm.time.isin(keys) & (tm.theta == "dynamic")].sun_red.dropna()
+    rt = pd.read_parquet(city_folder(cfg) / "routes_city.parquet", columns=["mode", "length_bin", "time", "heat_dutci"])
+    du = -rt[(rt["mode"] == "bus") & (rt.length_bin == cb) & rt.time.isin(keys)].heat_dutci
+    share = lambda x, edges: [round(float(((x >= a) & (x < b)).mean()), 4) for a, b in zip(edges[:-1], edges[1:])]
+    res = {"thermal": {"corners": [[round(a, 6), round(b, 6)] for a, b in corners], "images": images, "size_m": [W, H],
+                       "stops": STORY_UTCI_STOPS},
+           "spots": {"label": lab, **{k: round(med[i], 2) for k, i in (("u_sun", 0), ("u_tree", 1), ("u_bldg", 2))}, "points": spots},
+           "sun": [{"label": r.label, "azimuth": round(float(r.azimuth), 1), "elevation": round(float(r.elevation), 1)} for r in sun.itertuples()],
+           "waffle": {"labels": keys, "band": cb,
+                      "sun_red": {"edges": [0, thr, 0.10, 0.25, 9], "shares": share(sr.to_numpy(), [-9, thr, 0.10, 0.25, 9]), "n": int(len(sr))},
+                      "cooler": {"edges": [0, 0.1, 0.5, 1.5, 99], "shares": share(du.to_numpy(), [-99, 0.1, 0.5, 1.5, 99]), "n": int(len(du))}}}
+    (app / "story.json").write_text(json.dumps(res, separators=(",", ":")))
+    print(json.dumps({k: v for k, v in res.items() if k not in ("sun", "thermal")}, indent=1))
+    print(f"thermal: {len(images)} images, {size / 1e6:.1f} MB; corners {res['thermal']['corners']}")
+
+
 def main(args):
     cfg = load_config()
     steps = {"met": met, "inputs": inputs, "network": network, "figure": figure, "routes": routes,
              "frontier": frontier, "city-points": city_points, "city-package": city_package,
              "city-shade": city_shade, "city-bundle": city_bundle, "city-collect": city_collect,
              "city-routes": city_routes, "city-sensitivity": city_sensitivity, "city-frontier": city_frontier,
-             "web-export": web_export, "web-layers": web_layers, "web-walk": web_walk}
+             "web-export": web_export, "web-layers": web_layers, "web-walk": web_walk, "web-story": web_story}
     for a in args or ["met", "inputs"]:
         steps[a](cfg)
 
