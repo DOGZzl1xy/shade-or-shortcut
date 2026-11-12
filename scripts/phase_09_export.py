@@ -27,7 +27,6 @@ from coolpath.transit import station_display
 from scripts.phase_08_demo import demo_square, load_indoor
 
 OUT = ROOT / "site" / "app" / "data"
-CLUSTER_NAMES = {0: "Sunny, no cooler alternative", 1: "Sunny but avoidable", 2: "Cooler, few alternatives"}
 
 
 def clean(o):
@@ -214,7 +213,7 @@ def main():
     keep = g[f"trips_{cb}"] >= cfg["metrics"]["min_trips_per_cell"]
     gg = g[keep].copy()
     out = gpd.GeoDataFrame({
-        "cluster": gg.cluster.astype(int), "cluster_name": gg.cluster.astype(int).map(CLUSTER_NAMES),
+        "cluster": gg.cluster.astype(int), "cluster_name": gg.cluster.astype(int).map(dict(enumerate(cfg["metrics"]["cluster_names"]))),
         "trips": gg[f"trips_{cb}"].astype(int),
         **{k: gg[f"{k}_{cb}"].round(3) for k in ("sun_share", "sun_red", "detour", "no_alt_share", "exposure_red")},
         "bldg_height_m": gg.bldg_height_mean_m.round(1), "canopy": gg.canopy_cover.round(3),

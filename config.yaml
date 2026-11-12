@@ -183,6 +183,9 @@ metrics:
   no_alt_threshold_sensitivity: [0.01, 0.05, 0.10]
   grid_m: 500                             # bus walks summarised on a 500 m grid by home parcel
   cluster_k: 3                            # k-means clusters (k = 3-6 have similar silhouettes)
+  # cluster names in label order; labels are fixed by profile, not by k-means order (which changes between runs):
+  # 0 = most walks with no cooler option, 1 = most sun avoidable, 2 = the other
+  cluster_names: ["Sunny, no cooler option", "Sunny but avoidable", "Some cooler options"]
   cluster_length_bin: "300-800"           # clustering uses this length band only
   min_trips_per_cell: 20                  # cells with fewer walks in the band are not clustered
   min_trips_per_station: 10               # stations with fewer walks in a band are not reported

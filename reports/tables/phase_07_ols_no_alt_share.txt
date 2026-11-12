@@ -4,7 +4,7 @@ Dep. Variable:     no_alt_share_300-800   R-squared:                       0.132
 Model:                              OLS   Adj. R-squared:                  0.127
 Method:                   Least Squares   F-statistic:                     21.56
 Date:                  Thu, 12 Nov 2026   Prob (F-statistic):           3.72e-13
-Time:                          13:13:41   Log-Likelihood:                -12.699
+Time:                          16:09:20   Log-Likelihood:                -12.699
 No. Observations:                   510   AIC:                             33.40
 Df Residuals:                       506   BIC:                             50.34
 Df Model:                             3                                         

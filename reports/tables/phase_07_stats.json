@@ -233,19 +233,6 @@
   "k": 3,
   "cluster_profile": {
     "0": {
-      "cells": 51,
-      "trips": 20620.0,
-      "sun_share": 0.6548,
-      "sun_red": 0.2529,
-      "detour": 0.0129,
-      "no_alt_share": 0.2323,
-      "exposure_red": 0.0269,
-      "bldg_height_mean_m": 9.0656,
-      "canopy_cover": 0.0699,
-      "network_km_per_km2": 43.7321,
-      "bldg_coverage": 0.3844
-    },
-    "1": {
       "cells": 322,
       "trips": 73001.0,
       "sun_share": 0.8012,
@@ -257,6 +244,19 @@
       "canopy_cover": 0.0933,
       "network_km_per_km2": 30.9149,
       "bldg_coverage": 0.2614
+    },
+    "1": {
+      "cells": 51,
+      "trips": 20620.0,
+      "sun_share": 0.6548,
+      "sun_red": 0.2529,
+      "detour": 0.0129,
+      "no_alt_share": 0.2323,
+      "exposure_red": 0.0269,
+      "bldg_height_mean_m": 9.0656,
+      "canopy_cover": 0.0699,
+      "network_km_per_km2": 43.7321,
+      "bldg_coverage": 0.3844
     },
     "2": {
       "cells": 137,

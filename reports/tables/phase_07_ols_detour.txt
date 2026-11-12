@@ -4,7 +4,7 @@ Dep. Variable:         detour_300-800   R-squared:                       0.199
 Model:                            OLS   Adj. R-squared:                  0.194
 Method:                 Least Squares   F-statistic:                     16.37
 Date:                Thu, 12 Nov 2026   Prob (F-statistic):           3.63e-10
-Time:                        13:13:41   Log-Likelihood:                 2099.3
+Time:                        16:09:20   Log-Likelihood:                 2099.3
 No. Observations:                 510   AIC:                            -4191.
 Df Residuals:                     506   BIC:                            -4174.
 Df Model:                           3                                         

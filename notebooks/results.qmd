@@ -91,7 +91,7 @@ Morning and evening, when shadows are long, offer the most; around 13:00–14:00
 
 ```{python}
 #| output: asis
-names = {0: "Sunny, no cooler option", 1: "Sunny but avoidable", 2: "Cooler, few alternatives"}
+names = dict(enumerate(cfg["metrics"]["cluster_names"]))
 prof = pd.DataFrame(s7["cluster_profile"]).T
 prof.index = prof.index.astype(int)
 sil = s7["silhouette"]

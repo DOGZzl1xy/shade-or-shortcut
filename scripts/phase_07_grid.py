@@ -194,7 +194,14 @@ def main():
         sil[k] = float(silhouette_score(Z, km.labels_))
         models[k] = km
     kbest = mc["cluster_k"]                  # D-040: user-chosen k; silhouette reported for k = 3-6
-    use["cluster"] = models[kbest].labels_
+    lab = models[kbest].labels_
+    # fixed meaning per label (k-means numbering changes between runs): 0 = highest share of walks with no cooler
+    # option, 1 = highest sun reduction among the rest, 2 = the remaining cluster (names: metrics.cluster_names)
+    prof0 = pd.DataFrame({"k": lab, "no_alt": use[f"no_alt_share_{cb}"].to_numpy(), "red": use[f"sun_red_{cb}"].to_numpy()}).groupby("k").mean()
+    first = int(prof0.no_alt.idxmax())
+    second = int(prof0.drop(first).red.idxmax())
+    order = [first, second] + [k for k in prof0.index if k not in (first, second)]
+    use["cluster"] = pd.Series(lab).map({k: i for i, k in enumerate(order)}).to_numpy()
     cells = cells.merge(use[["row", "col", "cluster"]], on=["row", "col"], how="left")
     prof = use.groupby("cluster").agg(cells=("row", "size"), trips=(f"trips_{cb}", "sum"),
                                       **{c: (f"{c}_{cb}", "mean") for c in IND + ["exposure_red"]},

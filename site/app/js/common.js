@@ -6,8 +6,9 @@ export const VERSION = "dev";
 
 export const COLORS = { sun: "#ff8a3d", bldg: "#5b8cff", tree: "#43c27a", indoor: "#b48cff", cool: "#35d0e0", dim: "#8b8a84" };
 // grid clusters 0-2; colour-blind safe (checked with the dataviz palette validator: CVD ΔE >= 16 on #07080b)
+// names as config metrics.cluster_names (labels fixed by profile in phase 7)
 export const CLUSTERS = [[0, "Sunny, no cooler option", "#d47519"], [1, "Sunny but avoidable", "#4398d2"],
-  [2, "Cooler, few alternatives", "#1f5fb0"]];
+  [2, "Some cooler options", "#1f5fb0"]];
 export const DEMO_CENTER = [-75.1932, 39.9522];
 
 // attribution strings for map sources
