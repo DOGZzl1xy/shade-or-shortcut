@@ -102,7 +102,7 @@ $("clusters").innerHTML = CLUSTERS.map(([, n, c]) => `<span><span class="legend-
 for (const [id, key] of [["sunny", "sun_share"], ["cooler", "sun_red"]]) {
   const r = GRID_RAMPS[key];
   $(`r-${id}`).style.background = `linear-gradient(to right,${r.stops.filter((_, i) => i % 2).join(",")})`;
-  $(`e-${id}`).innerHTML = `<span>${r.lo}</span><span>${r.hi}</span>`;
+  $(`e-${id}`).innerHTML = `<span>${r.ticks[0][1]}</span><span>${r.ticks[r.ticks.length - 1][1]}</span>`;
 }
 
 // ---- walks: shortest / coolest lines, each labelled next to its own line where the label covers neither walk,

@@ -17,61 +17,35 @@
 </script>
 <style>
   #map { position: fixed; top: var(--nav-h); left: 0; right: 0; bottom: 0; }
-  #side { position: fixed; top: calc(var(--nav-h) + 14px); left: 14px; width: 320px; max-height: calc(100vh - var(--nav-h) - 28px); overflow-y: auto; z-index: 5; }
-  #side h1 { font-family: var(--display); font-weight: 500; font-size: 22px; margin: 4px 0 4px; }
-  .hint { font-size: 12px; color: var(--dim); margin: 14px 0 0; }
-  #side p { margin: 0 0 8px; font-size: 13px; color: var(--dim); }
-  .block { margin-top: 14px; }
-  .dot { display: inline-block; width: 11px; height: 11px; border-radius: 50%; border: 1px solid #e8e6df; vertical-align: middle; margin-right: 6px; }
-  select { width: 100%; font: 13px var(--body); color: var(--ink); background: #11141a; border: 1px solid var(--line); border-radius: 8px; padding: 7px; }
-  label.chk { display: flex; gap: 8px; align-items: center; font-size: 13px; margin: 4px 0; }
-  .ramp { height: 8px; border-radius: 4px; margin-top: 6px; }
-  .ends { display: flex; justify-content: space-between; font: 10px var(--mono); color: var(--dim); }
-  .maplibregl-popup-content { background: #11141a; color: var(--ink); font: 12px var(--body); border: 1px solid var(--line); }
-  .maplibregl-popup-tip { display: none; }
   .ringlabel { font: 11px var(--mono); letter-spacing: 0.06em; color: #fff; background: rgba(7,8,11,0.85); padding: 2px 8px;
     border: 1px dashed rgba(255,255,255,0.7); border-radius: 10px; margin-bottom: 6px; white-space: nowrap; }
-  @media (max-width: 760px) { #side { left: 8px; right: 8px; width: auto; top: auto; bottom: 8px; max-height: 44vh; } }
+  .hollow { display: inline-block; width: 10px; height: 10px; border-radius: 50%; border: 1.5px solid var(--cool); vertical-align: -1px; margin-right: 6px; }
 </style>
 </head>
 <body>
 <div id="map"></div>
-<div id="side" class="panel">
-  <div class="label">Philadelphia</div>
-  <h1>City shade map</h1>
+<div id="side" class="panel side">
+  <div class="label">City map · Philadelphia</div>
+  <h1>Sun and heat on every sidewalk</h1>
+  <p class="hint">Zoom in to see each sidewalk. Click a grid cell or a station for its walks home. Pick the day and hour below the map.</p>
+
+  <div class="block" id="measure"></div>
+  <div class="block" id="legend"></div>
 
   <div class="block">
-    <div class="label" style="margin-bottom:6px" id="sw-label">Sidewalk shade · zoom in</div>
-    <div class="seg seg-sm" id="colour" style="margin-bottom:8px"><button data-c="s" class="on">Shade</button><button data-c="u" title="Thermal comfort (UTCI) from SOLWEIG">Heat (UTCI)</button></div>
-    <div id="time"></div>
-    <div class="ramp" id="ramp" style="background:linear-gradient(to right,#ff8a3d,#e9b36a,#6fb0c8,#35d0e0)"></div>
-    <div class="ends"><span id="ramp-lo">sunny</span><span id="ramp-hi">shaded</span></div>
-    <div id="unote" style="font-size:11px;color:var(--dim);margin-top:6px;line-height:1.35" hidden></div>
-    <button class="ghost" id="play" style="margin-top:8px">Play the day</button>
+    <div class="label">500 m grid · walks from bus stops</div>
+    <div class="chips" id="gridvar"></div>
+    <div id="glegend" style="margin-top:10px"></div>
   </div>
 
   <div class="block">
-    <div class="label" style="margin-bottom:6px">500 m grid · bus walks</div>
-    <select id="gridvar">
-      <option value="cluster">Clusters</option>
-      <option value="sun_red">Less sun possible</option>
-      <option value="no_alt_share">No cooler option</option>
-      <option value="sun_share">Sun on the shortest walk</option>
-      <option value="network_km_km2">Sidewalk density</option>
-      <option value="none">Hide</option>
-    </select>
-    <div id="glegend" class="block" style="margin-top:8px"></div>
+    <label class="switch"><span class="label" style="margin:0">Rapid-transit stations</span><input type="checkbox" id="stations" checked></label>
+    <div id="slegend" style="margin-top:8px"></div>
   </div>
+  <p class="hint">Grid and stations: walks home of 300–800 m at 15:00, both days.</p>
 
-  <div class="block">
-    <label class="chk"><input type="checkbox" id="stations" checked> Stations · less sun</label>
-    <div class="ramp" style="background:linear-gradient(to right,#1d2733,#2f8f9a,#35d0e0)"></div>
-    <div class="ends"><span>0%</span><span>40%+</span></div>
-    <div style="font-size:11px;color:var(--dim);margin-top:4px"><span class="dot" style="background:transparent"></span>under <span id="minst">50</span> walks</div>
-  </div>
-  <p class="hint">Walks of 300–800 m at 15:00. Click a cell, or a station to see its 1.2 km reach.</p>
-  <div class="block" id="focus" hidden>
-    <div id="focus-info" style="font-size:13px"></div>
+  <div class="block details keep" id="focus" hidden>
+    <div id="focus-info"></div>
     <button class="ghost" id="unfocus" style="margin-top:10px">Back to the whole city</button>
   </div>
 </div>

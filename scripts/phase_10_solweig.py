@@ -1154,13 +1154,77 @@ def web_export(cfg):
     print(f"city_shade.pmtiles: {len(ge)} edges, {pm.stat().st_size / 1e6:.1f} MB")
 
 
+def web_layers(cfg):
+    """Heat next to sun on the website's phase-7 layers (site/app/data, after phase 9's export).
+
+    From routes_city.parquet at the key hour of every date (pooled, as phase 7):
+    grid.geojson (bus walks, cluster length band, cells as exported by phase 9) and stations.geojson (rapid walks,
+    per length band) gain u_short (mean UTCI along the shortest walk, C), u_cool (how much cooler the coolest walk
+    is, C), ext_m (metres of extreme heat stress on the shortest walk), ext_red (share of them the coolest walk
+    avoids, walks that have any) and same (coolest walk = shadiest walk). summary.json gains phase10: the city
+    medians of UTCI by shade class per time and the mode x length band table."""
+    app = ROOT / "site" / "app" / "data"
+    keys = [label(cfg, cfg["study"]["key_hour"], d) for d in city_dates(cfg)]
+    r = pd.read_parquet(city_folder(cfg) / "routes_city.parquet",
+                        columns=["trip", "time", "mode", "length_bin", "short_utci", "heat_dutci", "short_extreme",
+                                 "heat_extreme_red", "heat_same_as_shade"])
+    r = r[r.time.isin(keys)]
+    par = pd.read_parquet(cfg["paths"]["processed"] / "trips_city_parcels.parquet", columns=["x", "y", "station"])
+    r = r.join(par, on="trip")
+    agg = dict(u_short=("short_utci", "mean"), u_cool=("heat_dutci", lambda x: -x.mean()), ext_m=("short_extreme", "mean"),
+               ext_red=("heat_extreme_red", "mean"), same=("heat_same_as_shade", "mean"), n=("trip", "size"))
+    rnd = {"u_short": 2, "u_cool": 3, "ext_m": 1, "ext_red": 3, "same": 3}
+
+    # grid: phase 7's cells (500 m from the surface grid's north-west corner), bus walks of the cluster band
+    gm, cb = int(cfg["metrics"]["grid_m"]), cfg["metrics"]["cluster_length_bin"]
+    with rasterio.open(cfg["paths"]["processed"] / "surface_building.tif") as f:
+        x0, y0 = f.bounds.left, f.bounds.top
+    b = r[(r["mode"] == "bus") & (r.length_bin == cb)].copy()
+    b["col"], b["row"] = ((b.x - x0) // gm).astype(int), ((y0 - b.y) // gm).astype(int)
+    cell = b.groupby(["row", "col"]).agg(**agg)
+    g = json.loads((app / "grid.geojson").read_text())
+    cen = gpd.GeoSeries([shapely.geometry.shape(f["geometry"]).centroid for f in g["features"]], crs=4326).to_crs(cfg["project"]["crs"])
+    hit = 0
+    for f, c in zip(g["features"], cen):
+        key = (int((y0 - c.y) // gm), int((c.x - x0) // gm))
+        if key in cell.index:
+            hit += 1
+            f["properties"].update({k: (None if not np.isfinite(v) else round(float(v), rnd[k])) for k, v in cell.loc[key].items() if k != "n"})
+    (app / "grid.geojson").write_text(json.dumps(g, separators=(",", ":")))
+
+    # rapid-transit stations, every length band
+    st = r[r["mode"] == "rapid"].groupby(["station", "length_bin"], observed=True).agg(**agg)
+    s = json.loads((app / "stations.geojson").read_text())
+    for f in s["features"]:
+        p = f["properties"]
+        for bn in ("<300", "300-800", "800-1200"):
+            row = st.loc[(p["station"], bn)] if (p["station"], bn) in st.index else None
+            for k in rnd:
+                v = None if row is None else row[k]
+                p[f"{k}_{bn}"] = None if v is None or not np.isfinite(v) else round(float(v), rnd[k])
+    (app / "stations.geojson").write_text(json.dumps(s, separators=(",", ":")))
+
+    sm = json.loads((app / "summary.json").read_text())
+    c10 = json.loads((cfg["paths"]["tables"] / "phase_10_city.json").read_text())
+    rt = json.loads((cfg["paths"]["tables"] / "phase_10_city_routes.json").read_text())
+    sm["phase10"] = {
+        "by_hour": [{k: (round(v, 3) if isinstance(v, float) else v) for k, v in x.items()
+                     if k in ("label", "u_sun", "u_tree", "u_bldg", "tree_relief")} for x in c10["by_hour"]],
+        "by_mode_bin_key_hour": [{k: (round(v, 4) if isinstance(v, float) else v) for k, v in x.items()}
+                                 for x in rt["by_mode_bin_key_hour"]],
+        "key_labels": keys, "utci_categories": UTCI_BINS}
+    (app / "summary.json").write_text(json.dumps(sm, separators=(",", ":")))
+    print(f"grid.geojson: heat for {hit}/{len(g['features'])} cells; stations.geojson: {len(s['features'])} stations")
+    print(cell[["u_short", "u_cool", "ext_m", "ext_red", "same"]].describe().round(3).to_string())
+
+
 def main(args):
     cfg = load_config()
     steps = {"met": met, "inputs": inputs, "network": network, "figure": figure, "routes": routes,
              "frontier": frontier, "city-points": city_points, "city-package": city_package,
              "city-shade": city_shade, "city-bundle": city_bundle, "city-collect": city_collect,
              "city-routes": city_routes, "city-sensitivity": city_sensitivity, "city-frontier": city_frontier,
-             "web-export": web_export}
+             "web-export": web_export, "web-layers": web_layers}
     for a in args or ["met", "inputs"]:
         steps[a](cfg)
 
