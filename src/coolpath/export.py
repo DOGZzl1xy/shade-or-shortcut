@@ -57,7 +57,21 @@ def load_network_json(path):
     out = {"n": len(d["nodes"]["lon"]), "u": np.array(e["u"]), "v": np.array(e["v"]), "len": np.array(e["len"], float),
            "kind": np.array(e["kind"]), "penncard": np.array(e["penncard"], bool), "times": d["times"],
            "L": {k: np.array(v, float) for k, v in d["L"].items()}, "params": d["params"]}
+    if "U" in d:                                   # phase 10: UTCI per time and edge (null on indoor parts), heat refs
+        out["U"] = np.array([[np.nan if x is None else x for x in row] for row in d["U"]], float)
+        out["heat"] = d["heat"]
     return out
+
+
+def heat_arrays(net, sel, t):
+    """The browser router's heatArrays (site/app/js/router.js) for the edges `sel` at time index t:
+    (l_sun, l_bldg) = (L (1 - r), L r), r = clip((u_sun - U) / (u_sun - u_bldg), lo, hi)."""
+    h = net["heat"]
+    us, ub, (lo, hi) = h["u_sun"][t], h["u_bldg"][t], h["clip"]
+    L = net["len"][sel]
+    u = np.nan_to_num(net["U"][t][sel], nan=us)
+    r = np.minimum(np.maximum((us - u) / (us - ub), lo), hi)
+    return L * (1 - r), L * r
 
 
 def scenario_mask(net, scenario):

@@ -1,5 +1,6 @@
 // City map: sidewalk shade by hour (PMTiles), 500 m grid indicators and clusters (bus walks), rapid-transit stations.
-import { VERSION, handoff, nav, collapsible, baseStyle, getJSON, shadeRamp, pmtilesProtocol, COLORS, CLUSTERS, GRID_RAMPS, ATTR, pct, timeControl, newMap } from "./common.js?v=dev";
+import { VERSION, handoff, nav, collapsible, baseStyle, getJSON, shadeRamp, pmtilesProtocol, COLORS, CLUSTERS, GRID_RAMPS, ATTR, pct, timeControl, newMap,
+  utciRamp, UTCI_STOPS, UTCI_NOTE } from "./common.js?v=dev";
 
 nav("map.html");
 pmtilesProtocol();
@@ -51,8 +52,24 @@ function gridStyle() {
   const cols = r.stops.filter((_, i) => i % 2 === 1);
   $("glegend").innerHTML = `<div class="ramp" style="background:linear-gradient(to right,${cols.join(",")})"></div><div class="ends"><span>${r.lo}</span><span>${r.hi}</span></div>`;
 }
-let t = 7;
-const setTime = () => { if (map.getLayer("city")) map.setPaintProperty("city", "line-color", shadeRamp(`s${t}`)); };
+let t = 7, colour = "s";                       // s: shade share, u: UTCI x 10 (phase 10)
+const setTime = () => { if (map.getLayer("city")) map.setPaintProperty("city", "line-color", colour === "u" ? utciRamp(`u${t}`) : shadeRamp(`s${t}`)); };
+function colourLegend() {
+  const heat = colour === "u";
+  $("ramp").style.background = heat ? `linear-gradient(to right,${UTCI_STOPS.filter((_, i) => i % 2).reverse().join(",")})`
+    : "linear-gradient(to right,#ff8a3d,#e9b36a,#6fb0c8,#35d0e0)";
+  $("ramp-lo").textContent = heat ? "46 °C+" : "sunny";
+  $("ramp-hi").textContent = heat ? "32 °C · UTCI" : "shaded";
+  $("sw-label").textContent = heat ? "Sidewalk heat · zoom in" : "Sidewalk shade · zoom in";
+  $("unote").hidden = !heat;
+  $("unote").textContent = UTCI_NOTE;
+}
+$("colour").addEventListener("click", (e) => {
+  const b = e.target.closest("button"); if (!b) return;
+  colour = b.dataset.c;
+  document.querySelectorAll("#colour button").forEach((x) => x.classList.toggle("on", x === b));
+  colourLegend(); setTime();
+});
 map.once("style.load", async () => {
   gridStyle(); setTime();
   const [grid, stations, sm] = await DATA;

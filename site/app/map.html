@@ -41,10 +41,12 @@
   <h1>City shade map</h1>
 
   <div class="block">
-    <div class="label" style="margin-bottom:6px">Sidewalk shade · zoom in</div>
+    <div class="label" style="margin-bottom:6px" id="sw-label">Sidewalk shade · zoom in</div>
+    <div class="seg seg-sm" id="colour" style="margin-bottom:8px"><button data-c="s" class="on">Shade</button><button data-c="u" title="Thermal comfort (UTCI) from SOLWEIG">Heat (UTCI)</button></div>
     <div id="time"></div>
-    <div class="ramp" style="background:linear-gradient(to right,#ff8a3d,#e9b36a,#6fb0c8,#35d0e0)"></div>
-    <div class="ends"><span>sunny</span><span>shaded</span></div>
+    <div class="ramp" id="ramp" style="background:linear-gradient(to right,#ff8a3d,#e9b36a,#6fb0c8,#35d0e0)"></div>
+    <div class="ends"><span id="ramp-lo">sunny</span><span id="ramp-hi">shaded</span></div>
+    <div id="unote" style="font-size:11px;color:var(--dim);margin-top:6px;line-height:1.35" hidden></div>
     <button class="ghost" id="play" style="margin-top:8px">Play the day</button>
   </div>
 

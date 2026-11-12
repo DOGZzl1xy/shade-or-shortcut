@@ -823,6 +823,13 @@ def city_collect(cfg):
     print(json.dumps({k: v for k, v in res.items() if k != "by_hour"}, indent=2, default=float))
 
 
+def city_refs(cfg):
+    """Per label (MMDD_HH): the medians of UTCI at sunlit and at building-shaded sample points (classes from the
+    project's ray caster), written by city-collect; the two ends of the relief scale of the heat cost."""
+    bh = json.loads((cfg["paths"]["tables"] / "phase_10_city.json").read_text())["by_hour"]
+    return {r["label"]: (r["u_sun"], r["u_bldg"]) for r in bh}
+
+
 def city_routes(cfg):
     """City sample (phase 6 walks home from transit), every report hour: shortest vs shade path (Wen et al. on the
     project's shadows at SOLWEIG's sun times) vs heat path (UTCI relief cost, as `routes`). One-to-many searches per
@@ -843,12 +850,11 @@ def city_routes(cfg):
     t0 = time.time()
     dates = [dd for dd in s["dates"] if f"utci_{label(cfg, s['hours'][0], dd)}" in e.columns]    # collected dates
     labs = [lab for _, _, lab in city_labels(cfg, dates)]
+    refs = city_refs(cfg)
     for lab in labs:
         ls, lt, lb = (e[f"L_{k}_{lab}"].to_numpy(np.float64) for k in ("sun", "tree", "bldg"))
-        sun_pts = e[f"L_sun_{lab}"] > 0.5 * e.length
-        bld_pts = e[f"L_bldg_{lab}"] > 0.5 * e.length
         u = e[f"utci_{lab}"].to_numpy(np.float64)
-        u_sun, u_bldg = np.nanmedian(u[sun_pts]), np.nanmedian(u[bld_pts])
+        u_sun, u_bldg = refs[lab]
         u = np.nan_to_num(u, nan=u_sun)
         r = np.clip((u_sun - u) / (u_sun - u_bldg), -1, 1.5)
         uL = u * L
@@ -1001,7 +1007,7 @@ def city_frontier(cfg):
         lab = label(cfg, cfg["study"]["key_hour"], dd)
         ls, lt, lb = (e[f"L_{k}_{lab}"].to_numpy(np.float64) for k in ("sun", "tree", "bldg"))
         u = e[f"utci_{lab}"].to_numpy(np.float64)
-        u_sun, u_bldg = np.nanmedian(u[e[f"L_sun_{lab}"] > 0.5 * e.length]), np.nanmedian(u[e[f"L_bldg_{lab}"] > 0.5 * e.length])
+        u_sun, u_bldg = city_refs(cfg)[lab]
         u = np.nan_to_num(u, nan=u_sun)
         r = np.clip((u_sun - u) / (u_sun - u_bldg), -1, 1.5)
         uL = u * L
@@ -1045,12 +1051,79 @@ def city_frontier(cfg):
     print("figure:", out)
 
 
+def web_export(cfg):
+    """UTCI for the website (site/app/data), on top of the phase-9 export.
+
+    demo_network.json gains U (per time of `times`, per edge, 0.1 C; null on indoor parts) and heat (the relief
+    references u_sun / u_bldg per time, the clip range, the SOLWEIG date behind each shade date). The website keeps
+    its two shade dates (06-21, 08-01); UTCI comes from the SOLWEIG dates paired with them (solweig.dates, same
+    order). Demo edges: first date from the demo run (edges_heat.parquet), later dates from the demo points the server
+    sampled (pid >= the city points). city_shade.pmtiles is rebuilt with u0..u23 (UTCI x 10) next to s0..s23."""
+    import subprocess
+    from coolpath.export import KIND_CODES  # noqa: F401  (kind 2 = indoor)
+    s = cfg["solweig"]
+    app = ROOT / "site" / "app" / "data"
+    path = app / "demo_network.json"
+    net = json.loads(path.read_text())
+    times = net["times"]
+    shade_days = [d[5:].replace("-", "") for d in cfg["study"]["dates"]]
+    pair = dict(zip(shade_days, s["dates"]))                    # "0621" -> "2025-06-24", "0801" -> "2025-07-29"
+    lab_of = {t: label(cfg, int(t[-2:]), pair[t[:4]]) for t in times}
+    refs = city_refs(cfg)
+    kind = np.asarray(net["edges"]["kind"])
+    n = len(kind)
+    # per demo edge and SOLWEIG label: length-weighted mean UTCI
+    U = {}
+    demo1 = pd.read_parquet(folder(cfg) / "edges_heat.parquet")
+    for h in s["hours"]:
+        U[label(cfg, h, s["dates"][0])] = demo1[f"utci_{label(cfg, h, s['dates'][0])}"].to_numpy(np.float64)
+    dp = pd.read_parquet(city_folder(cfg) / "demo_points.parquet", columns=["pid", "edge", "seg_m"])
+    for date in s["dates"][1:]:
+        sol = pd.concat([pd.read_parquet(f, columns=["pid", *[f"utci_{h:02d}" for h in s["hours"]]])
+                         for f in sorted((city_folder(cfg) / "results" / date / "out").glob("points_*.parquet"))])
+        m = dp.merge(sol, on="pid", how="left")
+        w = np.bincount(m.edge, m.seg_m, n)
+        for h in s["hours"]:
+            ok = m[f"utci_{h:02d}"].notna().to_numpy()
+            U[label(cfg, h, date)] = np.bincount(m.edge[ok], m.seg_m[ok] * m[f"utci_{h:02d}"][ok], n) / np.where(w > 0, w, np.nan)
+    rnd = lambda a: [None if (k == 2 or not np.isfinite(x)) else round(float(x), 1) for x, k in zip(a, kind)]
+    net["U"] = [rnd(U[lab_of[t]]) for t in times]
+    net["heat"] = {"u_sun": [round(refs[lab_of[t]][0], 2) for t in times], "u_bldg": [round(refs[lab_of[t]][1], 2) for t in times],
+                   "clip": [-1, 1.5], "solweig_dates": pair,
+                   "note": "UTCI from SOLWEIG for the hottest clear day near each shade date; sun at h - 0:30"}
+    missing = sum(v is None for t in net["U"] for v, k in zip(t, kind) if k != 2)
+    path.write_text(json.dumps(net, separators=(",", ":"), allow_nan=False))
+    print(f"demo_network.json: U for {len(times)} times x {n} edges, {missing} outdoor values missing, "
+          f"{path.stat().st_size / 1e6:.1f} MB")
+
+    # city sidewalks: shade share s0..s23 (phase-9 definition) and UTCI x 10 u0..u23, one feature per graph edge
+    proc = cfg["paths"]["processed"]
+    ge = gpd.read_parquet(proc / "graph_edges.parquet", columns=["edge_id", "geometry"])
+    tab = pd.read_parquet(proc / "edges_shade.parquet", columns=["edge_id", "length", *[f"L_sun_{t}" for t in times]])
+    eh = pd.read_parquet(city_folder(cfg) / "edges_heat_city.parquet", columns=["edge_id", *[f"utci_{lab_of[t]}" for t in times]])
+    ge = ge.merge(tab, on="edge_id").merge(eh, on="edge_id", how="left")
+    for i, t in enumerate(times):
+        ge[f"s{i}"] = np.clip(np.round(100 * (1 - ge[f"L_sun_{t}"] / ge.length.clip(lower=1e-6))), 0, 100).astype(np.uint8)
+        ge[f"u{i}"] = np.round(10 * ge[f"utci_{lab_of[t]}"].fillna(0)).astype(np.int16)
+    ge = ge[["edge_id", *[f"s{i}" for i in range(len(times))], *[f"u{i}" for i in range(len(times))], "geometry"]].to_crs(4326)
+    seq = cfg["paths"]["interim"] / "city_shade.geojsonl"
+    seq.unlink(missing_ok=True)
+    ge.to_file(seq, driver="GeoJSONSeq")
+    pm = app / "city_shade.pmtiles"
+    tip = ROOT.parent / "envs" / "tiles" / "bin" / "tippecanoe"
+    subprocess.run([str(tip) if tip.exists() else "tippecanoe", "-o", str(pm), "--force", "-l", "sidewalks",
+                    "--minimum-zoom=13", "--maximum-zoom=16", "--drop-densest-as-needed", "--no-tile-size-limit", "-q",
+                    str(seq)], check=True)
+    print(f"city_shade.pmtiles: {len(ge)} edges, {pm.stat().st_size / 1e6:.1f} MB")
+
+
 def main(args):
     cfg = load_config()
     steps = {"met": met, "inputs": inputs, "network": network, "figure": figure, "routes": routes,
              "frontier": frontier, "city-points": city_points, "city-package": city_package,
              "city-shade": city_shade, "city-bundle": city_bundle, "city-collect": city_collect,
-             "city-routes": city_routes, "city-sensitivity": city_sensitivity, "city-frontier": city_frontier}
+             "city-routes": city_routes, "city-sensitivity": city_sensitivity, "city-frontier": city_frontier,
+             "web-export": web_export}
     for a in args or ["met", "inputs"]:
         steps[a](cfg)
 

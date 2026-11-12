@@ -124,6 +124,14 @@ export function shadeRamp(prop) {          // shade share (%) -> sun orange ... 
   return ["interpolate", ["linear"], ["get", prop], 0, COLORS.sun, 40, "#e9b36a", 70, "#6fb0c8", 100, COLORS.cool];
 }
 
+// UTCI x 10 (phase 10, SOLWEIG) -> the same sun orange ... cool cyan, hot at the orange end; 32-46 C covers the
+// summer afternoons of both SOLWEIG days (46 C = extreme heat stress)
+export const UTCI_STOPS = [320, COLORS.cool, 380, "#6fb0c8", 420, "#e9b36a", 460, COLORS.sun];
+export function utciRamp(prop) {
+  return ["interpolate", ["linear"], ["get", prop], ...UTCI_STOPS];
+}
+export const UTCI_NOTE = "UTCI: SOLWEIG for 24 June / 29 July 2025, the hottest clear days near each shade date (sun at hour − 0:30)";
+
 // numbers in text use a true minus sign (U+2212)
 export const pct = (x, d = 1) => `${(100 * x).toFixed(d)}%`.replace("-", "\u2212");
 

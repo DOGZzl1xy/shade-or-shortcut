@@ -35,6 +35,12 @@
   .keys i { display: inline-block; width: 8px; height: 8px; border-radius: 2px; margin-right: 4px; vertical-align: middle; }
   .hint { font-size: 12px; color: var(--dim); margin: 0; }
   .ramp { height: 6px; border-radius: 3px; margin-top: 10px; background: linear-gradient(to right, #ff8a3d, #e9b36a, #6fb0c8, #35d0e0); }
+  .seg button:disabled { opacity: 0.35; cursor: not-allowed; }
+  .unote { font-size: 11px; color: var(--dim); margin-top: 6px; line-height: 1.35; }
+  table.cmp td { white-space: nowrap; }
+  table.cmp .col-u { display: none; }                      /* heat mode: UTCI replaces the (empty) indoor column */
+  table.cmp.heat .col-u { display: table-cell; }
+  table.cmp.heat .col-in { display: none; }
   .ends { display: flex; justify-content: space-between; font: 10px var(--mono); color: var(--dim); }
   .pin { width: 26px; height: 26px; border-radius: 50%; background: #07080b; border: 2px solid #fff; color: #fff; cursor: grab;
     font: 12px/22px var(--mono); text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.6); }
@@ -56,7 +62,16 @@
   <div class="msg keep" id="msg" role="status"></div>
 
   <div class="block" id="time"></div>
-  <div class="ramp"></div><div class="ends"><span>sunny</span><span>shaded</span></div>
+  <div class="ramp" id="ramp"></div><div class="ends"><span id="ramp-lo">sunny</span><span id="ramp-hi">shaded</span></div>
+  <div class="unote" id="unote" hidden></div>
+
+  <div class="block">
+    <div class="label" style="margin-bottom:6px">Coolest by</div>
+    <div class="seg" id="metric">
+      <button data-m="shade" class="on">Shade</button>
+      <button data-m="heat" title="Thermal comfort (UTCI) from SOLWEIG: sun and shade, but also sky view, walls and surfaces">Heat (UTCI)</button>
+    </div>
+  </div>
 
   <div class="block">
     <div class="label" style="margin-bottom:6px">Through buildings</div>
@@ -69,10 +84,10 @@
 
   <div class="block keep" id="result" hidden>
     <table class="cmp">
-      <thead><tr><th></th><th>length</th><th>sun</th><th>shade</th><th>indoor</th></tr></thead>
+      <thead><tr><th></th><th>length</th><th>sun</th><th>shade</th><th class="col-in">indoor</th><th class="col-u" title="length-weighted UTCI along the walk">UTCI</th></tr></thead>
       <tbody>
-        <tr><td><span class="legend-swatch ls-short"></span>Shortest</td><td id="s-len"></td><td id="s-sun"></td><td id="s-sh"></td><td id="s-in"></td></tr>
-        <tr><td><span class="legend-swatch ls-cool"></span>Coolest</td><td id="c-len"></td><td id="c-sun"></td><td id="c-sh"></td><td id="c-in"></td></tr>
+        <tr><td><span class="legend-swatch ls-short"></span>Shortest</td><td id="s-len"></td><td id="s-sun"></td><td id="s-sh"></td><td id="s-in" class="col-in"></td><td id="s-u" class="col-u"></td></tr>
+        <tr><td><span class="legend-swatch ls-cool"></span>Coolest</td><td id="c-len"></td><td id="c-sun"></td><td id="c-sh"></td><td id="c-in" class="col-in"></td><td id="c-u" class="col-u"></td></tr>
       </tbody>
     </table>
     <div class="bar" id="cbar"></div>

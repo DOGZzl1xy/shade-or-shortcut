@@ -1,7 +1,8 @@
 """JS / Python consistency (spec phase 9): 100 random origin-destination pairs on the exported demo
 network, random scenario and time; the browser router must return the same paths as coolpath.routing,
 with lengths within 0.1 m. As in the analysis (phase 8), the shortest walk is always taken on the
-outdoor-only network and the coolest walk on the scenario network."""
+outdoor-only network and the coolest walk on the scenario network. Half of the pairs use the UTCI heat cost
+(phase 10), always on the outdoor network."""
 
 import json
 import shutil
@@ -11,7 +12,7 @@ import numpy as np
 import pytest
 
 from coolpath import ROOT
-from coolpath.export import load_network_json, scenario_csr
+from coolpath.export import heat_arrays, load_network_json, scenario_csr
 from coolpath.routing import path_edges, search
 
 NET = ROOT / "site" / "app" / "data" / "demo_network.json"
@@ -21,10 +22,18 @@ pytestmark = pytest.mark.skipif(not NET.exists() or shutil.which("node") is None
                                 reason="needs site/app/data/demo_network.json (scripts.phase_09_export) and node")
 
 
-def python_route(net, scenario, t, o, d):
+def python_route(net, scenario, t, o, d, metric="shade"):
     go, so = scenario_csr(net, "outdoor")
     z = np.zeros(len(so))
     _, _, p0, e0 = search(go, net["len"][so], z, z, z, o, "shortest")
+    if metric == "heat":
+        p = net["params"]
+        tp = np.array([p["theta"][k] for k in ("a", "k", "x0", "b")], float)
+        hs, hb = heat_arrays(net, so, t)
+        _, _, p1, e1 = search(go, net["len"][so], hs, z, hb, o, "shade", tp=tp, tree_factor=p["tree_factor"], l_indoor=z,
+                              indoor_factor=p["indoor_factor"])
+        a, c = so[path_edges(p0, e0, d)], so[path_edges(p1, e1, d)]
+        return a, c, net["len"][a].sum(), net["len"][c].sum()
     g, sel = scenario_csr(net, scenario)
     L = net["len"][sel]
     ls, lt, lb, li = (net["L"][k][t][sel] for k in ("sun", "tree", "bldg", "indoor"))
@@ -43,13 +52,16 @@ def test_js_matches_python(tmp_path):
     _, d0, _, _ = search(g, net["len"][sel], *(np.zeros(len(sel)),) * 3, 0, "shortest")
     reach = np.where(np.isfinite(d0))[0]                    # nodes connected in every scenario
     scen = ["outdoor", "no_penncard", "all"]
+    metrics = ["shade", "heat"] if "U" in net else ["shade"]
     ods = [{"o": int(rng.choice(reach)), "d": int(rng.choice(reach)), "scenario": scen[int(rng.integers(3))],
             "t": int(rng.integers(len(net["times"])))} for _ in range(100)]
+    for q in ods:
+        q["metric"] = metrics[int(rng.integers(len(metrics)))]
     (tmp_path / "ods.json").write_text(json.dumps(ods))
     js = json.loads(subprocess.run(["node", str(CLI), str(NET), str(tmp_path / "ods.json")], check=True,
                                    capture_output=True, text=True).stdout)
     for q, r in zip(ods, js):
-        a, c, la, lc = python_route(net, q["scenario"], q["t"], q["o"], q["d"])
+        a, c, la, lc = python_route(net, q["scenario"], q["t"], q["o"], q["d"], q["metric"])
         assert r["shortest"] == a.tolist() and r["coolest"] == c.tolist(), q
         assert abs(r["shortest_len"] - la) < 0.1 and abs(r["coolest_len"] - lc) < 0.1
         assert not (net["kind"][a] > 0).any()              # the shortest walk never uses indoor-side edges

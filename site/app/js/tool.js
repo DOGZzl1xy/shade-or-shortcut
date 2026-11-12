@@ -1,6 +1,6 @@
 // Route tool: two clicks -> shortest walk (outdoor network) and coolest walk (selected scenario), recomputed in the browser.
 import { handoff, nav, collapsible, baseStyle, getJSON, shadeRamp, COLORS, DEMO_CENTER, ATTR, pct, timeControl, newMap, edgeCoords, pathCoords,
-  routeLayers } from "./common.js?v=dev";
+  routeLayers, utciRamp, UTCI_STOPS, UTCI_NOTE } from "./common.js?v=dev";
 import { route } from "./router.js?v=dev";
 
 nav("tool.html");
@@ -9,7 +9,7 @@ collapsible($("side"));
 const [net, layers, hero] = await Promise.all([getJSON("data/demo_network.json"), getJSON("data/demo_layers.json"), getJSON("data/hero.json")]);
 $("status").hidden = true;
 
-let t = 7, scenario = "all", pts = [];
+let t = 7, scenario = "all", metric = "shade", pts = [];
 const caches = {};
 const MAX_SNAP_M = 60;          // a click farther than this from any sidewalk node is rejected, not snapped
 
@@ -21,6 +21,7 @@ for (let i = 0; i < E.u.length; i++) {
   for (let k = 0; k < T; k++) {
     const L = E.len[i] || 1e-6;
     props[`s${k}`] = E.kind[i] === 2 ? 100 : Math.round(100 * (1 - net.L.sun[k][i] / L));
+    props[`u${k}`] = net.U ? Math.round(10 * (net.U[k][i] ?? 0)) : 0;          // UTCI x 10 (phase 10)
   }
   features.push({ type: "Feature", properties: props, geometry: { type: "LineString", coordinates: edgeCoords(net, i) } });
 }
@@ -83,10 +84,24 @@ markers.forEach((mk, i) => mk.on("dragend", () => {
 }));
 const mp = (x, len) => `${Math.round(x)} m<small>${pct(x / len, 0)}</small>`;
 
+const SHADE_RAMP = "linear-gradient(to right, #ff8a3d, #e9b36a, #6fb0c8, #35d0e0)";
+const UTCI_RAMP = `linear-gradient(to right, ${UTCI_STOPS.filter((_, i) => i % 2).reverse().join(", ")})`;
+function legend() {
+  const heat = metric === "heat";
+  $("ramp").style.background = heat ? UTCI_RAMP : SHADE_RAMP;
+  $("ramp-lo").textContent = heat ? "46 °C+" : "sunny";
+  $("ramp-hi").textContent = heat ? "32 °C · UTCI" : "shaded";
+  $("unote").hidden = !heat;
+  $("unote").textContent = UTCI_NOTE + ". Indoor passages have no UTCI, so heat routing stays outdoors.";
+  document.querySelectorAll("#scen button").forEach((b) => { b.disabled = heat; });
+  document.querySelector("table.cmp").classList.toggle("heat", heat);
+}
+
 function render() {
-  if (map.getLayer("net")) map.setPaintProperty("net", "line-color", shadeRamp(`s${t}`));
+  const sc = metric === "heat" ? "outdoor" : scenario;           // indoor parts have no UTCI
+  if (map.getLayer("net")) map.setPaintProperty("net", "line-color", metric === "heat" ? utciRamp(`u${t}`) : shadeRamp(`s${t}`));
   if (map.getLayer("indoor")) {
-    const f = scenario === "outdoor" ? ["==", ["get", "kind"], -1] : scenario === "no_penncard" ? ["all", ["==", ["get", "kind"], 2], ["==", ["get", "pc"], 0]] : ["==", ["get", "kind"], 2];
+    const f = sc === "outdoor" ? ["==", ["get", "kind"], -1] : sc === "no_penncard" ? ["all", ["==", ["get", "kind"], 2], ["==", ["get", "pc"], 0]] : ["==", ["get", "kind"], 2];
     map.setFilter("indoor", f);
   }
   markers.forEach((mk, i) => {
@@ -96,7 +111,7 @@ function render() {
   // the sidewalk shade shares the orange-cyan colours of the walks, so it is dimmed while walks are shown
   if (map.getLayer("net")) map.setPaintProperty("net", "line-opacity", pts.length < 2 ? 0.75 : 0.4);
   if (pts.length < 2) { map.getSource("paths")?.setData({ type: "FeatureCollection", features: [] }); $("result").hidden = true; return; }
-  const r = route(net, scenario, t, pts[0], pts[1], caches);
+  const r = route(net, sc, t, pts[0], pts[1], caches, metric);
   const feat = (p, role) => ({ type: "Feature", properties: { role }, geometry: { type: "LineString", coordinates: pathCoords(net, p.edges, pts[0]) } });
   // indoor edges of the coolest walk, each in the walking direction (the line offset depends on it)
   const indoor = [];
@@ -112,13 +127,17 @@ function render() {
     $(`${pre}-sun`).innerHTML = mp(p.sun, p.length);
     $(`${pre}-sh`).innerHTML = mp(p.tree + p.bldg, p.length);
     $(`${pre}-in`).innerHTML = p.indoor > 0 ? mp(p.indoor, p.length) : "–";
+    $(`${pre}-u`).textContent = Number.isFinite(p.utci) ? `${p.utci.toFixed(1)}°` : "–";
   };
   fill(r.shortest, "s"); fill(r.coolest, "c");
   const c = r.coolest, seg = [["sun", COLORS.sun], ["tree", COLORS.tree], ["bldg", COLORS.bldg], ["indoor", COLORS.indoor]];
   $("cbar").innerHTML = seg.map(([k, col]) => `<span title="${k}" style="width:${(100 * c[k]) / c.length}%;background:${col}"></span>`).join("");
   const dSun = r.shortest.sun - c.sun, dLen = c.length - r.shortest.length;
-  const dC = (r.shortest.C - c.C) / r.shortest.C;
-  $("verdict").innerHTML = dSun <= 0.05
+  const dC = (r.shortest.C - c.C) / r.shortest.C, dU = r.shortest.utci - c.utci;
+  $("verdict").innerHTML = metric === "heat"
+    ? (dU < 0.05 ? "No cooler option on this trip."
+      : `The coolest walk is <b class="cool">${dU.toFixed(1)} °C</b> cooler on average (UTCI ${c.utci.toFixed(1)} vs ${r.shortest.utci.toFixed(1)} °C) for <b>${dLen >= 0 ? "+" : "−"}${Math.abs(Math.round(dLen))} m</b> of walking.`)
+    : dSun <= 0.05
     ? (c.indoor > 0 && dC > 0.005
       ? `No route with less sun, but the coolest walk spends <b class="indoor">${Math.round(c.indoor)} m</b> indoors: ${pct(dC, 0)} lower heat exposure.`
       : "No cooler option on this trip.")
@@ -160,5 +179,12 @@ $("scen").addEventListener("click", (e) => {
   document.querySelectorAll("#scen button").forEach((x) => x.classList.toggle("on", x === b));
   render();
 });
+$("metric").addEventListener("click", (e) => {
+  const b = e.target.closest("button"); if (!b) return;
+  metric = b.dataset.m;
+  document.querySelectorAll("#metric button").forEach((x) => x.classList.toggle("on", x === b));
+  legend(); render();
+});
+legend();
 $("reset").addEventListener("click", () => { pts = []; msg(""); render(); });
 $("swap").addEventListener("click", () => { if (pts.length === 2) { pts = [pts[1], pts[0]]; render(); } });
