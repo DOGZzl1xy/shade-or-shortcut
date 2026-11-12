@@ -179,11 +179,12 @@ export async function getJSON(url) {
   return r.json();
 }
 
-// ---- sidewalk colours. Shade share (%) runs sun orange -> cool cyan; UTCI (x 10) cool cyan -> sun orange over 34-46 C:
-// shade on a summer morning (about 34 C) to full sun in the afternoon (46 C = extreme heat stress), one scale for every
-// hour so hours compare. Legends always read low -> high, left to right.
-export const SHADE_STOPS = [0, COLORS.sun, 40, "#e9b36a", 70, "#6fb0c8", 100, COLORS.cool];
-export const UTCI_STOPS = [340, COLORS.cool, 390, "#6fb0c8", 430, "#e9b36a", 460, COLORS.sun];
+// ---- sidewalk colours. Shade share (%) runs sun orange -> cool cyan; UTCI (x 10) cool cyan -> sun orange over 36-46 C:
+// morning shade (36 C and below) to full afternoon sun (46 C = extreme heat stress), one scale for every hour so hours
+// compare; afternoon shade (about 41 C) sits on the cool side. The middle stops are pale teal and amber, not the grey
+// that a straight blue -> orange blend passes through. Legends always read low -> high, left to right.
+export const SHADE_STOPS = [0, COLORS.sun, 40, "#f0c26a", 70, "#8fd0c4", 100, COLORS.cool];
+export const UTCI_STOPS = [360, COLORS.cool, 405, "#8fd0c4", 435, "#f0c26a", 460, COLORS.sun];
 export const shadeRamp = (prop) => ["interpolate", ["linear"], ["get", prop], ...SHADE_STOPS];
 export const utciRamp = (prop) => ["interpolate", ["linear"], ["get", prop], ...UTCI_STOPS];
 export const sidewalkColor = (m, t) => (m === "heat" ? utciRamp(`u${t}`) : shadeRamp(`s${t}`));
@@ -206,7 +207,7 @@ export function rampHTML(stops, ticks, { lo = stops[0], hi = stops[stops.length 
 }
 export function sidewalkLegend(m, { note = true } = {}) {
   return m === "heat"
-    ? rampHTML(UTCI_STOPS, [[340, "34"], [380, "38"], [420, "42"], [460, "46 °C+"]],
+    ? rampHTML(UTCI_STOPS, [[360, "≤36"], [400, "40"], [430, "43"], [460, "46 °C+"]],
       { title: "Sidewalk heat · UTCI", note: note ? UTCI_NOTE : "" })
     : rampHTML(SHADE_STOPS, [[0, "0%"], [50, "50%"], [100, "100% shaded"]],
       { title: "Sidewalk shade · share of length", note: note ? SHADE_NOTE : "" });
@@ -224,7 +225,7 @@ export const GRID_RAMPS = {
   no_alt_share: { stops: [0.2, COLORS.cool, 0.6, "#c9a36a", 1, COLORS.sun], ticks: [[0.2, "20%"], [0.6, "60%"], [1, "100%"]] },
   sun_share: { stops: [0.4, COLORS.cool, 0.7, "#c9a36a", 0.95, COLORS.sun], ticks: [[0.4, "40%"], [0.7, "70%"], [0.95, "95%"]] },
   network_km_km2: { stops: [10, "#1d2733", 30, "#4b6b8a", 55, "#cfe3ff"], ticks: [[10, "10"], [30, "30"], [55, "55 km/km²"]] },
-  u_short: { stops: [42.5, COLORS.cool, 44, "#e9b36a", 45.5, COLORS.sun], ticks: [[42.5, "42.5"], [44, "44"], [45.5, "45.5 °C"]] },
+  u_short: { stops: [42.5, COLORS.cool, 44, "#f0c26a", 45.5, COLORS.sun], ticks: [[42.5, "42.5"], [44, "44"], [45.5, "45.5 °C"]] },
   u_cool: { stops: [0, HELP[0], 0.3, HELP[1], 1, COLORS.cool], ticks: [[0, "0"], [0.3, "0.3"], [1, "1 °C+"]] },
   ext_red: { stops: [0, HELP[0], 0.2, HELP[1], 0.5, COLORS.cool], ticks: [[0, "0%"], [0.2, "20%"], [0.5, "50%+"]] },
 };

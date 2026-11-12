@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The walk, felt – Shade or Shortcut (preview)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500&family=Space+Grotesk:wght@500;600&family=Space+Mono&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="vendor/maplibre-gl.css">
+<link rel="stylesheet" href="css/site.css?v=dev">
+<style>
+  /* preview of story screen 13: the map fills the window, text on the left, the profile at the bottom */
+  #map { position: fixed; inset: 0; }
+  .shade-fade { position: fixed; inset: 0; pointer-events: none; z-index: 1;
+    background: radial-gradient(ellipse at 62% 42%, rgba(7,8,11,0) 0%, rgba(7,8,11,0.2) 55%, rgba(7,8,11,0.75) 100%); }
+  .card { position: fixed; z-index: 3; left: 28px; top: calc(var(--nav-h) + 28px); width: 400px; }
+  .card h2 { font: 500 30px/1.15 var(--display); margin: 8px 0 10px; }
+  .card h2 b { font-weight: 600; }
+  .card p { margin: 0; font-size: 14px; color: var(--dim); }
+  .readout { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 16px; }
+  .readout .who { font: 11px var(--mono); text-transform: uppercase; letter-spacing: 0.12em; }
+  .readout .now { font: 500 30px/1.1 var(--mono); margin-top: 4px; }
+  .readout .sub { font-size: 12px; color: var(--dim); margin-top: 2px; line-height: 1.4; }
+  .readout .sub b { color: var(--ink); font-weight: 500; font-family: var(--mono); }
+  .chartbox { position: fixed; z-index: 3; left: 456px; right: 28px; bottom: 26px; padding: 12px 16px 8px; }
+  .chartbox .row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  .wc-axis text, .wc-band { font: 10px var(--mono); fill: var(--dim); }
+  .wc-band { text-transform: uppercase; letter-spacing: 0.08em; }
+  .wc-grid { stroke: rgba(255,255,255,0.06); }
+  .wc-line { fill: none; stroke-width: 2.2; stroke-linejoin: round; }
+  .wc-dot { fill: #fff; stroke-width: 3; }
+  .walk-tag { font: 12px/1 var(--mono); padding: 4px 7px; border-radius: 6px; background: rgba(7,8,11,0.88); color: #fff;
+    border: 1px solid var(--c); white-space: nowrap; }
+  .end { margin-top: 14px; font-size: 15px; min-height: 44px; opacity: 0; transition: opacity 0.8s; }
+  .end.on { opacity: 1; }
+  .pinlab { font: 11px var(--mono); letter-spacing: 0.08em; text-transform: uppercase; color: #fff; background: rgba(7,8,11,0.85);
+    border: 1px solid var(--line-strong); border-radius: 10px; padding: 3px 8px; white-space: nowrap; }
+</style>
+</head>
+<body>
+<div id="map"></div>
+<div class="shade-fade"></div>
+<div class="card panel">
+  <div class="label" id="eyebrow">Heat · the walk, felt</div>
+  <h2 id="headline">Same station, same door.</h2>
+  <p id="lede"></p>
+  <div class="readout">
+    <div><div class="who sun">Shortest walk</div><div class="now" id="n-short">–</div><div class="sub" id="s-short"></div></div>
+    <div><div class="who cool">Coolest walk</div><div class="now" id="n-cool">–</div><div class="sub" id="s-cool"></div></div>
+  </div>
+  <div class="end" id="end"></div>
+</div>
+<div class="chartbox panel">
+  <div class="row"><div class="label">UTCI along the walk · distance walked</div>
+    <div class="row"><div class="chips" id="hours"></div><button class="ghost" id="replay">Replay</button></div></div>
+  <div id="chart"></div>
+</div>
+<script src="vendor/maplibre-gl.js"></script>
+<script type="module">
+  import { nav, baseStyle, getJSON, newMap, DEMO_CENTER } from "./js/common.js?v=dev";
+  import { createWalk } from "./js/walk.js?v=dev";
+  nav("index.html");
+  const $ = (id) => document.getElementById(id);
+  const data = await getJSON("data/walk.json");
+  const map = newMap({ container: "map", center: DEMO_CENTER, zoom: 15.4, interactive: false,
+    style: baseStyle({}, [], { base: 0.55, labelOpacity: 0.45 }) });
+  const station = data.station.replace(/-/g, "–"), line = data.line.startsWith("Regional") ? "Regional Rail" : data.line[0];
+  let idx = data.hours.findIndex((h) => h.time.endsWith("_15"));
+  const fit = (e) => map.fitBounds(walk.bounds(e), { padding: { left: 470, right: 70, top: 90, bottom: 300 }, duration: 0, maxZoom: 16.6 });
+  const m = (x) => `${Math.round(x).toLocaleString("en-US")} m`;
+  let walk;
+  map.once("load", () => {
+    walk = createWalk(map, data, $("chart"), {
+      onStep: (s) => {
+        for (const r of ["short", "cool"]) {
+          $(`n-${r}`).textContent = s[r].now === null ? "–" : `${s[r].now.toFixed(1)} °C`;
+          $(`s-${r}`).innerHTML = `walked <b>${m(s[r].walked)}</b><br><b>${m(s[r].ext)}</b> above 46 °C so far`;
+        }
+      },
+      onEnd: (W) => {
+        const d = W.cool.total - W.short.total;
+        $("end").innerHTML = `The coolest walk is <b>${m(d)}</b> longer and spends <b class="cool">${m(W.cool.ext)}</b> in extreme heat stress instead of <b class="sun">${m(W.short.ext)}</b>; on average it feels <b class="cool">${(W.short.mean_u - W.cool.mean_u).toFixed(1)} °C</b> cooler.`;
+        $("end").classList.add("on");
+      },
+    });
+    // station and home pins
+    const pin = (txt, c, anchor) => { const el = document.createElement("div"); el.className = "pinlab"; el.textContent = txt;
+      return new maplibregl.Marker({ element: el, anchor, offset: [0, -10] }).setLngLat(c).addTo(map); };
+    const e0 = data.hours[idx];
+    pin(`${station} (${line})`, [e0.short.lon[0], e0.short.lat[0]], "bottom-left");
+    pin("home", [e0.short.lon.at(-1), e0.short.lat.at(-1)], "bottom");
+    run();
+  });
+  function run() {
+    const e = data.hours[idx], h = e.time.slice(5);
+    $("lede").textContent = `${station} (${line}) to a home 1.1 km away · June 24, ${h}:00 · both walkers keep the same pace`;
+    $("end").classList.remove("on");
+    document.querySelectorAll("#hours button").forEach((b) => b.classList.toggle("on", +b.dataset.i === idx));
+    fit(e);
+    const W = walk.play(e);
+    $("headline").innerHTML = `On the shortest walk home, <b class="sun">${m(W.short.ext)}</b> are in extreme heat stress. On the coolest, <b class="cool">${m(W.cool.ext)}</b>.`;
+  }
+  $("hours").innerHTML = data.hours.map((h, i) => [i, h.time.slice(5)]).filter(([, h]) => h >= 11 && h <= 16)
+    .map(([i, h]) => `<button data-i="${i}">${h}:00</button>`).join("");
+  $("hours").addEventListener("click", (ev) => { const b = ev.target.closest("button"); if (!b) return; idx = +b.dataset.i; run(); });
+  $("replay").addEventListener("click", run);
+</script>
+</body>
+</html>

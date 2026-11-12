@@ -28,6 +28,7 @@ heat-stress category (Bröde et al. 2012: < 26 none, 26-32 moderate, 32-38 stron
 """
 
 import json
+from pathlib import Path
 import sys
 import time
 
@@ -1056,6 +1057,21 @@ def demo_utci(cfg, date):
     of `date`: points every 2 m (demo_points); off bridges the nearest pixel with UTCI in the server's core rasters
     (as the server's post-processing does), on bridge decks the nearest point the server sampled on a deck (deck UTCI
     from the deck pixel's Tmrt) within 5 m, else the raster. Returns {label: array per edge} (NaN on indoor parts)."""
+    edges, px, py, eid, seg, on_b, vals, hours = demo_point_utci(cfg, date)
+    n = len(edges)
+    w = np.bincount(eid, seg, n)
+    out = {}
+    for j, h in enumerate(hours):
+        ok = np.isfinite(vals[:, j])
+        wt = np.bincount(eid[ok], seg[ok], n)
+        out[label(cfg, h, date)] = np.bincount(eid[ok], seg[ok] * vals[ok, j], n) / np.where(wt > 0, wt, np.nan)
+    out["_points"] = {"points": len(px), "bridge": int(on_b.sum()), "edges_sampled": int((w > 0).sum())}
+    return out
+
+
+def demo_point_utci(cfg, date):
+    """demo_utci's per-point values: (edges, x, y, edge index, seg, on_bridge, UTCI points x report hours, hours); the
+    points run along each edge from its first vertex (u) to its last (v)."""
     from scipy.spatial import cKDTree
     s = cfg["solweig"]
     d = city_folder(cfg)
@@ -1089,15 +1105,7 @@ def demo_utci(cfg, date):
         dist, k = cKDTree(bp[["x", "y"]].to_numpy()).query(np.c_[px[on_b], py[on_b]])
         near = dist <= 5
         vals[np.where(on_b)[0][near]] = bp[cols].to_numpy()[k[near]]
-    n = len(edges)
-    w = np.bincount(eid, seg, n)
-    out = {}
-    for j, h in enumerate(hours):
-        ok = np.isfinite(vals[:, j])
-        wt = np.bincount(eid[ok], seg[ok], n)
-        out[label(cfg, h, date)] = np.bincount(eid[ok], seg[ok] * vals[ok, j], n) / np.where(wt > 0, wt, np.nan)
-    out["_points"] = {"points": len(px), "bridge": int(on_b.sum()), "edges_sampled": int((w > 0).sum())}
-    return out
+    return edges, px, py, eid, seg, on_b, vals, hours
 
 
 def web_export(cfg):
@@ -1218,13 +1226,71 @@ def web_layers(cfg):
     print(cell[["u_short", "u_cool", "ext_m", "ext_red", "same"]].describe().round(3).to_string())
 
 
+def web_walk(cfg):
+    """The story's walk, felt (site/app/data/walk.json): the first opener walk of hero.json (station -> home), as the
+    shortest and the coolest walk (UTCI cost, outdoor network, the browser's router via tests/js/route_cli.mjs) at
+    every report hour of the first date. Each walk is the chain of its edges' 2 m demo points (demo_point_utci: the
+    values behind the website's edge means, bridge decks included), in walking order: lon / lat / UTCI per point."""
+    import subprocess
+    import tempfile
+    from pyproj import Transformer
+    app = ROOT / "site" / "app" / "data"
+    net = json.loads((app / "demo_network.json").read_text())
+    hero = json.loads((app / "hero.json").read_text())["opener"][0]
+    E, lon, lat = net["edges"], np.asarray(net["nodes"]["lon"]), np.asarray(net["nodes"]["lat"])
+    outdoor = np.zeros(len(lon), bool)
+    for u_, v_, k in zip(E["u"], E["v"], E["kind"]):
+        if k == 0:
+            outdoor[u_] = outdoor[v_] = True
+    kx = np.cos(np.radians(lat.mean()))
+    snap = lambda c: int(np.argmin(np.where(outdoor, ((lon - c[0]) * kx) ** 2 + (lat - c[1]) ** 2, np.inf)))
+    o, d = snap(hero["shortest"]["coords"][0]), snap(hero["shortest"]["coords"][-1])
+    date = cfg["study"]["dates"][0]
+    ts = [i for i, t in enumerate(net["times"]) if t.startswith(date[5:7] + date[8:10])]
+    with tempfile.TemporaryDirectory() as tmp:
+        q = Path(tmp) / "ods.json"
+        q.write_text(json.dumps([{"o": o, "d": d, "scenario": "outdoor", "t": t, "metric": "heat"} for t in ts]))
+        res = json.loads(subprocess.run(["node", str(ROOT / "tests" / "js" / "route_cli.mjs"), str(app / "demo_network.json"), str(q)],
+                                        check=True, capture_output=True, text=True).stdout)
+    edges, px, py, eid, seg, on_b, vals, hours = demo_point_utci(cfg, date)
+    assert len(edges) == len(E["u"]), "demo_network.json and the demo points disagree: rerun web-export"
+    lo_all, la_all = Transformer.from_crs(cfg["project"]["crs"], 4326, always_xy=True).transform(px, py)
+    order = np.argsort(eid, kind="stable")
+    first = np.searchsorted(eid[order], np.arange(len(E["u"]) + 1))
+
+    def profile(path, j):                            # points of the path's edges in walking order
+        idx, node = [], o
+        for i in path:
+            pts = order[first[i]:first[i + 1]]
+            fwd = E["u"][i] == node
+            idx.extend(pts if fwd else pts[::-1])
+            node = E["v"][i] if fwd else E["u"][i]
+        idx = np.asarray(idx)
+        u = vals[idx, j]
+        L = seg[idx]
+        return {"lon": np.round(lo_all[idx], 6).tolist(), "lat": np.round(la_all[idx], 6).tolist(),
+                "u": [None if not np.isfinite(x) else round(float(x), 1) for x in u], "seg": np.round(L, 2).tolist(),
+                "length": round(float(L.sum()), 1), "mean_u": round(float(np.nansum(u * L) / L[np.isfinite(u)].sum()), 2),
+                "extreme_m": round(float(L[u >= UTCI_BINS[-1]].sum()), 0)}
+
+    out = []
+    for t, r in zip(ts, res):
+        h = int(net["times"][t][5:])
+        j = hours.index(h)
+        out.append({"time": net["times"][t], "short": profile(r["shortest"], j), "cool": profile(r["coolest"], j)})
+        print(net["times"][t], {k: (out[-1][k]["length"], out[-1][k]["mean_u"], out[-1][k]["extreme_m"]) for k in ("short", "cool")})
+    (app / "walk.json").write_text(json.dumps({"station": hero["station"], "line": hero["line"], "date": date,
+                                               "extreme": UTCI_BINS[-1], "hours": out}, separators=(",", ":")))
+    print(f"walk.json: {(app / 'walk.json').stat().st_size / 1e3:.0f} kB")
+
+
 def main(args):
     cfg = load_config()
     steps = {"met": met, "inputs": inputs, "network": network, "figure": figure, "routes": routes,
              "frontier": frontier, "city-points": city_points, "city-package": city_package,
              "city-shade": city_shade, "city-bundle": city_bundle, "city-collect": city_collect,
              "city-routes": city_routes, "city-sensitivity": city_sensitivity, "city-frontier": city_frontier,
-             "web-export": web_export, "web-layers": web_layers}
+             "web-export": web_export, "web-layers": web_layers, "web-walk": web_walk}
     for a in args or ["met", "inputs"]:
         steps[a](cfg)
 
