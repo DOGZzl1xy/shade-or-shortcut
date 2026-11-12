@@ -1,14 +1,30 @@
 {
-  "date": "2025-06-24",
-  "source": "https://archive-api.open-meteo.com/v1/archive (models=era5)",
-  "grid_lat": 40.0,
-  "grid_lon": -75.25,
-  "grid_elevation_m": 28.0,
-  "met_file": "met_2025-06-24.txt",
-  "ta_max_c": 38.8,
-  "ta_15h_c": 38.5,
-  "rh_15h": 32.0,
-  "wind_15h_ms": 2.8,
-  "kdown_max_wm2": 936.0,
-  "cloud_cover_mean_report_hours": 31.333333333333332
+  "2025-06-24": {
+    "date": "2025-06-24",
+    "source": "https://archive-api.open-meteo.com/v1/archive (models=era5)",
+    "grid_lat": 40.0,
+    "grid_lon": -75.25,
+    "grid_elevation_m": 28.0,
+    "met_file": "met_2025-06-24.txt",
+    "ta_max_c": 38.8,
+    "ta_15h_c": 38.5,
+    "rh_15h": 32.0,
+    "wind_15h_ms": 2.8,
+    "kdown_max_wm2": 936.0,
+    "cloud_cover_mean_report_hours": 31.333333333333332
+  },
+  "2025-07-29": {
+    "date": "2025-07-29",
+    "source": "https://archive-api.open-meteo.com/v1/archive (models=era5)",
+    "grid_lat": 40.0,
+    "grid_lon": -75.25,
+    "grid_elevation_m": 28.0,
+    "met_file": "met_2025-07-29.txt",
+    "ta_max_c": 36.1,
+    "ta_15h_c": 36.1,
+    "rh_15h": 43.0,
+    "wind_15h_ms": 1.75,
+    "kdown_max_wm2": 914.0,
+    "cloud_cover_mean_report_hours": 32.333333333333336
+  }
 }

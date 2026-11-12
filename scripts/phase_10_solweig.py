@@ -901,12 +901,156 @@ def city_routes(cfg):
         print(mb.round(4).to_string())
 
 
+def city_sensitivity(cfg):
+    """Overnight server jobs (results/extra/<job>/out) against the main run of the same date, point by point.
+
+    tau05 / tau15: vegetation transmissivity 5 % / 15 % (SOLWEIG's fixed 3 %; Konarska et al. 2014 measured
+    1.3-5.3 % through foliated crowns) on 40 cores stratified by canopy cover: hourly medians of UTCI at sunlit,
+    tree- and building-shaded points (classes from the main run's SOLWEIG shadow) and the tree relief
+    (U_sun - U_tree) / (U_sun - U_bldg). margin800: the 8 cores with most > 150 m buildings 400-800 m away, run with an
+    800 m margin: UTCI differences and shade-class changes against the 400 m margin. Table + figure."""
+    import matplotlib.pyplot as plt
+    s = cfg["solweig"]
+    r = city_folder(cfg) / "results"
+    main1 = r / s["dates"][0] / "out"
+    hours = s["hours"]
+
+    def paired(job, cols):
+        files = sorted((r / "extra" / job / "out").glob("points_*.parquet"))
+        parts = []
+        for f in files:
+            a = pd.read_parquet(main1 / f.name, columns=["pid", *cols])
+            b = pd.read_parquet(f, columns=["pid", *cols])
+            parts.append(a.merge(b, on="pid", suffixes=("_main", "_job")))
+        return pd.concat(parts, ignore_index=True), len(files)
+
+    res, rows = {"hours": hours}, []
+    cols = [f"{v}_{h:02d}" for h in hours for v in ("utci", "shadow")]
+    for job, tau in (("tau05", 0.05), ("tau15", 0.15)):
+        m, n = paired(job, cols)
+        res[job] = {"cores": n, "points": len(m), "transmissivity": tau}
+        for h in hours:
+            sh = m[f"shadow_{h:02d}_main"]
+            cls = {"sun": sh > 0.99, "tree": (sh > 0.02) & (sh < 0.05), "bldg": sh < 0.01}
+            for which, tag in (("main", 0.03), ("job", tau)):
+                u = {k: float(m.loc[v, f"utci_{h:02d}_{which}"].median()) for k, v in cls.items()}
+                rows.append({"job": job, "hour": h, "transmissivity": tag, **{f"u_{k}": x for k, x in u.items()},
+                             "tree_relief": (u["sun"] - u["tree"]) / (u["sun"] - u["bldg"]),
+                             "n_tree": int(cls["tree"].sum())})
+    tab = pd.DataFrame(rows).drop_duplicates(["hour", "transmissivity"])
+    res["transmissivity_by_hour"] = tab.drop(columns="job").to_dict("records")
+    m, n = paired("margin800", cols)
+    mg = []
+    for h in hours:
+        dd = m[f"utci_{h:02d}_job"] - m[f"utci_{h:02d}_main"]
+        flip = (m[f"shadow_{h:02d}_job"] < 0.5) != (m[f"shadow_{h:02d}_main"] < 0.5)
+        mg.append({"hour": h, "mean_diff": float(dd.mean()), "share_abs_gt_0.5": float((dd.abs() > 0.5).mean()),
+                   "share_abs_gt_0.1": float((dd.abs() > 0.1).mean()), "max_abs": float(dd.abs().max()),
+                   "shade_class_changed": float(flip.mean())})
+    res["margin800"] = {"cores": n, "points": len(m), "by_hour": mg}
+    (cfg["paths"]["tables"] / "phase_10_sensitivity.json").write_text(json.dumps(res, indent=2))
+    with pd.option_context("display.width", 200):
+        print(tab.pivot(index="hour", columns="transmissivity", values="tree_relief").round(3).to_string())
+        print(pd.DataFrame(mg).round(4).to_string(index=False))
+
+    fig, ax = plt.subplots(1, 2, figsize=(12, 4.6), facecolor="#fcfcfb")
+    for tau, col in ((0.03, "#2a78d6"), (0.05, "#1baf7a"), (0.15, "#eb6834")):
+        tt = tab[tab.transmissivity == tau]
+        ax[0].plot(tt.hour, tt.tree_relief, color=col, lw=2, marker="o", ms=4, label=f"{tau:.0%}" + (" (SOLWEIG)" if tau == 0.03 else ""))
+    ax[0].axhline(0.5, color="#9a9893", lw=1, ls="--")
+    ax[0].annotate("Wen et al. (tree = ½ building)", (hours[0], 0.5), xytext=(0, 5), textcoords="offset points", fontsize=9, color="#52514e")
+    ax[0].axhline(1, color="#9a9893", lw=0.8, ls=":")
+    ax[0].set(xlabel="hour (sun at h − 0:30)", ylabel="tree relief  (U_sun − U_tree) / (U_sun − U_bldg)", ylim=(0.3, 1.3))
+    ax[0].set_title(f"Tree shade stays as cool as building shade\nvegetation transmissivity, {res['tau05']['cores']} cores, "
+                    f"{s['dates'][0]}", loc="left", fontsize=11)
+    ax[0].legend(frameon=False, title="transmissivity", loc="lower right")
+    g = pd.DataFrame(mg)
+    ax[1].bar(g.hour - 0.2, 100 * g["share_abs_gt_0.1"], width=0.4, color="#2a78d6", label="|ΔUTCI| > 0.1 °C")
+    ax[1].bar(g.hour + 0.2, 100 * g["share_abs_gt_0.5"], width=0.4, color="#eb6834", label="|ΔUTCI| > 0.5 °C")
+    ax[1].set(xlabel="hour (sun at h − 0:30)", ylabel="share of sample points (%)")
+    ax[1].set_title(f"An 800 m margin changes almost nothing\n{res['margin800']['points']:,} points in the "
+                    f"{n} cores nearest the towers", loc="left", fontsize=11)
+    ax[1].legend(frameon=False)
+    for a in ax:
+        for sp_ in ("top", "right"):
+            a.spines[sp_].set_visible(False)
+        a.grid(axis="y", color="#e6e5e0", lw=0.8)
+    out = cfg["paths"]["figures"] / "phase_10_sensitivity.png"
+    fig.savefig(out, dpi=130, bbox_inches="tight", facecolor=fig.get_facecolor())
+    print("figure:", out)
+
+
+def city_frontier(cfg):
+    """City-wide version of `frontier`: the three costs (Wen et al. shade, shade with tree = building, UTCI relief)
+    at equal detour, fixed θ swept 0.05-0.6, for the city sample walks of >= 300 m at the key hour of every collected
+    date (pooled). Mean detour and mean change of the walk's length-weighted UTCI against the shortest walk."""
+    import matplotlib.pyplot as plt
+    from coolpath.routing import load_city_graph, search, tree_totals
+    s, rc = cfg["solweig"], cfg["routing"]
+    d = city_folder(cfg)
+    g, L, _ = load_city_graph(cfg)
+    e = pd.read_parquet(d / "edges_heat_city.parquet").set_index("edge_id").loc[g.edge_ids].reset_index()
+    par = pd.read_parquet(cfg["paths"]["processed"] / "trips_city_parcels.parquet", columns=["node", "stop_node", "stop_dist"])
+    par = par[par.stop_dist >= 300].reset_index(drop=True)
+    fac, z = rc["search_radius_factor"], np.zeros_like(L)
+    dates = [dd for dd in s["dates"] if f"utci_{label(cfg, s['hours'][0], dd)}" in e.columns]
+    thetas = (0.05, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6)
+    acc = {}                                   # (cost, θ) -> [sum detour, sum dutci, n]
+    t0 = time.time()
+    for dd in dates:
+        lab = label(cfg, cfg["study"]["key_hour"], dd)
+        ls, lt, lb = (e[f"L_{k}_{lab}"].to_numpy(np.float64) for k in ("sun", "tree", "bldg"))
+        u = e[f"utci_{lab}"].to_numpy(np.float64)
+        u_sun, u_bldg = np.nanmedian(u[e[f"L_sun_{lab}"] > 0.5 * e.length]), np.nanmedian(u[e[f"L_bldg_{lab}"] > 0.5 * e.length])
+        u = np.nan_to_num(u, nan=u_sun)
+        r = np.clip((u_sun - u) / (u_sun - u_bldg), -1, 1.5)
+        uL = u * L
+        costs = {"shade": (ls, lt, lb, rc["tree_factor"]), "shade_tf1": (ls, lt, lb, 1.0), "heat": (L * (1 - r), z, L * r, 0.5)}
+        for sn, grp in par.groupby("stop_node"):
+            o, dests = int(sn), grp.node.to_numpy(np.int64)
+            rad = max(grp.stop_dist.max(), 1.0) * fac + 1
+            _, _, p0, e0 = search(g, L, z, z, z, o, "shortest", max_dist=rad)
+            A = tree_totals(p0, e0, o, dests, L, uL, z, z, np.zeros(4), 0.5, 0.0, e0)
+            for name, (a, b, c, tf) in costs.items():
+                for th in thetas:
+                    _, _, p1, e1 = search(g, L, a, b, c, o, "shade", theta_fixed=th, tree_factor=tf, max_dist=rad)
+                    B = tree_totals(p1, e1, o, dests, L, uL, z, z, np.zeros(4), 0.5, 0.0, e0)
+                    ok = np.isfinite(A[:, 0]) & np.isfinite(B[:, 0])
+                    det = B[ok, 0] / A[ok, 0] - 1
+                    du = B[ok, 1] / B[ok, 0] - A[ok, 1] / A[ok, 0]
+                    v = acc.setdefault((name, th), [0.0, 0.0, 0])
+                    v[0] += det.sum(); v[1] += du.sum(); v[2] += int(ok.sum())
+        print(lab, f"{time.time() - t0:.0f} s", flush=True)
+    rows = [{"cost": k[0], "theta": k[1], "detour": v[0] / v[2], "dutci": v[1] / v[2], "trips": v[2]} for k, v in acc.items()]
+    fr = pd.DataFrame(rows)
+    (cfg["paths"]["tables"] / "phase_10_city_frontier.json").write_text(json.dumps(
+        {"labels": [label(cfg, cfg["study"]["key_hour"], dd) for dd in dates], "min_walk_m": 300, "rows": rows}, indent=2))
+    print(fr.round(4).to_string())
+    names = {"shade": ("shade classes, tree = ½ building (Wen et al.)", "#2a78d6"),
+             "shade_tf1": ("shade classes, tree = building", "#1baf7a"), "heat": ("SOLWEIG UTCI", "#eb6834")}
+    fig, ax = plt.subplots(figsize=(8, 5.2), facecolor="#fcfcfb")
+    for k, (lab_, col) in names.items():
+        f = fr[fr.cost == k]
+        ax.plot(f.detour * 100, -f.dutci, color=col, lw=2, marker="o", ms=5, label=lab_)
+    for sp_ in ("top", "right"):
+        ax.spines[sp_].set_visible(False)
+    ax.grid(color="#e6e5e0", lw=0.8)
+    ax.set_xlim(0, fr.detour.max() * 100 * 1.1)
+    ax.set(xlabel="mean detour over the shortest walk (%)", ylabel="mean UTCI along the walk: reduction (°C)")
+    ax.set_title(f"Same detour, cooler walk, city-wide\n{fr.trips.iloc[0] // len(dates):,} walks home from transit (≥ 300 m) × "
+                 f"{len(dates)} days at {cfg['study']['key_hour']}:00; points = fixed θ 0.05–0.6", loc="left", fontsize=11)
+    ax.legend(frameon=False, loc="lower right")
+    out = cfg["paths"]["figures"] / "phase_10_city_frontier.png"
+    fig.savefig(out, dpi=130, bbox_inches="tight", facecolor=fig.get_facecolor())
+    print("figure:", out)
+
+
 def main(args):
     cfg = load_config()
     steps = {"met": met, "inputs": inputs, "network": network, "figure": figure, "routes": routes,
              "frontier": frontier, "city-points": city_points, "city-package": city_package,
              "city-shade": city_shade, "city-bundle": city_bundle, "city-collect": city_collect,
-             "city-routes": city_routes}
+             "city-routes": city_routes, "city-sensitivity": city_sensitivity, "city-frontier": city_frontier}
     for a in args or ["met", "inputs"]:
         steps[a](cfg)
 
