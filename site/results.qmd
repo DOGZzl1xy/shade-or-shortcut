@@ -1,6 +1,6 @@
 ---
 title: "Results"
-subtitle: "How much sun a walk home can avoid, where, and what buildings add."
+subtitle: "How much sun and heat a walk home can avoid, where, and what buildings add."
 jupyter: python3
 ---
 

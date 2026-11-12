@@ -1,8 +1,10 @@
 # Shade or Shortcut — cooling-path-philly
 
-Shade-aware pedestrian routing for Philadelphia (MUSA 5500 final project). For every sidewalk
-segment and 24 summer hours, we model sun / tree shade / building shade from 2022 LiDAR, then compare
-the shortest path with the shade-weighted path (Wen et al. cost, dynamic θ) on walks home from transit.
+Shade- and heat-aware pedestrian routing for Philadelphia (MUSA 5500 final project). For every sidewalk
+segment and 24 hours of two hot summer days (June 24 and July 29, 2025), we model two things from 2022 LiDAR:
+**sun** (sun / tree shade / building shade, our own ray caster) and **heat** (mean radiant temperature and UTCI,
+SOLWEIG on the GPU). On walks home from transit we compare three routes: the **shortest**, the **shadiest**
+(Wen et al. shade cost, dynamic θ) and the **coolest** (the same θ on a UTCI cost).
 
 - **Website: <https://dogzzl1xy.github.io/shade-or-shortcut/>** (story, route tool, city shade map, data / methods / results)
 - [Technical notes](https://dogzzl1xy.github.io/shade-or-shortcut/technical.html): pipeline, parameters, processing decisions and validation
@@ -23,20 +25,33 @@ the shortest path with the shade-weighted path (Wen et al. cost, dynamic θ) on 
 | 7 | Summaries by mode and walk length, rapid-transit stations, 500 m grid clusters |
 | 8 | University City demo with indoor passages (41 annotated buildings, three scenarios) |
 | 9 | Website |
+| 10 | Heat: SOLWEIG mean radiant temperature and UTCI, city-wide on a rented GPU; coolest walks; sensitivity |
 
-## Key results so far (15:00, dynamic θ, trips of 300–800 m)
+## Key results (15:00, both days pooled, dynamic θ, trips of 300–800 m)
 
 City sample: walks home from the nearest rapid-transit station or high-frequency bus stop (≥ 6 departures
 per hour on one route-direction, weekday 15:00–19:00, SEPTA GTFS fall 2026, 2026-10-28), every residential
 parcel within 1.2 km network distance (431,100 trips; 17.5% of parcels have no such stop within 1.2 km).
+Hours are the hour ending then, with the sun of half an hour earlier (SOLWEIG's convention), for sun and heat alike.
 
-| | Sun reduction | Detour | Weighted-exposure reduction | No cooler alternative (< 2%) |
-| --- | --- | --- | --- | --- |
-| High-frequency bus | 9.7% | 0.44% | 1.08% | 61% |
-| Rapid transit | 16.0% | 0.64% | 1.90% | 50% |
+**Sun: the shadiest walk**
+
+| | Sun on shortest | Sun reduction | Detour | Weighted-exposure reduction | No cooler alternative (< 2%) |
+| --- | --- | --- | --- | --- | --- |
+| High-frequency bus | 77% | 7.8% | 0.37% | 0.84% | 63% |
+| Rapid transit | 70% | 12.4% | 0.48% | 1.55% | 55% |
+
+**Heat: the coolest walk** (UTCI; a sunlit sidewalk at 15:00 on June 24: 45.9 °C, building shade 41.3 °C, tree shade 40.6 °C)
+
+| | UTCI on shortest | ΔUTCI shadiest / coolest | Detour shadiest / coolest | Extreme-heat metres (≥ 46 °C) shadiest / coolest | Coolest = shadiest |
+| --- | --- | --- | --- | --- | --- |
+| High-frequency bus | 44.1 °C | −0.40 / −0.54 °C | 0.37% / 0.70% | −16% / −28% | 77% |
+| Rapid transit | 43.8 °C | −0.58 / −0.72 °C | 0.48% / 0.79% | −22% / −32% | 71% |
 
 Network density is the strongest correlate of whether sun can be avoided; building height mainly sets
-how sunny the walk is to begin with. Full results: the [website](https://dogzzl1xy.github.io/shade-or-shortcut/results.html).
+how sunny the walk is to begin with. In the heat model tree shade is as cool as building shade in the
+afternoon (the shade cost counts it as half as good), and at equal detour the UTCI cost cools walks 12–14%
+more than the shade cost. Full results: the [website](https://dogzzl1xy.github.io/shade-or-shortcut/results.html).
 
 ## Layout
 
@@ -67,7 +82,7 @@ JS / Python consistency test, Node.js (20+). Developed on macOS (Apple silicon).
 ```bash
 git clone https://github.com/DOGZzl1xy/shade-or-shortcut.git && cd shade-or-shortcut
 uv sync
-uv run pytest                                   # 42 tests; the JS consistency test is skipped until phase 9 data exist
+uv run pytest                                   # 48 tests; the JS consistency test is skipped until phase 9 data exist
 uv run python -m scripts.phase_01_acquire       # all sources (phase 1)
 caffeinate -i uv run python -m scripts.phase_02_surface      # 1 m surfaces (on Linux drop `caffeinate -i`)
 caffeinate -i uv run python -m scripts.phase_03_shadow       # network, sample points, 24-hour shadows
@@ -185,11 +200,14 @@ scripts/publish_site.sh scan                                # check main for key
 scripts/publish_site.sh push                                # create DOGZzl1xy/shade-or-shortcut, push both, turn on Pages
 ```
 
-### Phase 10 — SOLWEIG mean radiant temperature and UTCI (University City)
+### Phase 10 — SOLWEIG mean radiant temperature and UTCI
 
 Extends the shade classes with SOLWEIG 2022a (GPU version, [solweig-gpu](https://github.com/nvnsudharsan/SOLWEIG-GPU) 2.0.0)
-for one hot, clear day (2025-06-24, PHL 101 °F), and compares the shortest, shade (Wen et al.) and heat (UTCI) paths.
-SOLWEIG needs GDAL's Python bindings and PyTorch, so it runs in its own conda env next to the repository:
+for the two study days (`study.dates`: 2025-06-24, PHL 101 °F, and 2025-07-29, 98 °F; ERA5 weather from Open-Meteo), and
+compares the shortest, shadiest (Wen et al.) and coolest (UTCI) paths. Phases 3–9 use the same days and SOLWEIG's sun
+time (`study.sun_offset_min: -30`), so shade and heat describe the same moments. First in a 4 km University City test
+domain, then city-wide. SOLWEIG needs GDAL's Python bindings and PyTorch, so it runs in its own conda env next to the
+repository:
 
 ```bash
 conda create -p ../envs/solweig -c conda-forge --override-channels python=3.12 gdal pyyaml netcdf4 timezonefinder pytz xarray tqdm matplotlib scipy pandas shapely rasterio
@@ -199,7 +217,7 @@ uv run python -m scripts.phase_02_surface A B C --area demo   # 1 m surfaces for
 uv run python -m scripts.phase_10_solweig met inputs          # ERA5 met file; 16 sub-domains (1 km core + 400 m margin)
 ../envs/solweig/bin/python scripts/solweig_run.py run         # one SOLWEIG run per sub-domain (resumable)
 ../envs/solweig/bin/python scripts/solweig_run.py merge       # tmrt / utci / utci_deck / shadow / svf on the domain grid
-uv run python -m scripts.phase_10_solweig network figure routes
+uv run python -m scripts.phase_10_solweig network figure routes frontier
 ```
 
 Outputs: `data/interim/solweig/` (rasters, `points.parquet`, `edges_heat.parquet`, `routes.parquet`),
@@ -218,7 +236,10 @@ python solweig_city/solweig_run.py city-status solweig_city
 # (met file, runs_city.json, the demo network's points); on the server link rasters/, append the demo points to points.parquet
 uv run python -m scripts.phase_10_solweig city-bundle
 # back home: unpack each date's out/ into data/interim/solweig_city/results/<date>/out/, then
-uv run python -m scripts.phase_10_solweig city-collect city-routes
+uv run python -m scripts.phase_10_solweig city-collect city-routes city-frontier
+# optional server jobs (results/extra/<job>/out/): tree transmissivity 5 % / 15 % on 40 cores, 800 m margin on 8 cores
+uv run python -m scripts.phase_10_solweig city-sensitivity
+uv run python -m scripts.phase_10_solweig web-export    # UTCI into demo_network.json and city_shade.pmtiles (u0..u23)
 ```
 
 Hand-written pages live in `site/app/` (story, route tool, city map); data, methods and results pages are rendered from
@@ -245,6 +266,9 @@ footways and is therefore available under the ODbL.
 | City boundary (TIGER/Line 2024), ACS | U.S. Census Bureau | public domain |
 | Land surface temperature, Landsat 8 Collection 2 Level-2, 2024-07-17 (Story page only) | [USGS](https://www.usgs.gov/landsat-missions), read through [Microsoft Planetary Computer](https://planetarycomputer.microsoft.com/dataset/landsat-c2-l2) | public domain; credit USGS |
 | Daily maximum air temperature, Philadelphia International Airport (Story page only) | NOAA Regional Climate Centers, [ACIS](https://www.rcc-acis.org/) | public domain |
+| Hourly weather for the heat model (ERA5 reanalysis, 2025-06-24 and 2025-07-29) | Copernicus Climate Change Service (ECMWF), through the [Open-Meteo](https://open-meteo.com/) historical weather API | Open-Meteo data CC BY 4.0; contains modified Copernicus Climate Change Service information |
+| OpenStreetMap extract (fallback when the Overpass API was down) | [Geofabrik](https://download.geofabrik.de/north-america/us/pennsylvania.html) | ODbL 1.0 |
 | Website basemap (World Dark Gray) | Esri | Esri terms of use, attribution shown on every map |
 
 Bundled web libraries: MapLibre GL JS 4.7.1 and PMTiles 3.2.1 (both BSD-3-Clause, in `site/app/vendor/`).
+The heat model, solweig-gpu 2.0.0 (GPL-3.0), is installed and run as a separate program; it is not distributed here.

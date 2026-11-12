@@ -1,6 +1,6 @@
 ---
 title: "Data"
-subtitle: "Where the shade map comes from, and who we follow home."
+subtitle: "Where the shade and heat maps come from, and who we follow home."
 jupyter: python3
 ---
 

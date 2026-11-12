@@ -9,14 +9,24 @@ from coolpath.transit import station_display
 import pandas as pd
 import matplotlib.pyplot as plt
 s6, s7, s8 = table("phase_06_summary.json"), table("phase_07_stats.json"), table("phase_08_scenarios.json")
+s10, s10r, s10f, s10s = (table(n) for n in ("phase_10_city.json", "phase_10_city_routes.json", "phase_10_city_frontier.json",
+                                            "phase_10_sensitivity.json"))
 p6 = pd.DataFrame(s6["at_15h"]).query("sample == 'city'").set_index(["mode", "length_bin"])
 p7 = pd.DataFrame(s7["by_mode_bin_15h"]).set_index(["mode", "length_bin"])
 cfg = load_config()
 r = p6.loc[("rapid", "300-800")]
 b = p6.loc[("bus", "300-800")]
+DAYS = {f"{d[5:7]}{d[8:10]}": pd.Timestamp(d).strftime("%B %-d") for d in cfg["study"]["dates"]}
+D0 = list(DAYS)[0]
+KEY = [f"{k}_{cfg['study']['key_hour']:02d}" for k in DAYS]
 ```
 
-All numbers are for 15:00 (June 21 and August 1 pooled) with the dynamic θ, unless stated.
+```{python}
+#| output: asis
+print(f"All numbers are for 15:00 ({' and '.join(DAYS.values())}, 2025, pooled) with the dynamic θ, unless stated. "
+      "Each hour is the hour ending then, with the sun of half an hour earlier (15:00 = the sun at 14:30), for sun and heat alike. "
+      "The **shadiest** walk minimises the shade cost, the **coolest** walk the heat (UTCI) cost; see [Methods](methods.qmd).")
+```
 
 ## How much sun can a walk home avoid?
 
@@ -26,7 +36,7 @@ print(f"""<div class="label">Walks of 300–800 m from rapid-transit stations, 1
 
 ::: {{.stat-row}}
 <div><div class="v sun">{pct(r.short_sun_share, 0)}</div><div class="label">of the shortest walk is sunny</div></div>
-<div><div class="v">−{pct(r.sun_red_mean, 0)}</div><div class="label">sun on the coolest walk</div></div>
+<div><div class="v">−{pct(r.sun_red_mean, 0)}</div><div class="label">sun on the shadiest walk</div></div>
 <div><div class="v">+{pct(r.detour_mean, 2)}</div><div class="label">extra distance</div></div>
 <div><div class="v">{pct(p7.loc[('rapid', '300-800')].no_alt_share, 0)}</div><div class="label">of walks have no cooler option</div></div>
 :::""")
@@ -47,13 +57,13 @@ t = pd.DataFrame({
 md(t)
 ```
 
-Rapid = rapid-transit stations; Bus = frequent bus stops. Sun ↓ = sun reduction of the coolest walk; Exposure ↓ = weighted exposure reduction.
+Rapid = rapid-transit stations; Bus = frequent bus stops. Sun ↓ = sun reduction of the shadiest walk; Exposure ↓ = weighted exposure reduction.
 
 ```{python}
 #| output: asis
 lo, hi = p6.detour_p95.min(), p6.detour_p95.max()
-print(f"- **The coolest walk is rarely more than a few percent longer.** Mean detours stay below 1% in every group, and 95% of "
-      f"coolest walks are at most {pct(lo, 1)}–{pct(hi, 1)} longer than the shortest walk, depending on the group.")
+print(f"- **The shadiest walk is rarely more than a few percent longer.** Mean detours stay below 1% in every group, and 95% of "
+      f"shadiest walks are at most {pct(lo, 1)}–{pct(hi, 1)} longer than the shortest walk, depending on the group.")
 ```
 
 - **Rapid-transit walks gain more** than bus walks of the same length: stations sit in denser, taller parts of the city where a parallel street in building shade is usually available.
@@ -68,14 +78,14 @@ f, ax = plt.subplots(figsize=(8, 3.4))
 for (mode, day), g in bt.assign(day=bt.time.str[:4]).groupby(["mode", "day"]):
     g = g.sort_values("time")
     ax.plot(g.time.str[5:].astype(int), 100 * g.sun_red_mean, marker="o", ms=3,
-            color=C["sun"] if mode == "rapid" else C["cool"], ls="-" if day == "0621" else "--",
-            label=f"{'rapid transit' if mode == 'rapid' else 'bus'}, {'June 21' if day == '0621' else 'August 1'}")
+            color=C["sun"] if mode == "rapid" else C["cool"], ls="-" if day == D0 else "--",
+            label=f"{'rapid transit' if mode == 'rapid' else 'bus'}, {DAYS[day]}")
 ax.set(xlabel="hour", ylabel="sun reduction (%)", xticks=range(8, 20))
 ax.legend(fontsize=9, ncol=2)
 chart(f)
 ```
 
-Morning and evening, when shadows are long, offer the most; around 13:00 the sun is high and little shade is left to choose.
+Morning and evening, when shadows are long, offer the most; around 13:00–14:00 the sun is high and little shade is left to choose.
 
 ## Where can walkers find shade?
 
@@ -131,14 +141,171 @@ md(pd.DataFrame({"Station": disp.str[0].str.replace("-", "–"), "Line": disp.st
 
 ```{python}
 #| output: asis
-print("At Front–Girard and Huntingdon (L) the coolest walk follows the elevated L on the side its shadow falls; at "
+print("At Front–Girard and Huntingdon (L) the shadiest walk follows the elevated L on the side its shadow falls; at "
       "Broad–Spring Garden (B) it simply crosses to the shaded side of the street; at Wyndmoor (Regional Rail) it follows "
       "tree-lined streets.")
 ```
 
 ```{python}
-#| fig-cap: "Front–Girard: one walk (left) and all walks of 300–800 m (right). Orange solid = used only by shortest walks, cyan dashed = only by coolest walks."
+#| fig-cap: "Front–Girard: one walk (left) and all walks of 300–800 m (right). Orange solid = used only by shortest walks, cyan dashed = only by shadiest walks."
 fig("phase_07_route_front-girard.png")
+```
+
+## From sun to heat
+
+```{python}
+#| output: asis
+bh = pd.DataFrame(s10["by_hour"]).set_index("label")
+k0 = KEY[0]
+h0 = bh.loc[k0]
+print(f"""Shade is yes or no; heat is a temperature. The SOLWEIG model gives the UTCI, the temperature the weather feels like to
+the body, at every sidewalk point for the same 24 hours. On {DAYS[D0]} at 15:00 a typical sunlit sidewalk felt like
+{h0.u_sun:.1f} °C, at the edge of *extreme* heat stress (46 °C); one step into shade took off about
+{h0.u_sun - (h0.u_bldg + h0.u_tree) / 2:.0f} °C.
+
+<div class="label">Median UTCI of sidewalk points, {DAYS[D0]}, 15:00</div>
+
+::: {{.stat-row}}
+<div><div class="v sun">{h0.u_sun:.1f} °C</div><div class="label">in the sun</div></div>
+<div><div class="v">{h0.u_bldg:.1f} °C</div><div class="label">in building shade</div></div>
+<div><div class="v">{h0.u_tree:.1f} °C</div><div class="label">in tree shade</div></div>
+<div><div class="v">{num(h0.u_tree - h0.u_sun, '.1f')} °C</div><div class="label">tree shade against sun</div></div>
+:::""")
+```
+
+```{python}
+#| fig-cap: "Median UTCI of sidewalk points in the sun, in tree shade and in building shade, by hour (shade classes from our shadow model). Bands: UTCI heat-stress categories."
+f, ax = plt.subplots(figsize=(8, 3.8))
+for lo_b, hi_b, name in ((32, 38, "strong"), (38, 46, "very strong"), (46, 50, "extreme")):
+    ax.axhspan(lo_b, hi_b, color=C["sun"], alpha={"strong": 0.04, "very strong": 0.08, "extreme": 0.16}[name], lw=0)
+    ax.text(19.6, (lo_b + min(hi_b, 48)) / 2, name, ha="left", va="center", fontsize=8, color=C["dim"], clip_on=False)
+for day, ls in zip(DAYS, ("-", "--")):
+    g = bh[bh.index.str.startswith(day)]
+    hrs = g.index.str[5:].astype(int)
+    for col, colr, nm in (("u_sun", C["sun"], "sun"), ("u_tree", C["tree"], "tree shade"), ("u_bldg", C["bldg"], "building shade")):
+        ax.plot(hrs, g[col], color=colr, ls=ls, lw=2, label=f"{nm}, {DAYS[day]}")
+ax.set(xlabel="hour", ylabel="UTCI (°C)", xticks=range(8, 20), ylim=(30, 48), xlim=(7.8, 19.5))
+ax.legend(fontsize=8, ncol=2, loc="lower center")
+chart(f)
+```
+
+```{python}
+#| output: asis
+tr = bh.loc[KEY].tree_relief
+mo = bh[bh.index.str.endswith("_08")].tree_relief.mean()
+g0b = bh[bh.index.str.startswith(D0)]
+vs = g0b[g0b.u_bldg > 38].index.str[5:].astype(int)
+print(f"""- **Tree shade is as cool as building shade.** The shade cost of Wen et al. counts a metre of tree shade as half as good
+  as building shade. In the heat model, tree shade at 15:00 takes off {pct(tr.min(), 0)}–{pct(tr.max(), 0)} of the step from
+  sun to building shade, slightly more than building shade itself ({pct(mo, 0)} at 8:00): in the afternoon, walls and pavement
+  that stood in the sun all day still radiate heat into shaded streets, while a tree also shades the ground under it.
+- **Shade does not make a walk comfortable.** Even building shade stays at *very strong* heat stress (above 38 °C) from
+  {vs.min()}:00 to {vs.max()}:00 on {DAYS[D0]}. Choosing the shaded side lowers the strain; it does not remove it.""")
+```
+
+### The coolest walk home
+
+```{python}
+#| output: asis
+mb = pd.DataFrame(s10r["by_mode_bin_key_hour"]).set_index(["mode", "length_bin"])
+nd = len(s10r["dates"])
+hb = mb.loc[("bus", "300-800")]
+print(f"""Routing on the UTCI instead of the shade classes gives the **coolest walk**. For walks of 300–800 m from frequent bus stops
+at 15:00:
+
+::: {{.stat-row}}
+<div><div class="v">{num(hb.heat_dutci, '.2f')} °C</div><div class="label">mean UTCI on the coolest walk (shadiest {num(hb.shade_dutci, '.2f')})</div></div>
+<div><div class="v">+{pct(hb.heat_detour, 2)}</div><div class="label">extra distance (shadiest +{pct(hb.shade_detour, 2)})</div></div>
+<div><div class="v">−{pct(hb.heat_extreme_red, 0)}</div><div class="label">metres of extreme heat (shadiest −{pct(hb.shade_extreme_red, 0)})</div></div>
+<div><div class="v">{pct(hb.heat_eq_shade, 0)}</div><div class="label">same path as the shadiest walk</div></div>
+:::""")
+```
+
+```{python}
+#| column: page-inset-right
+md(pd.DataFrame({
+    "Mode": [("Rapid" if m == "rapid" else "Bus") for m, _ in mb.index],
+    "Walk": [l.replace("-", "\u2060–\u2060") + "\u00a0m" for _, l in mb.index],
+    "UTCI, shortest": [f"{x:.1f} °C" for x in mb.short_utci],
+    "Extreme heat, shortest": [f"{x:.0f} m" for x in mb.short_extreme_m],
+    "Shadiest: UTCI / detour": [f"{num(a, '.2f')} °C / +{pct(b, 2)}" for a, b in zip(mb.shade_dutci, mb.shade_detour)],
+    "Coolest: UTCI / detour": [f"{num(a, '.2f')} °C / +{pct(b, 2)}" for a, b in zip(mb.heat_dutci, mb.heat_detour)],
+    "Extreme heat ↓ shadiest / coolest": [f"{pct(a, 0)} / {pct(b, 0)}" for a, b in zip(mb.shade_extreme_red, mb.heat_extreme_red)],
+    "Coolest = shadiest": [pct(x, 0) for x in mb.heat_eq_shade],
+}))
+```
+
+Walk counts as in the sun table above. UTCI = mean UTCI along the walk, change against the shortest walk. Extreme heat = metres with UTCI ≥ 46 °C on the shortest walk, and the mean reduction for walks that have any.
+
+```{python}
+#| output: asis
+bt = pd.DataFrame(s10r["by_time"]).set_index("time")
+g0 = bt[bt.index.str.startswith(D0)]
+hr = g0.index.str[5:].astype(int)
+best = g0.heat_dutci.idxmin()
+noon = g0[(hr >= 11) & (hr <= 15)].heat_dutci.idxmax()
+eve = g0.index[-1]
+rp = mb.loc[("rapid", "300-800")]
+mid = mb.xs("300-800", level="length_bin").heat_eq_shade
+xr = mb.heat_extreme_red / mb.shade_extreme_red
+print(f"""- **The two walks mostly agree.** For {pct(mid.min(), 0)}–{pct(mid.max(), 0)} of walks of 300–800 m the coolest walk is the
+  shadiest walk. Where they differ, the coolest walk takes the tree-lined street the shade cost undervalues, and tells apart
+  sunny streets that are hotter or cooler than usual.
+- **The coolest walk is a little cooler, for a little more distance.** It lowers the walk's mean UTCI by about
+  {num(-(mb.heat_dutci - mb.shade_dutci).mean(), '.1f')} °C more than the shadiest walk and cuts the metres of extreme heat
+  stress {xr.min():.1f}–{xr.max():.1f} times as much, for mean detours of {pct(mb.heat_detour.min(), 1)}–{pct(mb.heat_detour.max(), 1)}.
+- **Rapid-transit walks gain most**, as with sun: {num(rp.heat_dutci, '.2f')} °C for walks of 300–800 m, against
+  {num(hb.heat_dutci, '.2f')} °C from bus stops.
+- **Averages are small because most walks have no choice.** The mean over all walks, sunny or not, hides walks with no
+  alternative (a change of 0) next to walks that cool by several degrees. Like shade, the gain is largest in the morning
+  ({num(g0.loc[best, 'heat_dutci'], '.2f')} °C at {best[5:]}:00 on {DAYS[D0]}, all walks) and small around midday
+  ({num(g0.loc[noon, 'heat_dutci'], '.2f')} °C at {noon[5:]}:00), when little shade is left. Unlike shade, it is small again
+  in the evening ({num(g0.loc[eve, 'heat_dutci'], '.2f')} °C at {eve[5:]}:00): the shadows are long, but the low sun no longer
+  makes the sunny side much hotter.""")
+```
+
+### Why the coolest walk is cooler
+
+```{python}
+#| fig-cap: "Same detour, cooler walk: mean detour and mean UTCI reduction of walks of at least 300 m at 15:00 (both days), for three costs with θ fixed from 0.05 to 0.6."
+fr = pd.DataFrame(s10f["rows"])
+names = {"shade": ("shade cost, tree = ½ building (Wen et al.)", C["bldg"]),
+         "shade_tf1": ("shade cost, tree = building", C["tree"]), "heat": ("UTCI cost", C["sun"])}
+f, ax = plt.subplots(figsize=(7.5, 3.8))
+for k, (nm, colr) in names.items():
+    g = fr[fr.cost == k].sort_values("theta")
+    ax.plot(100 * g.detour, -g.dutci, color=colr, lw=2, marker="o", ms=4, label=nm)
+ax.set(xlabel="mean detour (%)", ylabel="UTCI reduction (°C)", xlim=(0, 100 * fr.detour.max() * 1.05), ylim=(0, None))
+ax.legend(fontsize=9, loc="lower right")
+chart(f)
+```
+
+```{python}
+#| output: asis
+import numpy as np
+sh_ = fr[fr.cost == "shade"].sort_values("detour")
+t1_ = fr[(fr.cost == "shade_tf1") & (fr.detour <= fr[fr.cost == "shade"].detour.max())].sort_values("detour")
+hh_ = fr[(fr.cost == "heat") & (fr.detour <= sh_.detour.max())]
+gain = hh_.dutci / np.interp(hh_.detour, sh_.detour, sh_.dutci) - 1
+gt = t1_.dutci / np.interp(t1_.detour, sh_.detour, sh_.dutci) - 1
+print(f"""Is the coolest walk cooler only because it is allowed to detour more? Fixing θ at a range of values traces, for each cost,
+how much cooler walks get for a given extra distance. At the same detour the UTCI cost cools walks
+{pct(gain.min(), 0)}–{pct(gain.max(), 0)} more than the shade cost. Valuing tree shade as much as building shade adds only
+about {pct(gt.mean(), 0)}: most of the gain comes from the differences *within* each shade class, such as a sunny metre next to
+hot walls against one on an open lawn, or a deep street canyon against a thin strip of shade.""")
+```
+
+```{python}
+#| output: asis
+ts = pd.DataFrame(s10s["transmissivity_by_hour"]).set_index(["hour", "transmissivity"]).tree_relief
+kh = cfg["study"]["key_hour"]
+mg = pd.DataFrame(s10s["margin800"]["by_hour"])
+print(f"""**How robust is this?** SOLWEIG lets a fixed 3% of the sun through tree crowns. Rerunning {s10s['tau05']['cores']} tiles of
+{DAYS[D0]} with 5% and 15% moves tree shade's share of the building-shade relief at {kh}:00 from {pct(ts.loc[(kh, 0.03)], 0)}
+to {pct(ts.loc[(kh, 0.05)], 0)} and {pct(ts.loc[(kh, 0.15)], 0)}: thinner crowns make tree shade warmer, but it stays about as
+cool as building shade, far from the half assumed by the shade cost. Widening the margin around each tile from 400 to 800 m,
+so that towers further away can cast shadows in, changes the UTCI by more than 0.5 °C at no more than
+{pct(mg['share_abs_gt_0.5'].max(), 2)} of points in any hour. Details: [technical notes](technical.qmd).""")
 ```
 
 ## Through buildings (University City)
@@ -153,34 +320,36 @@ d["o"] = d.scenario.map(order.index)
 d = d.sort_values(["set", "o"])
 md(pd.DataFrame({"Sample": d.set.map({"campus": "Campus", "station": "Station"}),
                  "Scenario": d.scenario.map(lab), "Walks": d.trips.astype(int).map("{:,}".format).values,
-                 "Coolest uses indoors": [pct(x, 0) for x in d.shade_uses_indoor],
+                 "Shadiest uses indoors": [pct(x, 0) for x in d.shade_uses_indoor],
                  "Sun ↓*": [pct(x, 1) for x in d.sun_red_vs_outdoor],
                  "Exposure ↓*": [pct(x, 1) for x in d.exposure_red_vs_outdoor],
                  "Length*": [f"+{100 * x:.2f}%" for x in d.len_vs_outdoor]}))
 ```
 
-Campus = building to building; Station = rapid-transit station to building. \* compared with the shortest walk on the outdoor-only network.
+Campus = building to building; Station = rapid-transit station to building. \* compared with the shortest walk on the outdoor-only network. Indoor passages have no UTCI, so this section uses the shade cost only.
 
 ```{python}
 #| output: asis
 u = d.set_index(["set", "scenario"])
-print(f"Opening the annotated buildings puts about one in five coolest walks indoors and removes another "
+bb = pd.DataFrame(s8["at_15h_by_bin"]).query("scenario == 'all' and set != 'home'").set_index(["set", "length_bin"]).shade_uses_indoor
+lo_, hi_ = sorted(bb.loc[(k, "800-1200")] / bb.loc[(k, "300-800")] for k in ("campus", "station"))
+print(f"Opening the annotated buildings puts about one in five shadiest walks indoors and removes another "
       f"{100 * (u.loc[('campus', 'all')].sun_red_vs_outdoor - u.loc[('campus', 'outdoor')].sun_red_vs_outdoor):.1f}–"
       f"{100 * (u.loc[('station', 'all')].sun_red_vs_outdoor - u.loc[('station', 'outdoor')].sun_red_vs_outdoor):.1f} points of sun, "
       "without making walks longer. The Indoor Contribution Index stays close to zero (median below 0.001 in absolute value): "
       "indoor passages here offer an equally long but cooler option, not a shortcut. This differs from the Dubai stations of Wen et al. "
       "(2025), where indoor networks through malls and connected towers make indoor routes real shortcuts. With θ near 0.2–0.3 for most of a "
       "300–1,200 m walk, an indoor metre beats building shade by only about 0.1 m of cost, so indoor routes are chosen mainly when they "
-      "are already on the way; walks of 800–1,200 m use them about three times as often as walks of 300–800 m.")
+      f"are already on the way; walks of 800–1,200 m use them {lo_:.1f}–{hi_:.1f} times as often as walks of 300–800 m.")
 ```
 
 ```{python}
-#| fig-cap: "University City at 15:00: share of the sun avoided compared with the shortest outdoor walk, and share of coolest walks that go indoors."
+#| fig-cap: "University City at 15:00: share of the sun avoided compared with the shortest outdoor walk, and share of shadiest walks that go indoors."
 lab2 = {"outdoor": "Outdoor only", "no_penncard": "+ buildings open without a Penn ID", "all": "+ all mapped buildings"}
 cols = {"outdoor": C["dim"], "no_penncard": "#8f78c9", "all": C["indoor"]}
 f, axes = plt.subplots(1, 2, figsize=(7.2, 2.9), sharey=True)
 sets = [("campus", "Campus walks"), ("station", "Station walks")]
-for k, (ax, (col, title)) in enumerate(zip(axes, [("sun_red_vs_outdoor", "sun avoided"), ("shade_uses_indoor", "coolest walk goes indoors")])):
+for k, (ax, (col, title)) in enumerate(zip(axes, [("sun_red_vs_outdoor", "sun avoided"), ("shade_uses_indoor", "shadiest walk goes indoors")])):
     for i, (sname, slab) in enumerate(sets):
         for j, sc in enumerate(order):
             v = u.loc[(sname, sc)][col]
@@ -202,5 +371,10 @@ chart(f)
 
 - Outside University City, campus and park walkways are missing, so cooler options there are understated.
 - “No cooler option” mixes two cases: no cooler street exists, or one exists but is not worth the detour at the default shade preference.
-- Shadows are for clear-sky June 21 and August 1; trees from leaf-off LiDAR and 2018 land cover; buildings from 2022.
+- Shadows and heat are for two hot, sunny days, June 24 and July 29, 2025; trees from leaf-off LiDAR and 2018 land cover; buildings from 2022.
+- Air temperature, humidity and wind come from one ERA5 weather cell and are the same on every street; the heat map shows the
+  effect of sun, shade and surfaces, not neighbourhood differences in air temperature or the cooling of a breezy street.
+- Trees let a fixed 3% of the sun through in SOLWEIG; leafier or sparser crowns would change how much cooler tree shade is
+  (see the sensitivity test above).
+- UTCI is for a standing person in the open air; air-conditioned indoor passages have no UTCI, so the coolest walk stays outdoors.
 - Indoor passages assume buildings are open and air-conditioned; opening hours and security are not modelled.

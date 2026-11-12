@@ -3,7 +3,7 @@
     uv run python -m scripts.phase_07_route_check
 
 For each station: all city-sample trips of 300-800 m are re-routed at 06-21 15:00 (dynamic θ).
-Figure (dark, in the website's route style: shortest = orange solid, coolest = cyan dashed), left: one
+Figure (dark, in the website's route style: shortest = orange solid, shadiest = cyan dashed), left: one
 representative trip (a changed path whose sun reduction is closest to the station mean) on the 2025
 PASDA orthophoto. Right: all trips — edges used only by shortest paths vs only by shade paths, width = trips.
 Table: where the extra shade on the shade paths comes from — building vs tree shade gained, and
@@ -139,7 +139,7 @@ def main():
         ax[0].set_ylim(view[1], view[3])
         ax[0].set_axis_off()
         ax[0].legend(handles=[Line2D([], [], color=SUN, lw=4, label=f"shortest: {L[a].sum():.0f} m, {ls[a].sum():.0f} m in sun"),
-                              Line2D([], [], color=COOL, lw=4, ls=DASH, label=f"coolest: {L[c].sum():.0f} m, {ls[c].sum():.0f} m in sun"),
+                              Line2D([], [], color=COOL, lw=4, ls=DASH, label=f"shadiest: {L[c].sum():.0f} m, {ls[c].sum():.0f} m in sun"),
                               Line2D([], [], color="white", marker="s", ls="", mec="k", ms=9, label="station"),
                               Line2D([], [], color="white", marker="o", ls="", mec="k", ms=9, label="home")],
                      loc="upper center", bbox_to_anchor=(0.5, -0.01), ncol=2, fontsize=19, facecolor=BG, edgecolor=DIM, labelcolor=INK, framealpha=0.85)
@@ -153,7 +153,7 @@ def main():
         width = lambda idx: 0.8 + 4 * np.sqrt(np.maximum(use_s, use_c)[idx] / umax)
         ax[1].add_collection(LineCollection(segments(geom[common]), colors="#9a988f", lw=width(common), label="both"))
         route_lines(ax[1], geom[only_s], SUN, width(only_s), label="shortest walks only")
-        route_lines(ax[1], geom[only_c], COOL, width(only_c), dashed=True, label="coolest walks only")
+        route_lines(ax[1], geom[only_c], COOL, width(only_c), dashed=True, label="shadiest walks only")
         ax[1].scatter(g.x[t.stop_node.unique()], g.y[t.stop_node.unique()], s=80, c="white", edgecolors="k", marker="s", zorder=5,
                       label="station")
         ax[1].set_xlim(b[0], b[2])

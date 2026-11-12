@@ -1,6 +1,6 @@
 ---
 title: "Methods"
-subtitle: "Shadows, routes and the cost of a sunny metre."
+subtitle: "Shadows, heat, routes and the cost of a sunny or hot metre."
 jupyter: python3
 ---
 
