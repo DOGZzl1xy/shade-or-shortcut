@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.10.19">
+<meta name="generator" content="quarto-1.10.20">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
@@ -38,10 +38,10 @@ ul.task-list li input[type="checkbox"] {
 <script src="site_libs/quarto-html/tippy.umd.min.js"></script>
 <script src="site_libs/quarto-html/anchor.min.js"></script>
 <link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="site_libs/quarto-html/quarto-syntax-highlighting-dark-f41162f81dd66dbd42c3d463b140dc68.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-dark-f2fac4bd8d68d17ddb8ee8f6b215a9c2.css" rel="stylesheet" id="quarto-text-highlighting-styles">
 <script src="site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="site_libs/bootstrap/bootstrap-d69f2ca21dae9656bc97ea7e3f15cba2.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="dark">
+<link href="site_libs/bootstrap/bootstrap-3f2ecac992fc0b84ee4edb0d0b73e134.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="dark">
 <script id="quarto-search-options" type="application/json">{
   "language": {
     "search-no-results-text": "No results",
@@ -151,7 +151,7 @@ ul.task-list li input[type="checkbox"] {
 </header>
 
 
-<p>This page is for readers who want to check how the numbers on the other pages were produced. The code, every parameter and the stored result tables are in the <a href="https://github.com/DOGZzl1xy/shade-or-shortcut">project repository</a>.</p>
+<p>How the numbers were produced. Code, parameters and result tables are in the <a href="https://github.com/DOGZzl1xy/shade-or-shortcut">project repository</a>.</p>
 <section id="processing-pipeline" class="level2 page-columns page-full">
 <h2 class="anchored" data-anchor-id="processing-pipeline">Processing pipeline</h2>
 <div class="column-page-inset-right">
@@ -190,25 +190,31 @@ ul.task-list li input[type="checkbox"] {
 <td>a ray from each point (1.5 m above the ground) towards the sun, marched 1 m at a time for up to 1 km</td>
 </tr>
 <tr class="even">
-<td>4. Edge attributes</td>
-<td>DVRPC sidewalks and crossings, OSM bridges and covered walkways</td>
-<td>metres of sun, tree shade and building shade per edge and hour</td>
-<td>sample points summed per edge; covered walkways always in building shade</td>
+<td>4. Heat model (phase 10)</td>
+<td>surface model, 2018 land cover, ERA5 hourly weather</td>
+<td>mean radiant temperature and UTCI at 1 m, every hour; sampled at the same points</td>
+<td>SOLWEIG 2022a on the GPU (solweig-gpu 2.0.0), in 1 km tiles with a 400 m margin, on a rented server</td>
 </tr>
 <tr class="odd">
-<td>5. Routing</td>
-<td>edge table</td>
-<td>shortest and coolest path per walk</td>
-<td>Dijkstra on length, and on the cost of Wen et al.&nbsp;(2025) with θ growing with distance walked</td>
+<td>5. Edge attributes</td>
+<td>DVRPC sidewalks and crossings, OSM bridges and covered walkways</td>
+<td>metres of sun, tree shade and building shade per edge and hour; mean UTCI and metres per heat-stress class</td>
+<td>sample points summed per edge; covered walkways always in building shade</td>
 </tr>
 <tr class="even">
-<td>6. Walk samples</td>
+<td>6. Routing</td>
+<td>edge table</td>
+<td>shortest, shadiest and coolest path per walk</td>
+<td>Dijkstra on length, on the shade cost of Wen et al.&nbsp;(2025) and on the heat (UTCI) cost, θ growing with distance walked</td>
+</tr>
+<tr class="odd">
+<td>7. Walk samples</td>
 <td>SEPTA timetable, residential parcels</td>
 <td>one walk per home, stop → home</td>
 <td>nearest frequent stop along the network, within 1.2 km</td>
 </tr>
-<tr class="odd">
-<td>7. Summaries</td>
+<tr class="even">
+<td>8. Summaries</td>
 <td>walk metrics</td>
 <td>tables by mode and walk length; stations; 500 m grid clusters</td>
 <td>means within length bands; k-means on grid cells</td>
@@ -219,12 +225,12 @@ ul.task-list li input[type="checkbox"] {
 </section>
 <section id="key-parameters" class="level2">
 <h2 class="anchored" data-anchor-id="key-parameters">Key parameters</h2>
-<div id="42194b26" class="cell" data-execution_count="2">
+<div id="6aac91eb" class="cell" data-execution_count="2">
 <div class="cell-output cell-output-display cell-output-markdown" data-execution_count="2">
 <table class="caption-top table table-sm table-striped small">
 <colgroup>
-<col style="width: 23%">
-<col style="width: 76%">
+<col style="width: 16%">
+<col style="width: 83%">
 </colgroup>
 <thead>
 <tr class="header">
@@ -235,63 +241,95 @@ ul.task-list li input[type="checkbox"] {
 <tbody>
 <tr class="odd">
 <td style="text-align: left;">Dates and hours</td>
-<td style="text-align: left;">June 21 and August 1, 8:00–19:00 local time, every hour (24 sun positions)</td>
+<td style="text-align: left;">June 24 and July 29, 2025, 8:00–19:00 local time, every hour (24 sun positions)</td>
 </tr>
 <tr class="even">
+<td style="text-align: left;">Sun time of an hour</td>
+<td style="text-align: left;">30 min before the hour (15:00 = sun at 14:30), SOLWEIG’s convention for hourly mean radiation, for shade and heat alike</td>
+</tr>
+<tr class="odd">
 <td style="text-align: left;">Grid resolution</td>
 <td style="text-align: left;">1 m</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td style="text-align: left;">Sample spacing along sidewalks</td>
 <td style="text-align: left;">2 m</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td style="text-align: left;">Observer height</td>
 <td style="text-align: left;">1.5 m above the ground (above the deck on bridges)</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td style="text-align: left;">Ray step and maximum length</td>
 <td style="text-align: left;">1 m, 1,000 m</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td style="text-align: left;">Minimum tree height</td>
 <td style="text-align: left;">2 m</td>
 </tr>
-<tr class="odd">
-<td style="text-align: left;">Cost function</td>
+<tr class="even">
+<td style="text-align: left;">Shade cost (shadiest walk)</td>
 <td style="text-align: left;">C = L_sun + (1 − 0.5θ) L_tree + (1 − θ) L_building + (1 − 1.5θ) L_indoor</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td style="text-align: left;">θ curve (distance walked l, in m)</td>
 <td style="text-align: left;">θ(l) = 0.3961 / (1 + exp(−0.0111 (l − 859.6))) + 0.1958</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td style="text-align: left;">Frequent stop</td>
 <td style="text-align: left;">≥ 6 departures per hour on one route and direction, weekday 15:00–19:00 (2026-10-28); all rapid-transit stations</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td style="text-align: left;">Maximum walk</td>
 <td style="text-align: left;">1,200 m along the network</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td style="text-align: left;">Walk-length bands</td>
 <td style="text-align: left;">under 300 m, 300–800 m, 800–1,200 m</td>
 </tr>
-<tr class="even">
-<td style="text-align: left;">No cooler option</td>
-<td style="text-align: left;">the coolest walk avoids less than 2% of the sun (sensitivity 1%, 5%, 10%)</td>
-</tr>
 <tr class="odd">
+<td style="text-align: left;">No cooler option</td>
+<td style="text-align: left;">the shadiest walk avoids less than 2% of the sun (sensitivity 1%, 5%, 10%)</td>
+</tr>
+<tr class="even">
 <td style="text-align: left;">Grid and clusters</td>
 <td style="text-align: left;">500 m cells with at least 20 walks of 300–800 m; k-means, k = 3</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td style="text-align: left;">Station ranking</td>
 <td style="text-align: left;">at least 50 walks of 300–800 m</td>
 </tr>
+<tr class="even">
+<td style="text-align: left;">Heat model</td>
+<td style="text-align: left;">SOLWEIG 2022a, GPU version solweig-gpu 2.0.0; global radiation split into direct and diffuse by the model; 153 sky patches for the sky view</td>
+</tr>
 <tr class="odd">
-<td style="text-align: left;">Random seed</td>
-<td style="text-align: left;">42</td>
+<td style="text-align: left;">Heat model tiles</td>
+<td style="text-align: left;">1,000 m cores, each run with a 400 m margin on every side; 400 cores per day (those with sidewalk points)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Weather</td>
+<td style="text-align: left;">ERA5 hourly via Open-Meteo, one cell (40.0° N, 75.25° W) for the whole city; rows 7–19 h</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Tree heights in the heat model</td>
+<td style="text-align: left;">canopy pixels above 40 m dropped (also in the shadow model)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Light through tree crowns</td>
+<td style="text-align: left;">3% (fixed in SOLWEIG; tested at 5% and 15%)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Land cover for the heat model</td>
+<td style="text-align: left;">2018 land cover → UMEP classes paved, building, grass, bare soil, water; canopy pixels take the class of the nearest non-canopy pixel</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Heat cost (coolest walk)</td>
+<td style="text-align: left;">C = Σ L (1 − θ r), r = (U_sun − U) / (U_sun − U_building), clipped to [−1, 1.5]; U_sun, U_building = hourly city medians of UTCI at sunlit and building-shaded sidewalk points</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Extreme heat stress</td>
+<td style="text-align: left;">UTCI ≥ 46 °C (heat-stress classes 26 / 32 / 38 / 46 °C, Bröde et al.&nbsp;2012)</td>
 </tr>
 </tbody>
 </table>
@@ -311,14 +349,19 @@ ul.task-list li input[type="checkbox"] {
 <li><strong>Structures without footprints.</strong> Bridges and rail viaducts are kept as structures: areas at least 3 m high outside footprints and the canopy, cut where the surface jumps by more than 2 m, and kept if a piece covers at least 50 m² with a height spread of at most 3 m. Parked trains can pass this test too.</li>
 <li><strong>Flat-roof extrusion.</strong> Footprints with almost no LiDAR height (median below 2 m) but a recorded height of at least 3 m are built after the survey; they are extruded to the recorded height. Footprints where 30%–50% of pixels are tall overlap a neighbour and are skipped. In University City every extruded building was checked on 2025 aerial photos.</li>
 <li><strong>Bridge decks.</strong> A sidewalk segment is on a bridge when at least 80% of it lies within 15 m of an OSM road bridge and the two run within 20° of each other; its observer then stands on the deck. A plain intersection test would put every underpass on the bridge above it.</li>
-<li><strong>Terrain shadows.</strong> Bare ground also blocks the sun, which matters in steep valleys such as the Wissahickon at low sun.</li>
-<li><strong>Covered walkways.</strong> OpenStreetMap covered walkways and passages through buildings are added and counted as building shade at every hour.</li>
-<li><strong>Cost function kept as published.</strong> The coolest path sometimes has more sun than the shortest, when it trades tree shade for building shade (0.8% of test walks). The cost was kept unchanged, and the weighted exposure C is reported next to the sun share.</li>
+<li><strong>Covered walkways.</strong> OpenStreetMap covered walkways and passages are always building shade; in the heat model they take the hour’s median UTCI of building-shaded points (SOLWEIG does not see their roofs).</li>
+<li><strong>Cost function kept as published.</strong> The shadiest path sometimes has more sun than the shortest, when it trades tree shade for building shade (0.8% of test walks). The cost was kept unchanged, and the weighted exposure C is reported next to the sun share.</li>
 <li><strong>Which stops.</strong> Using every stop gave a median walk of 113 m, too short for any choice of route. Rapid transit plus frequent buses gives a median of 407 m and still reaches 82% of homes within 1.2 km.</li>
-<li><strong>Threshold for no cooler option.</strong> Sun reduction has a spike at exactly 0 (the coolest walk is the shortest) and is continuous from about 2% on, so the cut is placed where the spike ends.</li>
-<li><strong>Clusters.</strong> Clustering uses only 300–800 m walks so that cells are compared at the same walk length. Silhouette scores for k = 3–6 are 0.33–0.35, so k = 3 is a summary of a continuum rather than natural types.</li>
+<li><strong>Threshold for no cooler option.</strong> Sun reduction has a spike at exactly 0 (the shadiest walk is the shortest) and is continuous from about 2% on, so the cut is placed where the spike ends.</li>
+<li><strong>Clusters.</strong> Clustering uses only 300–800 m walks so that cells are compared at the same walk length. Silhouette scores for k = 3–6 are 0.35–0.37, so k = 3 is a summary of a continuum rather than natural types.</li>
 <li><strong>Campus footways.</strong> The regional sidewalk data lack most campus paths, so University City adds OpenStreetMap footways (36 km), leaving out sidewalks, crossings, private and indoor ways. Each mapped entrance is linked to the nearest sidewalk point without crossing a building; links over 30 m were checked by hand and the ones that are not walkable removed.</li>
-<li><strong>Indoor baseline.</strong> In the indoor scenarios the shortest walk is always the outdoor one, so every scenario is compared against the same baseline.</li>
+<li><strong>Two real days.</strong> The heat model needs real weather, so the calendar dates of the shade analysis (June 21, August 1) were replaced by the hot, sunny days nearest to them in 2025: June 24 (Philadelphia airport 101 °F) and July 29 (98 °F); August 1, 2025 was cool and overcast. The shadows were recomputed for the same days.</li>
+<li><strong>Own tiling.</strong> solweig-gpu can split a large area itself, but its tiles overlap only to the right and below, so a tower just left of or above a tile edge would cast no shadow into it. Every 1 km core is run on its own with a 400 m margin on all four sides and only the core is kept.</li>
+<li><strong>Tall ‘trees’.</strong> Façade returns beside towers and cranes appear in the canopy layer, up to 270 m tall. Canopy above 40 m is dropped in both models (2,573 pixels in the University City test domain, 0.1% of its canopy).</li>
+<li><strong>Points inside buildings.</strong> SOLWEIG has no UTCI on roofs. 32,933 sidewalk points that fall on a building pixel (footprints overlap the sidewalk lines) take the value of the nearest open pixel.</li>
+<li><strong>Bridge decks.</strong> SOLWEIG treats a bridge as a building and gives no UTCI on it. For the 30,346 points on bridge decks, UTCI is computed from the mean radiant temperature of the deck pixel.</li>
+<li><strong>One weather cell.</strong> Air temperature, humidity and wind are the same everywhere: ERA5 cells are about 25 km wide, and within-city differences in air temperature and wind are left for later work. The UTCI differences shown here come from radiation: sun, shade, sky view, walls and ground.</li>
+<li><strong>Pinned timetable.</strong> SEPTA replaced its GTFS feed during the project; the analysis uses the archived release v202609271, so stop frequencies stay reproducible.</li>
 </ul>
 </section>
 <section id="validation" class="level2">
@@ -326,13 +369,32 @@ ul.task-list li input[type="checkbox"] {
 <ul>
 <li><strong>Synthetic shadows.</strong> Unit tests cast shadows from box buildings and trees on flat ground and check the shadow length against height / tan(sun elevation) for several sun positions, no shadow on the sunny side, tree versus building priority, terrain shadows and observers on bridge decks.</li>
 <li><strong>Building heights.</strong> LiDAR heights agree with the city’s recorded heights for 541,222 buildings (Spearman ρ = 0.84; Pearson r = 0.83). The median difference (LiDAR minus record) is −0.5 m, so LiDAR heights are typically 0.5 m lower than the records; the median absolute difference is 0.5 m.</li>
-<li><strong>Routing.</strong> With θ fixed, the search reproduces networkx Dijkstra exactly on 9,094 nodes (largest absolute difference 0). Hand-computed small networks check the cost rule, tree versus building shade and the indoor term.</li>
-<li><strong>Browser and analysis agree.</strong> The route tool’s JavaScript router returns the same shortest and coolest paths as the Python analysis for 100 random walks, scenarios and hours.</li>
-<li><strong>Direction of travel.</strong> Reversing 500 walks of at least 400 m (home → stop) changes little: mean sun reduction 14.2% one way and 14.2% the other, correlation 0.99.</li>
+<li><strong>Routing.</strong> With θ fixed, the search reproduces networkx Dijkstra exactly on 8,346 nodes (largest absolute difference 0). Hand-computed small networks check the cost rule, tree versus building shade and the indoor term.</li>
+<li><strong>Browser and analysis agree.</strong> The route tool’s JavaScript router returns the same shortest, shadiest and coolest paths as the Python analysis for 100 random walks, scenarios and hours, half of them with the heat cost.</li>
+<li><strong>Direction of travel.</strong> Reversing 500 walks of at least 400 m (home → stop) changes little: mean sun reduction 13.8% one way and 13.8% the other, correlation 0.99.</li>
 <li><strong>Visual checks.</strong> The University City entrances and passages were checked one by one on aerial photos.</li>
 </ul>
+<section id="the-heat-model" class="level3">
+<h3 class="anchored" data-anchor-id="the-heat-model">The heat model</h3>
+<ul>
+<li><strong>Two shadow models agree.</strong> SOLWEIG computes its own shadows. At the 3.6 million sidewalk points the two models agree on sun or shade at 90%–94% of points in every hour (Cohen’s κ 0.79–0.84). SOLWEIG finds slightly more shade (2.1% of points on average), as expected: it shades the ground, our rays start 1.5 m above it.</li>
+<li><strong>Complete coverage.</strong> Every sidewalk point has a UTCI value at every hour on both days, and no edge is without one.</li>
+<li><strong>Margin.</strong> The 8 cores with the most tall buildings 400–800 m away were rerun with an 800 m margin (155,764 points). UTCI changed by more than 0.1 °C at 0.16% of points at most and by more than 0.5 °C at 0.02%.</li>
+<li><strong>Light through tree crowns.</strong> 40 cores chosen across the range of canopy cover were rerun with 5% and 15% of the sun passing through crowns (SOLWEIG: 3%; measured values are about 1–5%, Konarska et al.&nbsp;2014). Tree shade’s share of the building-shade relief at 15:00 is 112% at 3%, 110% at 5% and 99% at 15%.</li>
+</ul>
+<div id="f1de0d60" class="cell figure-light" data-execution_count="6">
+<div class="cell-output cell-output-display" data-execution_count="6">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="technical_files/figure-html/cell-7-output-1.jpeg" class="img-fluid figure-img"></p>
+<figcaption>Sensitivity of the heat model: light through tree crowns (left) and tile margin (right).</figcaption>
+</figure>
+</div>
+</div>
+</div>
 
 
+</section>
 </section>
 
 </main> <!-- /main -->
@@ -750,7 +812,7 @@ ul.task-list li input[type="checkbox"] {
       &nbsp;
     </div>
     <div class="nav-footer-right">
-<p>Data: NOAA LiDAR, City of Philadelphia, PASDA, DVRPC, OpenStreetMap, SEPTA, Meta CHMv2 (CC BY 4.0)</p>
+<p>Data: NOAA LiDAR, City of Philadelphia, PASDA, DVRPC, OpenStreetMap, SEPTA, Meta CHMv2 (CC BY 4.0), ERA5 (Copernicus) via Open-Meteo (CC BY 4.0)</p>
 </div>
   </div>
 </footer>

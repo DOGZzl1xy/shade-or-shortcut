@@ -37,13 +37,29 @@ export function buildCSR(net, sel) {
   return { n, indptr, nbr, eid: eidS, sel };
 }
 
-// per-scenario edge arrays (local ids) for one time index
+// per-scenario edge arrays (local ids) for one time index; utci (phase 10) is NaN on indoor parts and when absent
 export function edgeArrays(net, csr, t) {
   const pick = (a) => Float64Array.from(csr.sel, (i) => a[i]);
   return {
     length: pick(net.edges.len), sun: pick(net.L.sun[t]), tree: pick(net.L.tree[t]),
     bldg: pick(net.L.bldg[t]), indoor: pick(net.L.indoor[t]),
+    utci: Float64Array.from(csr.sel, (i) => (net.U ? net.U[t][i] ?? NaN : NaN)),
   };
+}
+
+// UTCI relief cost (phase 10, coolpath: scripts/phase_10_solweig.routes): per metre 1 - θ r with
+// r = clip((u_sun - U) / (u_sun - u_bldg), lo, hi), run through the same search as sun = L (1 - r), bldg = L r
+export function heatArrays(net, csr, t) {
+  const h = net.heat, us = h.u_sun[t], ub = h.u_bldg[t], [lo, hi] = h.clip;
+  const base = edgeArrays(net, csr, t), m = base.length.length;
+  const sun = new Float64Array(m), bldg = new Float64Array(m), zero = new Float64Array(m);
+  for (let j = 0; j < m; j++) {
+    const u = Number.isNaN(base.utci[j]) ? us : base.utci[j];
+    const r = Math.min(Math.max((us - u) / (us - ub), lo), hi);
+    sun[j] = base.length[j] * (1 - r);
+    bldg[j] = base.length[j] * r;
+  }
+  return { ...base, sun, tree: zero, bldg, indoor: zero };
 }
 
 class Heap {                        // binary min-heap of [cost, node], ordered like Python tuples
@@ -111,28 +127,36 @@ export function pathEdges(res, dst) {   // local edge ids from the source to dst
   return out.reverse();
 }
 
-// weighted exposure of a path walked in order (coolpath.routing.path_cost)
+// weighted exposure of a path walked in order (coolpath.routing.path_cost), and its length-weighted UTCI
 export function pathTotals(arr, local, opts) {
   const tf = opts.treeFactor ?? 0.5, inf = opts.indoorFactor ?? 1.5;
-  let L = 0, sun = 0, tree = 0, bldg = 0, indoor = 0, C = 0;
+  let L = 0, sun = 0, tree = 0, bldg = 0, indoor = 0, C = 0, uL = 0, uLen = 0;
   for (const e of local) {
     const th = theta(L, opts.theta);
     C += arr.sun[e] + (1 - tf * th) * arr.tree[e] + (1 - th) * arr.bldg[e] + (1 - inf * th) * arr.indoor[e];
     L += arr.length[e]; sun += arr.sun[e]; tree += arr.tree[e]; bldg += arr.bldg[e]; indoor += arr.indoor[e];
+    if (!Number.isNaN(arr.utci[e])) { uL += arr.utci[e] * arr.length[e]; uLen += arr.length[e]; }
   }
-  return { length: L, sun, tree, bldg, indoor, C };
+  return { length: L, sun, tree, bldg, indoor, C, utci: uLen > 0 ? uL / uLen : NaN };
 }
 
 // shortest walk on the outdoor-only network (the baseline used throughout the analysis) and coolest walk on the
-// scenario network, between two nodes at time index t; edges as file indices
-export function route(net, scenario, t, o, d, cache = {}) {
+// scenario network, between two nodes at time index t; edges as file indices. metric "heat" (phase 10) finds the
+// coolest walk by the UTCI relief cost on the outdoor network (indoor parts have no UTCI)
+export function route(net, scenario, t, o, d, cache = {}, metric = "shade") {
   const graph = (sc) => cache[sc] ?? (cache[sc] = buildCSR(net, scenarioEdges(net, sc)));
   const p = net.params;
   const opts = { theta: p.theta, treeFactor: p.tree_factor, indoorFactor: p.indoor_factor };
   const csrO = graph("outdoor"), arrO = edgeArrays(net, csrO, t);
-  const csrS = graph(scenario), arrS = scenario === "outdoor" ? arrO : edgeArrays(net, csrS, t);
   const ls = pathEdges(search(csrO, arrO, o, "shortest"), d);
-  const lh = pathEdges(search(csrS, arrS, o, "shade", opts), d);
+  let csrS = csrO, arrS = arrO, lh;
+  if (metric === "heat") {
+    lh = pathEdges(search(csrO, heatArrays(net, csrO, t), o, "shade", opts), d);
+  } else {
+    csrS = graph(scenario);
+    arrS = scenario === "outdoor" ? arrO : edgeArrays(net, csrS, t);
+    lh = pathEdges(search(csrS, arrS, o, "shade", opts), d);
+  }
   return {
     shortest: { edges: ls.map((e) => csrO.sel[e]), ...pathTotals(arrO, ls, opts) },
     coolest: { edges: lh.map((e) => csrS.sel[e]), ...pathTotals(arrS, lh, opts) },

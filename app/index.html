@@ -4,45 +4,68 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Shade or Shortcut</title>
-<meta name="description" content="How much summer sun can a walk from transit in Philadelphia avoid, and what does the coolest walk cost?">
+<meta name="description" content="On the hottest afternoons, how much of the walk home from transit in Philadelphia can a different street cool? Sun and heat (UTCI) on every sidewalk.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500&family=Space+Grotesk:wght@500;600&family=Space+Mono&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="vendor/maplibre-gl.css">
-<link rel="stylesheet" href="css/site.css?v=ac2d5dd">
+<link rel="stylesheet" href="css/site.css?v=15e0ad9">
 <script>
   // a page cross-fade the browser skips (e.g. in a background tab) rejects its promises; nothing to do about it
   const quiet = (e) => { const t = e.viewTransition; if (t) [t.ready, t.finished, t.updateCallbackDone].forEach((q) => q.catch(() => {})); };
   addEventListener("pagereveal", quiet); addEventListener("pageswap", quiet);
 </script>
 <style>
-  /* one screen per step: scrolling, Space, PageDown / PageUp, arrows and presentation clickers stop on the next screen */
+  /* one screen per step */
   html { scroll-snap-type: y mandatory; }
+  :root { --chap-h: 34px; --top: calc(var(--nav-h) + var(--chap-h)); }
   #map { position: fixed; inset: 0; }
   .shade-fade { position: fixed; inset: 0; pointer-events: none; z-index: 1;
-    background: radial-gradient(ellipse at 50% 55%, rgba(7,8,11,0) 0%, rgba(7,8,11,0.25) 55%, rgba(7,8,11,0.8) 100%); }
+    background: radial-gradient(ellipse at 60% 55%, rgba(7,8,11,0) 0%, rgba(7,8,11,0.25) 55%, rgba(7,8,11,0.8) 100%); }
   main { position: relative; z-index: 2; pointer-events: none; }
-  section { min-height: 100vh; min-height: 100svh; scroll-snap-align: start; scroll-snap-stop: always;
-    display: flex; align-items: center; padding: calc(var(--nav-h) + 24px) 5vw 24px 28px; }
-  section .panel { pointer-events: auto; max-width: 420px; }
-  .hero { justify-content: center; text-align: center; align-items: flex-end; padding-bottom: 9vh; }
-  .hero .title { font-size: clamp(44px, 8vw, 112px); margin: 0; text-shadow: 0 10px 30px rgba(0,0,0,0.6); }
+  section { min-height: 100vh; scroll-snap-align: start; position: relative;
+    display: flex; align-items: center; padding: calc(var(--top) + 24px) 5vw 32px 28px; }
+  section .panel { pointer-events: auto; max-width: 440px; transition: opacity 0.7s ease, transform 0.7s ease; }
+  section:not(.active) .panel, section:not(.active) .content { opacity: 0; transform: translateY(18px); }
+  .hero .content { transition: opacity 0.7s ease, transform 0.7s ease; }
+
+  /* chapter bar under the navigation: where we are in the story; click to jump */
+  .chapters { position: fixed; top: var(--nav-h); left: 0; right: 0; height: var(--chap-h); z-index: 40; display: flex; gap: 0;
+    padding: 0 20px; background: rgba(7,8,11,0.72); border-bottom: 1px solid var(--line); backdrop-filter: blur(6px); }
+  .chapters button { flex: 1 1 0; position: relative; background: none; border: 0; cursor: pointer; text-align: left;
+    font: 11px var(--mono); letter-spacing: 0.12em; text-transform: uppercase; color: var(--dim); padding: 0 10px; }
+  .chapters button b { color: var(--line-strong); font-weight: 400; margin-right: 8px; }
+  .chapters button::after { content: ""; position: absolute; left: 10px; right: 10px; bottom: 0; height: 2px; background: var(--line); }
+  .chapters button .fill { position: absolute; left: 10px; bottom: 0; height: 2px; width: 0; background: var(--cool); transition: width 0.3s; }
+  .chapters button.on { color: var(--ink); }
+  .chapters button.on b { color: var(--cool); }
+  .chapters.hidden { opacity: 0; pointer-events: none; }
+  .chapters { transition: opacity 0.4s; }
+
+  /* hero */
+  .hero { align-items: flex-end; padding-bottom: 10vh; }
+  .hero .content { max-width: 620px; }
+  .hero .title { font-size: clamp(56px, 6.4vw, 104px); margin: 0; text-shadow: 0 10px 30px rgba(0,0,0,0.6); }
   .hero .title em { font-style: normal; color: var(--cool); }
-  .hero .lead { max-width: 560px; margin: 14px auto 0; font-size: clamp(17px, 2vw, 22px); font-weight: 300; text-shadow: 0 2px 12px rgba(0,0,0,0.9); }
-  .scroll-cue { margin-top: 22px; }
-  /* emphasis in the one-sentence headlines: heavier, and in the colour of what it names */
+  .hero .lead { max-width: 560px; margin: 16px 0 0; font-size: clamp(18px, 1.7vw, 23px); font-weight: 300; line-height: 1.45; text-shadow: 0 2px 12px rgba(0,0,0,0.9); }
+  .hero .lead b { font-weight: 500; color: var(--sun); }
+  .scroll-cue { margin-top: 26px; }
+
+  /* text cards: the sentence carries the point, the line under it the detail, the numbers the evidence */
+  .step h2 { font-family: var(--display); font-weight: 500; font-size: clamp(26px, 2.5vw, 36px); line-height: 1.14; margin: 8px 0 8px; }
   .step h2 em { font-style: normal; font-weight: 600; }
+  .step .detail { font-size: 15px; line-height: 1.5; color: #bdbbb4; margin: 0; }
+  .step .detail b { color: var(--ink); font-weight: 500; }
+  .step .stat { display: flex; gap: 34px; margin: 18px 0 4px; flex-wrap: wrap; }
+  .step .stat > div { min-width: 0; }
+  .step .stat .big { font-size: clamp(34px, 3.4vw, 46px); }
+  .cap { font-size: 12px; color: var(--dim); line-height: 1.4; margin-top: 2px; }
   .c-noalt { color: #e58a3a; } .c-choice { color: #6aaee0; }
-  .step h2 { font-family: var(--display); font-weight: 500; font-size: clamp(26px, 3vw, 38px); line-height: 1.12; margin: 6px 0 4px; }
-  .step .stat { display: flex; gap: 40px; margin: 16px 0 2px; flex-wrap: wrap; }
-  .step .stat .big { font-size: clamp(34px, 4vw, 48px); }
-  .cap { font-size: 13px; color: var(--dim); }
-  .step .stat.two { flex-wrap: nowrap; gap: 24px; }
-  .step .stat.two > div { flex: 1 1 0; min-width: 0; }
+  .t-tree { color: var(--tree); } .t-bldg { color: var(--bldg); } .t-indoor { color: var(--indoor); }
   .legend-row { display: flex; gap: 14px; flex-wrap: wrap; margin-top: 14px; font-size: 12px; color: var(--dim); }
-  .ramp { height: 8px; border-radius: 4px; margin-top: 14px; max-width: 260px; }
-  .ends { display: flex; justify-content: space-between; max-width: 260px; font: 10px var(--mono); color: var(--dim); }
-  .cta a { display: inline-block; margin: 10px 10px 0 0; }
+  .mini-legend { margin-top: 14px; max-width: 300px; }
+  .cta a { display: inline-block; margin: 14px 10px 0 0; }
+  .ls-open { height: 10px; background: #c9b6f2; }
   /* opening diagrams: tree, building and indoor shade, shadows grow when the screen comes in */
   section .panel.wide { max-width: 760px; }
   .diagrams { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 14px; }
@@ -50,7 +73,6 @@
   .diagrams svg { width: 100%; height: auto; display: block; overflow: visible; }
   .diagrams figcaption { font-size: 12px; color: var(--dim); margin-top: 6px; line-height: 1.35; }
   .diagrams figcaption b { display: block; font: 500 14px var(--display); }
-  .t-tree { color: var(--tree); } .t-bldg { color: var(--bldg); } .t-indoor { color: var(--indoor); }
   .diagrams .gr { stroke: var(--dim); stroke-width: 1.2; }
   .diagrams .sun-dot { fill: #ffd27a; }
   .diagrams .ray { stroke: #ffd27a; stroke-width: 1; stroke-dasharray: 3 3; opacity: 0.6; }
@@ -67,74 +89,123 @@
   .active .diagrams .sh { transform: scaleX(1); }
   .active .diagrams .in-fill { opacity: 0.22; }
   .active .diagrams .walk, .active .diagrams .who { opacity: 1; }
-  @media (prefers-reduced-motion: reduce) { .diagrams * { transition: none !important; } }
-  @media (max-width: 760px) { .diagrams { gap: 8px; } .diagrams figcaption { font-size: 11px; } }
-  /* hour ticks under the clock on the shade screen, 08:00-19:00 */
-  .hours { display: flex; gap: 3px; margin-top: 12px; max-width: 300px; }
-  .hours i { flex: 1; height: 4px; border-radius: 2px; background: var(--line-strong); transition: background 0.3s; }
+
+  /* clock with sun dial (screens 5 and 11): the day plays by itself while the screen is on */
+  .clock { display: flex; align-items: center; gap: 18px; margin-top: 16px; }
+  .clock .big { font-size: 46px; }
+  .dial { width: 92px; height: 56px; overflow: visible; }
+  .dial .arc { fill: none; stroke: var(--line-strong); stroke-dasharray: 2 3; }
+  .dial .ground { stroke: var(--dim); }
+  .dial .sunpos { fill: #ffd27a; filter: drop-shadow(0 0 6px rgba(255,210,122,0.8)); }
+  .hours { display: flex; gap: 3px; margin-top: 12px; max-width: 320px; }
+  .hours i { flex: 1; height: 4px; border-radius: 2px; background: var(--line-strong); transition: background 0.2s; }
   .hours i.on { background: var(--ink); }
-  .ls-open { height: 10px; background: #c9b6f2; }
-  /* line-end labels on the walks */
-  .tagwrap { width: 0; height: 0; pointer-events: none; }
+
+  /* felt temperature (screen 10) */
+  .felt { margin-top: 14px; }
+  .felt svg { width: 100%; height: auto; display: block; overflow: visible; }
+  .felt text { font-family: var(--mono); }
+  .felt .val { font: 500 17px var(--mono); }
+  .felt .lab { font: 11px var(--body); fill: var(--dim); }
+  .felt .fig { opacity: 0; transform: translateY(6px); transition: opacity 0.6s, transform 0.6s; }
+  .active .felt .fig { opacity: 1; transform: none; }
+  .active .felt .fig.f2 { transition-delay: 0.25s; } .active .felt .fig.f3 { transition-delay: 0.5s; }
+
+  /* 100 walks in four groups (screen 8), in a panel right of the card */
+  section .waffle { position: absolute; right: 6vw; top: 50%; transform: translateY(-45%); width: 560px; max-width: none; pointer-events: none; padding: 18px 22px; }
+  .waffle .wrow { display: grid; grid-template-columns: 64px 1fr; gap: 14px; align-items: start; padding: 12px 0; border-top: 1px solid var(--line); }
+  .waffle .wrow:first-of-type { border-top: 0; }
+  .waffle .wn { font: 500 34px/1 var(--mono); }
+  .waffle .wt { font-size: 13px; color: #c9c7c0; margin-bottom: 8px; line-height: 1.35; }
+  .waffle .wt b { color: var(--ink); font-weight: 500; }
+  .waffle .sq { display: flex; flex-wrap: wrap; gap: 3px; max-width: 440px; }
+  .waffle .sq i { width: 15px; height: 15px; border-radius: 3px; opacity: 0; transform: scale(0.6); transition: opacity 0.3s, transform 0.3s; }
+  .active .waffle .sq i { opacity: 1; transform: none; }
+
+  /* mini chart of UTCI by hour (screen 11) */
+  .hourchart { margin-top: 14px; }
+  .hourchart svg { width: 100%; height: auto; display: block; overflow: visible; }
+  .hourchart text { font: 10px var(--mono); fill: var(--dim); }
+
+  /* walk screen (13): the UTCI profile sits in the card, the map keeps the whole route */
+  section .panel.walkcard { max-width: 600px; width: 600px; }
+  .walkcard h2 { font-size: clamp(24px, 2.1vw, 31px); }
+  .wk-head2 { display: flex; align-items: center; justify-content: space-between; margin: 16px 0 4px; }
+  .wk-head2 .ghost { padding: 5px 10px; font-size: 11px; }
+  .wc-axis text, .wc-band { font: 10px var(--mono); fill: var(--dim); }
+  .wc-band { text-transform: uppercase; letter-spacing: 0.08em; }
+  .wc-grid { stroke: rgba(255,255,255,0.06); }
+  .wc-line { fill: none; stroke-width: 2.2; stroke-linejoin: round; }
+  .wc-dot { fill: #fff; stroke-width: 3; }
+  .walk-tag { font: 12px/1 var(--mono); padding: 4px 7px; border-radius: 6px; background: rgba(7,8,11,0.88); color: #fff; border: 1px solid var(--c); white-space: nowrap; }
+  .readout { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 14px; }
+  .readout .who { font: 11px var(--mono); text-transform: uppercase; letter-spacing: 0.12em; }
+  .readout .now { font: 500 28px/1.1 var(--mono); margin-top: 4px; }
+  .readout .sub { font-size: 12px; color: var(--dim); margin-top: 2px; line-height: 1.4; }
+  .readout .sub b { color: var(--ink); font-weight: 500; font-family: var(--mono); }
+  .end-line { margin-top: 12px; font-size: 14px; opacity: 0; transition: opacity 0.8s; }
+  .end-line.on { opacity: 1; }
+
+  /* labels on the map */
   .pill { font: 12px/1.3 var(--mono); padding: 3px 8px; border-radius: 10px; background: rgba(7,8,11,0.85); border: 1px solid currentColor;
-    white-space: nowrap; pointer-events: none; opacity: 0; transition: opacity 0.6s 0.8s; }
+    white-space: nowrap; pointer-events: none; opacity: 0; transition: opacity 0.6s 0.6s; }
   .pill.on { opacity: 1; }
+  .pill .v { font-weight: 700; margin-left: 6px; }
+  .pinlab { font: 11px var(--mono); letter-spacing: 0.08em; text-transform: uppercase; color: #fff; background: rgba(7,8,11,0.85);
+    border: 1px solid var(--line-strong); border-radius: 10px; padding: 3px 8px; white-space: nowrap; pointer-events: none; }
+  .tagwrap { width: 0; height: 0; pointer-events: none; }
   .tag { position: absolute; top: 0; transform: translateY(-50%); font: 12px/1.3 var(--mono); white-space: pre; padding: 3px 7px;
     border-radius: 5px; background: rgba(7,8,11,0.82); border: 1px solid currentColor; opacity: 0; transition: opacity 0.4s; }
-  .tagwrap.l .tag { right: 12px; }
-  .tagwrap.r .tag { left: 12px; }
+  .tagwrap.l .tag { right: 12px; } .tagwrap.r .tag { left: 12px; }
   .tagwrap.u .tag { bottom: 12px; top: auto; left: 0; transform: translateX(-50%); }
   .tagwrap.d .tag { top: 12px; left: 0; transform: translateX(-50%); }
   .tagwrap.on .tag { opacity: 1; }
-  @media (min-width: 1000px) {
-    .hero { justify-content: flex-start; text-align: left; padding-bottom: 10vh; }
-    .hero .content { max-width: 560px; }
-    .hero .title { font-size: clamp(56px, 6vw, 96px); }
-    .hero .lead { margin-left: 0; }
-  }
-  @media (max-height: 760px), (max-width: 999px) {
-    .hero .title { font-size: clamp(38px, 7vw, 72px); }
-    .hero .lead { font-size: 16px; margin-top: 8px; }
-    .scroll-cue { margin-top: 10px; }
-  }
-  @media (max-width: 760px) {
-    html { scroll-snap-type: y proximity; }
-    section { padding: calc(var(--nav-h) + 16px) 16px 16px; align-items: flex-end; }
-    .hero { padding-bottom: 28px; }
-    section .panel { max-width: none; }
-    .step .stat .big { font-size: 32px; }
-    .tag { font-size: 11px; padding: 2px 6px; }
-  }
+  @media (prefers-reduced-motion: reduce) { .diagrams *, .felt *, .waffle * { transition: none !important; } }
 </style>
 </head>
 <body>
 <div id="map"></div>
 <div class="shade-fade"></div>
+<nav class="chapters hidden" id="chapters" aria-label="Chapters"></nav>
 <main>
-  <section class="hero" id="stage-0" data-step="hero">
+  <!-- 0 -->
+  <section class="hero" data-step="hero" data-ch="0">
     <div class="content">
       <h1 class="title big">Shade <em>or</em> Shortcut</h1>
-      <p class="lead">Sun and shade on the walk home from transit in Philadelphia.</p>
-      <div class="label scroll-cue">scroll ↓</div>
+      <p class="lead">On a <b>101 °F</b> afternoon, the walk home from the train or the bus is the part of the trip nobody cools. How much of it can a different street?</p>
+      <div class="label scroll-cue">Scroll ↓</div>
     </div>
   </section>
 
-  <section id="stage-1" data-step="heat">
+  <!-- 1 · The heat -->
+  <section data-step="heat" data-ch="1">
     <div class="panel step">
-      <div class="label">Philadelphia · summer</div>
+      <div class="label">Philadelphia · summer 2025</div>
       <h2>Summer afternoons in Philadelphia are <em class="sun">hot and bright</em>.</h2>
-      <div class="stat two">
+      <div class="stat">
         <div><div class="big num sun" id="h-hot">–</div><div class="cap" id="h-hot-cap">&nbsp;</div></div>
         <div><div class="big num sun" id="h-days">–</div><div class="cap" id="h-days-cap">&nbsp;</div></div>
       </div>
-      <div class="ramp" id="r-lst"></div><div class="ends" id="e-lst"></div>
-      <div class="cap" id="lst-cap" style="margin-top:6px">&nbsp;</div>
+      <div class="mini-legend" id="lst-legend"></div>
+      <p class="cap" id="lst-cap"></p>
     </div>
   </section>
 
-  <section id="stage-2" data-step="sources">
+  <section data-step="persona" data-ch="1">
+    <div class="panel step">
+      <div class="label">One walk among <span id="n-trips">–</span></div>
+      <h2>Every afternoon, thousands walk home from a train or a bus. <em class="cool">Follow one.</em></h2>
+      <p class="detail">From <b id="p-station">–</b> in University City to a home <b id="p-len">–</b> away, at 15:00 on June 24, 2025, the hottest day of the summer.</p>
+      <div class="stat">
+        <div><div class="big num" id="n-homes">–</div><div class="cap">homes within a 15-minute walk (1.2 km) of a station or a frequent bus stop</div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 2 · The shade -->
+  <section data-step="sources" data-ch="2">
     <div class="panel step wide">
-      <div class="label">Shadows drawn for June 21, 15:00 · sun <span class="n-elev">60°</span> high</div>
+      <div class="label">Shadows for June 24, 15:00 · sun <span class="n-elev">65°</span> high</div>
       <h2>Shade comes from <em class="t-tree">trees</em>, from <em class="t-bldg">buildings</em>, and from walking <em class="t-indoor">indoors</em>.</h2>
       <div class="diagrams">
         <figure>
@@ -173,94 +244,149 @@
           <figcaption><b class="t-indoor">Indoors</b><span id="d-indoor">–</span> buildings mapped</figcaption>
         </figure>
       </div>
-      <p class="cap" style="margin:10px 0 0">The other <span id="s-sunny">–</span> of sidewalk length is in the sun.</p>
+      <p class="cap" style="margin:10px 0 0">The other <span id="s-sunny">–</span> of the city's sidewalk length is in the sun.</p>
     </div>
   </section>
 
-  <section id="stage-3" data-step="types">
+  <section data-step="types" data-ch="2">
     <div class="panel step">
-      <div class="label">University City · June 21 · 15:00</div>
+      <div class="label">University City · June 24 · 15:00</div>
       <h2>Mapped on every sidewalk: <em class="sun">sun</em>, <em class="t-tree">tree shade</em>, <em class="t-bldg">building shade</em> or <em class="t-indoor">indoors</em>.</h2>
-      <div class="legend-row"><span><span class="legend-swatch" style="background:var(--sun)"></span>sun</span><span><span class="legend-swatch" style="background:var(--tree)"></span>tree shade</span><span><span class="legend-swatch" style="background:var(--bldg)"></span>building shade</span><span><span class="legend-swatch ls-indoor"></span>indoors</span></div>
+      <p class="detail">From the 2022 LiDAR survey: the height of every building and tree, and a ray towards the sun every 2 m along <b id="n-km">–</b> km of sidewalks.</p>
     </div>
   </section>
 
-  <section id="stage-4" data-step="question">
+  <section data-step="hours" data-ch="2">
     <div class="panel step">
-      <div class="label">The question</div>
-      <h2>So how much sun can a walk home from transit <em class="cool">avoid</em>, and <em>what does it cost</em>?</h2>
-      <div class="stat"><div><div class="big num" id="n-trips">–</div><div class="cap">walks home from stations and frequent bus stops, each as the shortest and the coolest walk</div></div></div>
-    </div>
-  </section>
-
-  <section id="stage-5" data-step="example">
-    <div class="panel step">
-      <div class="label" id="h-case">&nbsp;</div>
-      <h2>Same station, same door: the <em class="sun">shortest</em> and the <em class="cool">coolest</em> walk.</h2>
-    </div>
-  </section>
-
-  <section id="stage-6" data-step="shade">
-    <div class="panel step">
-      <div class="label">Center City · June 21</div>
+      <div class="label">University City · June 24</div>
       <h2>Every sidewalk, <em>every hour</em>.</h2>
+      <p class="detail">Long morning and evening shadows; around midday the sun is high and little shade is left.</p>
+      <div class="clock"><div class="big num" data-clock>08:00</div><svg class="dial" data-dial viewBox="0 0 92 56"></svg></div>
+      <div class="hours" data-hours></div>
+      <div class="mini-legend" data-legend="shade"></div>
+    </div>
+  </section>
+
+  <!-- 3 · Sun: the shadiest walk -->
+  <section data-step="example" data-ch="3">
+    <div class="panel step">
+      <div class="label" id="ex-label">&nbsp;</div>
+      <h2>Same station, same door: the <em class="sun">shortest</em> and the <em class="cool">shadiest</em> walk.</h2>
       <div class="stat">
-        <div><div class="big num" id="h-hour">15:00</div><div class="cap">hour of the day</div></div>
-        <div><div class="big num" id="n-km">–</div><div class="cap">km of sidewalks</div></div>
+        <div><div class="big num sun" id="ex-short">–</div><div class="cap" id="ex-short-cap">&nbsp;</div></div>
+        <div><div class="big num cool" id="ex-cool">–</div><div class="cap" id="ex-cool-cap">&nbsp;</div></div>
       </div>
-      <div class="hours" id="hours" aria-hidden="true"></div>
-      <div class="legend-row"><span><span class="legend-swatch" style="background:var(--sun)"></span>sunny</span><span><span class="legend-swatch" style="background:#e9b36a"></span></span><span><span class="legend-swatch" style="background:#6fb0c8"></span></span><span><span class="legend-swatch" style="background:var(--cool)"></span>shaded</span></div>
+      <p class="detail" id="ex-detail"></p>
     </div>
   </section>
 
-  <section id="stage-7" data-step="sunny">
+  <section data-step="sunny" data-ch="3">
     <div class="panel step">
-      <div class="label">Frequent bus stops · 300–800 m · 15:00</div>
-      <h2>The shortest walk home from a frequent bus stop is <em class="sun">mostly in the sun</em>.</h2>
-      <div class="stat"><div><div class="big num sun" id="s-sun">–</div><div class="cap">in the sun</div></div></div>
-      <div class="ramp" id="r-sunny"></div><div class="ends" id="e-sunny"></div>
+      <div class="label">Walks home from frequent bus stops · 300–800 m · 15:00</div>
+      <h2>Across the city, the shortest walk home is <em class="sun">mostly in the sun</em>.</h2>
+      <div class="stat"><div><div class="big num sun" id="s-sun">–</div><div class="cap">of the shortest walk is in the sun</div></div></div>
+      <div class="mini-legend" data-grid-legend="sun_share"></div>
     </div>
   </section>
 
-  <section id="stage-8" data-step="cooler">
+  <section data-step="waffle" data-ch="3">
     <div class="panel step">
-      <div class="label">Frequent bus stops · 300–800 m · 15:00</div>
-      <h2>The <em class="cool">coolest walk</em> avoids <em id="s-red-words">some</em> of the sun for <em>almost no extra distance</em>.</h2>
-      <div class="stat">
-        <div><div class="big num cool" id="s-red">–</div><div class="cap">sun</div></div>
-        <div><div class="big num" id="s-det">–</div><div class="cap">distance</div></div>
-      </div>
-      <div class="ramp" id="r-cooler"></div><div class="ends" id="e-cooler"></div>
+      <div class="label">Walks home from frequent bus stops · 300–800 m · 15:00</div>
+      <h2>For <em class="c-noalt" id="w-noalt">–</em> walks there is <em class="c-noalt">no shadier way home</em>.</h2>
+      <p class="detail" id="w-detail"></p>
     </div>
+    <div class="panel waffle" id="waffle"></div>
   </section>
 
-  <section id="stage-9" data-step="grid">
+  <section data-step="clusters" data-ch="3">
     <div class="panel step">
-      <div class="label">Frequent bus stops · 500 m cells</div>
-      <h2><span id="s-noalt-words">Many</span> have <em class="c-noalt">no cooler option</em>. <em class="c-choice">Dense street grids</em> give a choice.</h2>
-      <div class="stat"><div><div class="big num" id="s-noalt">–</div><div class="cap">no cooler option</div></div></div>
+      <div class="label">Walks home from frequent bus stops · 500 m cells</div>
+      <h2>Where the street grid is <em class="c-choice">dense</em>, there is a choice.</h2>
+      <p class="detail" id="cl-detail"></p>
       <div class="legend-row" id="clusters"></div>
     </div>
   </section>
 
-  <section id="stage-10" data-step="indoor">
-    <div class="panel step">
-      <div class="label">University City campus · June 21, 15:00</div>
-      <h2>On campus, <em id="s-ind-words">some</em> <em class="cool">coolest walks</em> go <em class="t-indoor">indoors</em>.</h2>
-      <div class="legend-row"><span><span class="legend-swatch ls-short"></span>shortest</span><span><span class="legend-swatch ls-cool"></span>coolest</span><span><span class="legend-swatch ls-indoor"></span>indoors</span><span><span class="legend-swatch ls-open"></span>open to walkers</span></div>
+  <!-- 4 · Heat: the coolest walk -->
+  <section data-step="felt" data-ch="4">
+    <div class="panel step" style="max-width:500px">
+      <div class="label">University City · June 24 · 15:00</div>
+      <h2>Shade is not the same as <em class="cool">cool</em>.</h2>
+      <p class="detail">The heat model gives the <b>UTCI</b>: how hot the weather feels to the body, from sun, sky, walls and ground. A step into shade takes off about <b id="f-drop">5 °C</b> — and still leaves very strong heat stress.</p>
+      <div class="felt"><svg id="felt" viewBox="0 0 400 252"></svg></div>
     </div>
   </section>
 
-  <section id="stage-11" data-step="end">
+  <section data-step="heatday" data-ch="4">
+    <div class="panel step">
+      <div class="label">University City · June 24 · the felt temperature</div>
+      <h2>From <span id="hd-from">10</span>:00 to <span id="hd-to">17</span>:00 even the shade is <em class="sun">very strong heat stress</em>.</h2>
+      <div class="clock"><div class="big num" data-clock>08:00</div><svg class="dial" data-dial viewBox="0 0 92 56"></svg></div>
+      <div class="hourchart"><svg id="hourchart" viewBox="0 0 400 150"></svg></div>
+      <div class="mini-legend" data-legend="heat"></div>
+    </div>
+  </section>
+
+  <section data-step="trees" data-ch="4">
+    <div class="panel step">
+      <div class="label">Three sidewalks, a short block apart · 15:00</div>
+      <h2>Tree shade is as cool as <em class="t-bldg">building shade</em>.</h2>
+      <p class="detail" id="tr-detail"></p>
+    </div>
+  </section>
+
+  <section data-step="walk" data-ch="4">
+    <div class="panel step walkcard">
+      <div class="label" id="wk-label">&nbsp;</div>
+      <h2 id="wk-head">&nbsp;</h2>
+      <div class="readout">
+        <div><div class="who sun">Shortest walk</div><div class="now" id="wk-n-short">–</div><div class="sub" id="wk-s-short"></div></div>
+        <div><div class="who cool">Coolest walk</div><div class="now" id="wk-n-cool">–</div><div class="sub" id="wk-s-cool"></div></div>
+      </div>
+      <div class="wk-head2"><div class="label">UTCI along the walk</div><button class="ghost" id="wk-replay">Replay</button></div>
+      <div id="wk-chart"></div>
+      <div class="end-line" id="wk-end"></div>
+    </div>
+  </section>
+
+  <section data-step="cityheat" data-ch="4">
+    <div class="panel step">
+      <div class="label">Walks home from frequent bus stops · 300–800 m · 15:00</div>
+      <h2>Across the city, the coolest walk takes <em class="cool" id="ch-ext-w">–</em> off the metres in extreme heat.</h2>
+      <div class="stat">
+        <div><div class="big num cool" id="ch-du">–</div><div class="cap">mean UTCI along the walk</div></div>
+        <div><div class="big num cool" id="ch-ext">–</div><div class="cap">metres in extreme heat stress</div></div>
+        <div><div class="big num" id="ch-det">–</div><div class="cap">extra distance</div></div>
+      </div>
+      <p class="detail" id="ch-detail"></p>
+      <div class="mini-legend" data-grid-legend="u_cool"></div>
+    </div>
+  </section>
+
+  <!-- 5 · Indoors -->
+  <section data-step="indoor" data-ch="5">
+    <div class="panel step">
+      <div class="label">University City campus · June 24, 15:00</div>
+      <h2>On campus, <em id="s-ind-words">some</em> <em class="cool">shadiest walks</em> go <em class="t-indoor">indoors</em>.</h2>
+      <p class="detail">Indoor passages count as shade only: they have no UTCI, so the coolest walk stays outside.</p>
+      <div class="legend-row"><span><span class="legend-swatch ls-short"></span>shortest</span><span><span class="legend-swatch ls-cool"></span>shadiest</span><span><span class="legend-swatch ls-indoor"></span>indoors</span><span><span class="legend-swatch ls-open"></span>open to walkers</span></div>
+    </div>
+  </section>
+
+  <!-- 6 · Your walk -->
+  <section data-step="end" data-ch="6">
     <div class="panel step cta">
-      <h2>Find your own <em class="cool">shade</em>.</h2>
-      <a href="tool.html"><button class="ghost">Open the route tool</button></a>
-      <a href="map.html"><button class="ghost">Open the city map</button></a>
+      <div class="label">Where shade is missing</div>
+      <h2>In the <em class="c-noalt">orange</em> neighbourhoods, no street home is shadier.</h2>
+      <p class="detail" id="end-detail"></p>
+      <p class="detail" style="margin-top:14px">Check your own walk, any hour of both days:</p>
+      <a href="tool.html" data-to="tool"><button class="ghost">Open the route tool</button></a>
+      <a href="map.html" data-to="map"><button class="ghost">Open the city map</button></a>
     </div>
   </section>
 </main>
 <script src="vendor/maplibre-gl.js"></script>
 <script src="vendor/pmtiles.js"></script>
-<script type="module" src="js/home.js?v=ac2d5dd"></script>
+<script type="module" src="js/home.js?v=15e0ad9"></script>
 </body>
 </html>

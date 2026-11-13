@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.10.19">
+<meta name="generator" content="quarto-1.10.20">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
@@ -38,10 +38,10 @@ ul.task-list li input[type="checkbox"] {
 <script src="site_libs/quarto-html/tippy.umd.min.js"></script>
 <script src="site_libs/quarto-html/anchor.min.js"></script>
 <link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="site_libs/quarto-html/quarto-syntax-highlighting-dark-f41162f81dd66dbd42c3d463b140dc68.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-dark-f2fac4bd8d68d17ddb8ee8f6b215a9c2.css" rel="stylesheet" id="quarto-text-highlighting-styles">
 <script src="site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="site_libs/bootstrap/bootstrap-d69f2ca21dae9656bc97ea7e3f15cba2.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="dark">
+<link href="site_libs/bootstrap/bootstrap-3f2ecac992fc0b84ee4edb0d0b73e134.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="dark">
 <script id="quarto-search-options" type="application/json">{
   "language": {
     "search-no-results-text": "No results",
@@ -123,6 +123,7 @@ ul.task-list li input[type="checkbox"] {
   <ul class="collapse">
   <li><a href="#sources" id="toc-sources" class="nav-link active" data-scroll-target="#sources">Sources</a></li>
   <li><a href="#the-shade-map" id="toc-the-shade-map" class="nav-link" data-scroll-target="#the-shade-map">The shade map</a></li>
+  <li><a href="#the-heat-model" id="toc-the-heat-model" class="nav-link" data-scroll-target="#the-heat-model">The heat model</a></li>
   <li><a href="#whose-walks" id="toc-whose-walks" class="nav-link" data-scroll-target="#whose-walks">Whose walks</a></li>
   <li><a href="#university-city" id="toc-university-city" class="nav-link" data-scroll-target="#university-city">University City</a></li>
   <li><a href="#known-gaps" id="toc-known-gaps" class="nav-link" data-scroll-target="#known-gaps">Known gaps</a></li>
@@ -135,7 +136,7 @@ ul.task-list li input[type="checkbox"] {
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
 <h1 class="title">Data</h1>
-<p class="subtitle lead">Where the shade map comes from, and who we follow home.</p>
+<p class="subtitle lead">Where the shade and heat maps come from, and who we follow home.</p>
 </div>
 
 
@@ -154,7 +155,7 @@ ul.task-list li input[type="checkbox"] {
 
 <section id="sources" class="level2">
 <h2 class="anchored" data-anchor-id="sources">Sources</h2>
-<p>All inputs are public data.</p>
+<p>All inputs are public.</p>
 <table class="caption-top table">
 <colgroup>
 <col style="width: 33%">
@@ -171,12 +172,12 @@ ul.task-list li input[type="checkbox"] {
 <tbody>
 <tr class="odd">
 <td>Airborne LiDAR, March 2022</td>
-<td>City of Philadelphia, via NOAA Digital Coast and PASDA</td>
+<td>City of Philadelphia (NOAA Digital Coast, PASDA)</td>
 <td>ground, building and tree heights at 1 m</td>
 </tr>
 <tr class="even">
 <td>Building footprints</td>
-<td>City of Philadelphia (OpenDataPhilly)</td>
+<td>City of Philadelphia</td>
 <td>building outlines</td>
 </tr>
 <tr class="odd">
@@ -202,22 +203,27 @@ ul.task-list li input[type="checkbox"] {
 <tr class="odd">
 <td>Transit</td>
 <td>SEPTA, fall 2026 timetable</td>
-<td>rapid-transit stations and frequent bus stops</td>
+<td>stations and frequent bus stops</td>
 </tr>
 <tr class="even">
 <td>Properties</td>
 <td>City of Philadelphia (OPA)</td>
-<td>residential parcels, where walks end</td>
+<td>homes, where walks end</td>
 </tr>
 <tr class="odd">
-<td>Land surface temperature</td>
-<td>USGS Landsat 8 (July 17, 2024)</td>
-<td>the summer heat map on the Story page (Landsat surface temperature, as used for Philadelphia by Li, Chakraborty &amp; Wang 2023, <em>Urban Climate</em>)</td>
+<td>Hourly weather</td>
+<td>ERA5 (ECMWF), via Open-Meteo</td>
+<td>weather for the heat model</td>
 </tr>
 <tr class="even">
-<td>Air temperature</td>
-<td>NOAA ACIS, Philadelphia International Airport</td>
-<td>summer heat figures on the Story page</td>
+<td>Heat model</td>
+<td>SOLWEIG 2022a (solweig-gpu 2.0.0)</td>
+<td>felt temperature (UTCI) at 1 m</td>
+</tr>
+<tr class="odd">
+<td>Surface temperature, air temperature</td>
+<td>USGS Landsat 8; NOAA ACIS</td>
+<td>heat figures on the Story page</td>
 </tr>
 </tbody>
 </table>
@@ -246,7 +252,7 @@ points checked for shade, every 2 m
 24
 </div>
 <div class="label">
-hours: June 21 and August 1, 8:00–19:00
+hours: June 24 and July 29, 8:00–19:00
 </div>
 </div>
 <div>
@@ -258,8 +264,8 @@ height model of buildings and trees
 </div>
 </div>
 </div>
-<p>Building and tree heights come from the 2022 LiDAR survey, flown before the leaves came out. Building heights agree closely with the city’s own records (median absolute difference 0.5 m over 541,222 buildings); bridges and elevated rail lines are included, so they cast shadows too. Trees cover 17% of the city in the model (the median tree is 15 m tall). Covered walkways and passages through buildings (4.2 km) are always in shade.</p>
-<div id="66b2afe3" class="cell figure-light" data-execution_count="4">
+<p>Heights come from the 2022 LiDAR survey. Building heights match the city’s records to 0.5 m (median, 541,222 buildings); bridges and elevated rail cast shadows too. Trees cover 17% of the city (median height 15 m). Covered walkways (4.2 km) are always in shade.</p>
+<div id="0879cbdc" class="cell figure-light" data-execution_count="4">
 <div class="cell-output cell-output-display" data-execution_count="4">
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
@@ -270,14 +276,58 @@ height model of buildings and trees
 </div>
 </div>
 </section>
+<section id="the-heat-model" class="level2">
+<h2 class="anchored" data-anchor-id="the-heat-model">The heat model</h2>
+<p>Shade says where the sun is blocked, not how hot a sidewalk feels. For that, the same heights go into SOLWEIG, which computes the radiation a standing person receives from sun, sky, walls and ground and, with the weather, the <strong>UTCI</strong>: how hot it feels, in °C. Above 38 °C is <em>very strong</em> heat stress, above 46 °C <em>extreme</em>.</p>
+<p>The model needs real weather, so the study uses two hot, sunny days of 2025: <strong>June 24</strong>, during a heat wave, and <strong>July 29</strong>. Shadows are computed for the same moments.</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 16%">
+<col style="width: 16%">
+<col style="width: 16%">
+<col style="width: 16%">
+<col style="width: 16%">
+<col style="width: 16%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Day</th>
+<th>Air temperature, 15:00</th>
+<th>Humidity, 15:00</th>
+<th>Wind, 15:00</th>
+<th>Peak solar radiation</th>
+<th>Daily maximum</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>June 24, 2025</td>
+<td>38.5 °C</td>
+<td>32%</td>
+<td>2.8 m/s</td>
+<td>936 W/m²</td>
+<td>38.8 °C</td>
+</tr>
+<tr class="even">
+<td>July 29, 2025</td>
+<td>36.1 °C</td>
+<td>43%</td>
+<td>1.8 m/s</td>
+<td>914 W/m²</td>
+<td>36.1 °C</td>
+</tr>
+</tbody>
+</table>
+<p>One ERA5 cell covers the whole city, so air temperature and wind are the same everywhere; the heat map varies with sun, shade, walls and ground. The model ran in 400 one-kilometre tiles per day on a GPU and gives a UTCI value at all 3.6 million sidewalk points, every hour.</p>
+</section>
 <section id="whose-walks" class="level2">
 <h2 class="anchored" data-anchor-id="whose-walks">Whose walks</h2>
-<p>Each walk starts at a stop: any rapid-transit station (Regional Rail, L (Market-Frankford), B (Broad Street) or the T trolley tunnel) or a bus stop with at least 6 buses an hour in one direction between 15:00 and 19:00. Every home within 1.2 km walking distance of such a stop is one walk, 431,100 in all. The other 91,649 homes (17.5%), mostly in the Northeast and Roxborough, have no frequent stop that close.</p>
-<div id="e8b3d92d" class="cell figure-light" data-execution_count="6">
-<div class="cell-output cell-output-display" data-execution_count="6">
+<p>Each walk starts at a rapid-transit station (Regional Rail, L, B, T tunnel) or at a bus stop with at least 6 buses an hour (15:00–19:00), and ends at a home within 1.2 km on foot: 431,114 walks. The other 91,659 homes (17.5%), mostly in the Northeast and Roxborough, have no frequent stop that close.</p>
+<div id="bb39a9d6" class="cell figure-light" data-execution_count="8">
+<div class="cell-output cell-output-display" data-execution_count="8">
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
-<p><img src="data_files/figure-html/cell-7-output-1.jpeg" class="img-fluid figure-img" width="640"></p>
+<p><img src="data_files/figure-html/cell-9-output-1.jpeg" class="img-fluid figure-img" width="640"></p>
 <figcaption>Homes without a frequent stop within 1.2 km (red).</figcaption>
 </figure>
 </div>
@@ -286,15 +336,16 @@ height model of buildings and trees
 </section>
 <section id="university-city" class="level2">
 <h2 class="anchored" data-anchor-id="university-city">University City</h2>
-<p>For University City we mapped the entrances and indoor passages of 41 buildings (4.4 km of passages); 10 of them can be entered without a Penn ID. Campus footpaths from OpenStreetMap are added to the sidewalk network there.</p>
+<p>In University City, entrances and indoor passages of 41 buildings were mapped (4.4 km; 10 buildings open without a Penn ID), and campus footpaths from OpenStreetMap were added.</p>
 </section>
 <section id="known-gaps" class="level2">
 <h2 class="anchored" data-anchor-id="known-gaps">Known gaps</h2>
 <ul>
-<li>Outside University City, campus and park paths are missing, so cooler options inside campuses and parks are understated.</li>
-<li>Shadows assume clear skies on two summer days; trees are mapped from leaf-off LiDAR and 2018 land cover, buildings from 2022.</li>
-<li>Missing or misplaced footprints, newer buildings and temporary objects (parked trains, scaffolding) affect shade locally.</li>
-<li>The timetable is one weekday in fall 2026; summer service may differ.</li>
+<li>Campus and park paths are missing outside University City, so cooler options there are understated.</li>
+<li>Two clear, hot days; trees from leaf-off LiDAR and 2018 land cover, buildings from 2022.</li>
+<li>One weather cell for the city: no neighbourhood differences in air temperature or wind. Trees let a fixed 3% of the sun through.</li>
+<li>Missing footprints, new buildings and temporary objects affect shade locally.</li>
+<li>The timetable is one weekday in fall 2026.</li>
 </ul>
 
 
@@ -715,7 +766,7 @@ height model of buildings and trees
       &nbsp;
     </div>
     <div class="nav-footer-right">
-<p>Data: NOAA LiDAR, City of Philadelphia, PASDA, DVRPC, OpenStreetMap, SEPTA, Meta CHMv2 (CC BY 4.0)</p>
+<p>Data: NOAA LiDAR, City of Philadelphia, PASDA, DVRPC, OpenStreetMap, SEPTA, Meta CHMv2 (CC BY 4.0), ERA5 (Copernicus) via Open-Meteo (CC BY 4.0)</p>
 </div>
   </div>
 </footer>
