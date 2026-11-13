@@ -112,14 +112,14 @@
   .active .felt .fig.f2 { transition-delay: 0.25s; } .active .felt .fig.f3 { transition-delay: 0.5s; }
 
   /* 100 walks in four groups (screen 8), in a panel right of the card */
-  section .waffle { position: absolute; right: 6vw; top: 50%; transform: translateY(-45%); width: 560px; max-width: none; pointer-events: none; padding: 18px 22px; }
-  .waffle .wrow { display: grid; grid-template-columns: 64px 1fr; gap: 14px; align-items: start; padding: 12px 0; border-top: 1px solid var(--line); }
-  .waffle .wrow:first-of-type { border-top: 0; }
-  .waffle .wn { font: 500 34px/1 var(--mono); }
-  .waffle .wt { font-size: 13px; color: #c9c7c0; margin-bottom: 8px; line-height: 1.35; }
+  section[data-step="waffle"] .panel { max-width: 520px; }
+  .waffle { margin-top: 16px; }
+  .waffle .wrow { display: grid; grid-template-columns: 48px 1fr; gap: 12px; align-items: start; padding: 9px 0; border-top: 1px solid var(--line); }
+  .waffle .wn { font: 500 26px/1 var(--mono); }
+  .waffle .wt { font-size: 12px; color: #c9c7c0; margin-bottom: 6px; line-height: 1.35; }
   .waffle .wt b { color: var(--ink); font-weight: 500; }
-  .waffle .sq { display: flex; flex-wrap: wrap; gap: 3px; max-width: 440px; }
-  .waffle .sq i { width: 15px; height: 15px; border-radius: 3px; opacity: 0; transform: scale(0.6); transition: opacity 0.3s, transform 0.3s; }
+  .waffle .sq { display: flex; flex-wrap: wrap; gap: 3px; }
+  .waffle .sq i { width: 12px; height: 12px; border-radius: 2px; opacity: 0; transform: scale(0.6); transition: opacity 0.3s, transform 0.3s; }
   .active .waffle .sq i { opacity: 1; transform: none; }
 
   /* mini chart of UTCI by hour (screen 11) */
@@ -260,7 +260,6 @@
     <div class="panel step">
       <div class="label">University City · June 24</div>
       <h2>Every sidewalk, <em>every hour</em>.</h2>
-      <p class="detail">Long morning and evening shadows; around midday the sun is high and little shade is left.</p>
       <div class="clock"><div class="big num" data-clock>08:00</div><svg class="dial" data-dial viewBox="0 0 92 56"></svg></div>
       <div class="hours" data-hours></div>
       <div class="mini-legend" data-legend="shade"></div>
@@ -282,7 +281,7 @@
 
   <section data-step="sunny" data-ch="3">
     <div class="panel step">
-      <div class="label">Walks home from frequent bus stops · 300–800 m · 15:00</div>
+      <div class="label">Walks home from frequent bus stops within 300–800 m at 15:00</div>
       <h2>Across the city, the shortest walk home is <em class="sun">mostly in the sun</em>.</h2>
       <div class="stat"><div><div class="big num sun" id="s-sun">–</div><div class="cap">of the shortest walk is in the sun</div></div></div>
       <div class="mini-legend" data-grid-legend="sun_share"></div>
@@ -291,16 +290,16 @@
 
   <section data-step="waffle" data-ch="3">
     <div class="panel step">
-      <div class="label">Walks home from frequent bus stops · 300–800 m · 15:00</div>
+      <div class="label">Walks home from frequent bus stops within 300–800 m at 15:00</div>
       <h2>For <em class="c-noalt" id="w-noalt">–</em> walks there is <em class="c-noalt">no shadier way home</em>.</h2>
       <p class="detail" id="w-detail"></p>
+      <div class="waffle" id="waffle"></div>
     </div>
-    <div class="panel waffle" id="waffle"></div>
   </section>
 
   <section data-step="clusters" data-ch="3">
     <div class="panel step">
-      <div class="label">Walks home from frequent bus stops · 500 m cells</div>
+      <div class="label">Walks home from frequent bus stops within 300–800 m at 15:00</div>
       <h2>Where the street grid is <em class="c-choice">dense</em>, there is a choice.</h2>
       <p class="detail" id="cl-detail"></p>
       <div class="legend-row" id="clusters"></div>
@@ -351,7 +350,7 @@
 
   <section data-step="cityheat" data-ch="4">
     <div class="panel step">
-      <div class="label">Walks home from frequent bus stops · 300–800 m · 15:00</div>
+      <div class="label">Walks home from frequent bus stops within 300–800 m at 15:00</div>
       <h2>Across the city, the coolest walk takes <em class="cool" id="ch-ext-w">–</em> off the metres in extreme heat.</h2>
       <div class="stat">
         <div><div class="big num cool" id="ch-du">–</div><div class="cap">mean UTCI along the walk</div></div>
