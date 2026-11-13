@@ -2,8 +2,8 @@
 // sentence; on two screens the day plays by itself (08:00 -> 19:00).
 // Colours, ramps, legends and route styles are the shared ones of common.js, as on the route tool and the city map.
 import { VERSION, nav, baseStyle, getJSON, pmtilesProtocol, COLORS, CLUSTERS, GRID_RAMPS, ATTR, pct, degC, newMap, routeLayers,
-  ROUTE_LAYERS, sidewalkColor, sidewalkLegend, SIDEWALK_WIDTH, rampHTML, rampExpr, UTCI_STOPS } from "./common.js?v=15e0ad9";
-import { createWalk } from "./walk.js?v=15e0ad9";
+  ROUTE_LAYERS, sidewalkColor, sidewalkLegend, SIDEWALK_WIDTH, rampHTML, rampExpr, UTCI_STOPS } from "./common.js?v=00c01c4";
+import { createWalk } from "./walk.js?v=00c01c4";
 
 nav("index.html");
 pmtilesProtocol();
@@ -124,7 +124,7 @@ $("cl-detail").innerHTML = `In <b class="c-choice">${prof[1].length} cells</b> a
 $("clusters").innerHTML = CLUSTERS.map(([, n, c]) => `<span><span class="legend-swatch" style="background:${c};height:10px"></span>${n.toLowerCase()}</span>`).join("");
 document.querySelectorAll("[data-grid-legend]").forEach((el) => {
   const k = el.dataset.gridLegend, r = GRID_RAMPS[k];
-  el.innerHTML = rampHTML(r.stops, r.ticks, { title: k === "sun_share" ? "Sun on the shortest walk, by 500 m cell" : "How much cooler the coolest walk is (UTCI)" });
+  el.innerHTML = rampHTML(r.stops, r.ticks, { title: k === "sun_share" ? "Sun on the shortest walk" : "How much cooler the coolest walk is (UTCI)", ends: r.ends });
 });
 // chapter 4
 set("f-drop", `${Math.round(r15.u_sun - (r15.u_bldg + r15.u_tree) / 2)} °C`);
@@ -214,7 +214,7 @@ function hourChart(h) {
   let rest = 100 - n.reduce((a, b) => a + b, 0);
   raw.map((v, i) => [v - Math.floor(v), i]).sort((a, b) => b[0] - a[0]).forEach(([, i]) => { if (rest > 0) { n[i] += 1; rest -= 1; } });
   let k = 0;
-  $("waffle").innerHTML = `<div class="label" style="margin-bottom:6px">100 walks home · one square = one walk</div>` + n.map((c, i) =>
+  $("waffle").innerHTML = `<div class="label" style="margin-bottom:4px">100 walks home · one square = one walk</div>` + n.map((c, i) =>
     `<div class="wrow"><div class="wn" style="color:${cols[i]}">${c}</div><div><div class="wt">${text[i]}</div>
       <div class="sq">${Array.from({ length: c }, () => `<i style="background:${cols[i]};transition-delay:${(k++ * 12) / 1000}s"></i>`).join("")}</div></div></div>`).join("");
 })();
@@ -269,7 +269,12 @@ function arrangeTags() {
   const pts = { short: screenPoints(tagLines.short), cool: screenPoints(tagLines.cool) }, all = [...pts.short, ...pts.cool];
   const pr = document.querySelector(`[data-step="${current}"] .panel`)?.getBoundingClientRect();
   const panel = pr && { x: pr.left - 8, y: pr.top - 8, w: pr.width + 16, h: pr.height + 16 };
-  const W = window.innerWidth, H = window.innerHeight, placed = [];
+  const W = window.innerWidth, H = window.innerHeight;
+  // the station and home labels are obstacles too
+  const placed = pins.filter((mk) => mk.getElement().isConnected).map((mk) => {
+    const r = mk.getElement().getBoundingClientRect();
+    return { x: r.left - 6, y: r.top - 6, w: r.width + 12, h: r.height + 12 };
+  });
   for (const k of ["short", "cool"]) {
     const el = tags[k].getElement(), w = el.firstChild.offsetWidth + 8, h = el.firstChild.offsetHeight + 8;
     const own = pts[k], other = pts[k === "short" ? "cool" : "short"];

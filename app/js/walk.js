@@ -2,7 +2,7 @@
 // same pace; the walked part of each route turns the colour of its UTCI, and a profile below draws UTCI against the
 // distance walked, with the extreme heat-stress band (UTCI >= 46 C). Data: data/walk.json (phase 10 web-walk), one
 // entry per hour of the first study day, every walk as its 2 m sample points (lon, lat, UTCI, length per point).
-import { COLORS, UTCI_STOPS } from "./common.js?v=15e0ad9";
+import { COLORS, UTCI_STOPS } from "./common.js?v=00c01c4";
 
 const C_STOPS = UTCI_STOPS.map((v, i) => (i % 2 ? v : v / 10));          // UTCI in C, not x 10
 const uColor = ["interpolate", ["linear"], ["get", "u"], ...C_STOPS];

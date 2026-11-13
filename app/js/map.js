@@ -2,7 +2,7 @@
 // rapid-transit stations. Panel, legend, time bar and sidewalk colours are the shared components of common.js, as on
 // the route tool; one measure toggle (sun / heat) switches the sidewalks, the grid and the stations together.
 import { VERSION, readState, writeState, nav, collapsible, baseStyle, getJSON, pmtilesProtocol, COLORS, CLUSTERS, GRID_RAMPS, ATTR,
-  pct, degC, timeBar, newMap, sidewalkColor, sidewalkLegend, SIDEWALK_WIDTH, SIDEWALK_OPACITY, measureControl, rampHTML, rampExpr } from "./common.js?v=15e0ad9";
+  pct, degC, timeBar, newMap, sidewalkColor, sidewalkLegend, SIDEWALK_WIDTH, SIDEWALK_OPACITY, measureControl, rampHTML, rampExpr } from "./common.js?v=00c01c4";
 
 nav("map.html");
 pmtilesProtocol();
