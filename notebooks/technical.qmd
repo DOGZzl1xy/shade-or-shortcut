@@ -17,8 +17,8 @@ days = " and ".join(pd.Timestamp(d).strftime("%B %-d") for d in st["dates"])
 th, hs, mt = cfg["routing"]["theta_curve"], cfg["trips"]["home_stops"], cfg["metrics"]
 ```
 
-This page is for readers who want to check how the numbers on the other pages were produced. The code, every
-parameter and the stored result tables are in the [project repository](https://github.com/DOGZzl1xy/shade-or-shortcut).
+How the numbers were produced. Code, parameters and result tables are in the
+[project repository](https://github.com/DOGZzl1xy/shade-or-shortcut).
 
 ## Processing pipeline
 
@@ -59,7 +59,6 @@ rows = [
                               f"(sensitivity {', '.join(f'{x:.0%}' for x in mt['no_alt_threshold_sensitivity'])})"),
     ("Grid and clusters", f"{mt['grid_m']} m cells with at least {mt['min_trips_per_cell']} walks of 300–800 m; k-means, k = {mt['cluster_k']}"),
     ("Station ranking", f"at least {mt['min_trips_station_rank']} walks of 300–800 m"),
-    ("Random seed", str(cfg["project"]["seed"])),
     ("Heat model", "SOLWEIG 2022a, GPU version solweig-gpu 2.0.0; global radiation split into direct and diffuse by the model; "
                    "153 sky patches for the sky view"),
     ("Heat model tiles", f"{sw['city']['core_m']:,} m cores, each run with a {sw['city']['margin_m']} m margin on every side; "
@@ -114,9 +113,8 @@ items = [
     ("Bridge decks", f"A sidewalk segment is on a bridge when at least {bd['min_length_share']:.0%} of it lies within "
      f"{bd['buffer_m']} m of an OSM road bridge and the two run within {bd['max_angle_deg']}° of each other; its observer then "
      "stands on the deck. A plain intersection test would put every underpass on the bridge above it."),
-    ("Terrain shadows", "Bare ground also blocks the sun, which matters in steep valleys such as the Wissahickon at low sun."),
-    ("Covered walkways", "OpenStreetMap covered walkways and passages through buildings are added and counted as building "
-     "shade at every hour."),
+    ("Covered walkways", "OpenStreetMap covered walkways and passages are always building shade; in the heat model they take "
+     "the hour's median UTCI of building-shaded points (SOLWEIG does not see their roofs)."),
     ("Cost function kept as published", f"The shadiest path sometimes has more sun than the shortest, when it trades tree "
      f"shade for building shade ({pct(s5['sun_increase_share'], 1)} of test walks). The cost was kept unchanged, and the "
      "weighted exposure C is reported next to the sun share."),
@@ -132,13 +130,9 @@ items = [
      f"({s8['connectivity']['osm_km_in_main_component']:.0f} km), leaving out sidewalks, crossings, private and indoor ways. "
      "Each mapped entrance is linked to the nearest sidewalk point without crossing a building; links over 30 m were checked "
      "by hand and the ones that are not walkable removed."),
-    ("Indoor baseline", "In the indoor scenarios the shortest walk is always the outdoor one, so every scenario is compared "
-     "against the same baseline."),
     ("Two real days", "The heat model needs real weather, so the calendar dates of the shade analysis (June 21, August 1) were "
      "replaced by the hot, sunny days nearest to them in 2025: June 24 (Philadelphia airport 101 °F) and July 29 (98 °F); "
      "August 1, 2025 was cool and overcast. The shadows were recomputed for the same days."),
-    ("Sun half an hour early", "SOLWEIG reads each weather row as the mean of the hour ending then and puts the sun at its "
-     "middle. The shadow model uses the same instant, so a sidewalk's shade class and its UTCI describe the same moment."),
     ("Own tiling", "solweig-gpu can split a large area itself, but its tiles overlap only to the right and below, so a tower "
      "just left of or above a tile edge would cast no shadow into it. Every 1 km core is run on its own with a 400 m margin on "
      "all four sides and only the core is kept."),
@@ -149,16 +143,9 @@ items = [
      "building pixel (footprints overlap the sidewalk lines) take the value of the nearest open pixel."),
     ("Bridge decks", f"SOLWEIG treats a bridge as a building and gives no UTCI on it. For the {s10['bridge_points']:,} points on "
      "bridge decks, UTCI is computed from the mean radiant temperature of the deck pixel."),
-    ("Covered walkways", "SOLWEIG does not see roofs over walkways; covered edges take the hour's median UTCI of building-shaded "
-     "points."),
     ("One weather cell", "Air temperature, humidity and wind are the same everywhere: ERA5 cells are about 25 km wide, and "
      "within-city differences in air temperature and wind are left for later work. The UTCI differences shown here come from "
      "radiation: sun, shade, sky view, walls and ground."),
-    ("Heat cost references", "The ends of the relief scale are city-wide medians at sunlit and building-shaded points, per hour, "
-     "so the coolest walk prices a metre of typical sun at 1 and a metre of typical building shade at 1 − θ, exactly as the "
-     "shade cost does; everything in between follows the UTCI."),
-    ("OpenStreetMap fallback", "In November 2026 the Overpass API was overloaded; missing OSM layers were read from the Geofabrik "
-     "Pennsylvania extract with the same tag filters."),
     ("Pinned timetable", "SEPTA replaced its GTFS feed during the project; the analysis uses the archived release v202609271, "
      "so stop frequencies stay reproducible."),
 ]

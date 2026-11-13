@@ -94,8 +94,8 @@ const PAUSE = '<svg viewBox="0 0 12 12" width="12" height="12"><path d="M2.5 1.5
 
 // ---- measure: sun (shade share; the shadiest walk) or heat (UTCI; the coolest walk), one toggle on every page
 export const MEASURES = {
-  shade: { label: "Sun", route: "Shadiest", help: "Sun: shade along each sidewalk. Routes take the <b>shadiest walk</b> (shade cost of Wen et al. 2025)." },
-  heat: { label: "Heat (UTCI)", route: "Coolest", help: "Heat: the UTCI, how hot it feels. Routes take the <b>coolest walk</b> (UTCI cost)." },
+  shade: { label: "Sun", route: "Shadiest", help: "Shade along each sidewalk" },
+  heat: { label: "Heat (UTCI)", route: "Coolest", help: "How hot it feels" },
 };
 export function measureControl(el, m, onChange, { help = true } = {}) {
   el.innerHTML = `<div class="label">Measure</div>
@@ -208,12 +208,12 @@ export function rampHTML(stops, ticks, { lo = stops[0], hi = stops[stops.length 
     ${ends ? `<div class="ends2"><span style="color:${ends[0][1]}">← ${ends[0][0]}</span><span style="color:${ends[1][1]}">${ends[1][0]} →</span></div>` : ""}
     ${note ? `<p class="note">${note}</p>` : ""}`;
 }
-export function sidewalkLegend(m, { note = true } = {}) {
+export function sidewalkLegend(m, { note = false } = {}) {
   return m === "heat"
     ? rampHTML(UTCI_STOPS, [[360, "≤36"], [400, "40"], [430, "43"], [460, "46 °C+"]],
-      { title: "Sidewalk heat · UTCI (felt temperature)", note: note ? UTCI_NOTE : "", ends: [["cooler", COLORS.cool], ["hotter", COLORS.sun]] })
+      { title: "UTCI", note: note ? UTCI_NOTE : "", ends: [["cooler", COLORS.cool], ["hotter", COLORS.sun]] })
     : rampHTML(SHADE_STOPS, [[0, "0%"], [50, "50%"], [100, "100%"]],
-      { title: "Sidewalk shade · share of each sidewalk in shade", note: note ? SHADE_NOTE : "", ends: [["sunny", COLORS.sun], ["shaded", COLORS.cool]] });
+      { title: "Sidewalk shade", note: note ? SHADE_NOTE : "", ends: [["sunny", COLORS.sun], ["shaded", COLORS.cool]] });
 }
 
 // numbers in text use a true minus sign (U+2212)

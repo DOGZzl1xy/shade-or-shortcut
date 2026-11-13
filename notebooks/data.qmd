@@ -16,22 +16,21 @@ days = " and ".join(d.strftime("%B %-d") for d in dates)
 
 ## Sources
 
-All inputs are public data.
+All inputs are public.
 
 | Layer | Source | Used for |
 | --- | --- | --- |
-| Airborne LiDAR, March 2022 | City of Philadelphia, via NOAA Digital Coast and PASDA | ground, building and tree heights at 1 m |
-| Building footprints | City of Philadelphia (OpenDataPhilly) | building outlines |
+| Airborne LiDAR, March 2022 | City of Philadelphia (NOAA Digital Coast, PASDA) | ground, building and tree heights at 1 m |
+| Building footprints | City of Philadelphia | building outlines |
 | Land cover 2018 | PASDA | tree canopy |
 | Canopy height (CHMv2) | Meta / WRI, CC BY 4.0 | trees just outside the city |
 | Pedestrian network | DVRPC | sidewalks and crosswalks |
-| OpenStreetMap | OSM contributors, ODbL (Overpass API; Geofabrik extract when Overpass was down) | bridges, covered walkways, campus footways |
-| Transit | SEPTA, fall 2026 timetable (release v202609271) | rapid-transit stations and frequent bus stops |
-| Hourly weather | ERA5 reanalysis (ECMWF), via the Open-Meteo archive | air temperature, humidity, wind and sunshine for the heat model |
-| Heat model | SOLWEIG 2022a, GPU version (solweig-gpu 2.0.0) | mean radiant temperature and UTCI at 1 m |
-| Properties | City of Philadelphia (OPA) | residential parcels, where walks end |
-| Land surface temperature | USGS Landsat 8 (July 17, 2024) | the summer heat map on the Story page (Landsat surface temperature, as used for Philadelphia by Li, Chakraborty & Wang 2023, *Urban Climate*) |
-| Air temperature | NOAA ACIS, Philadelphia International Airport | summer heat figures on the Story page |
+| OpenStreetMap | OSM contributors, ODbL | bridges, covered walkways, campus footways |
+| Transit | SEPTA, fall 2026 timetable | stations and frequent bus stops |
+| Properties | City of Philadelphia (OPA) | homes, where walks end |
+| Hourly weather | ERA5 (ECMWF), via Open-Meteo | weather for the heat model |
+| Heat model | SOLWEIG 2022a (solweig-gpu 2.0.0) | felt temperature (UTCI) at 1 m |
+| Surface temperature, air temperature | USGS Landsat 8; NOAA ACIS | heat figures on the Story page |
 
 ## The shade map
 
@@ -49,11 +48,9 @@ print(f"""::: {{.stat-row}}
 ```{python}
 #| output: asis
 b, s = q2["buildings"], q2["shares_in_city"]
-print(f"Building and tree heights come from the 2022 LiDAR survey, flown before the leaves came out. Building heights agree closely "
-      f"with the city's own records (median absolute difference {b['median_abs_err_m']:.1f} m over {b['compared']:,} buildings); bridges and "
-      f"elevated rail lines are included, so they cast shadows too. Trees cover {pct(s['tree_phase2'], 0)} of the city in the model "
-      f"(the median tree is {s['tree_height_median_m']:.0f} m tall). Covered walkways and passages through buildings "
-      f"({s4['covered_km_total']:.1f} km) are always in shade.")
+print(f"Heights come from the 2022 LiDAR survey. Building heights match the city's records to {b['median_abs_err_m']:.1f} m "
+      f"(median, {b['compared']:,} buildings); bridges and elevated rail cast shadows too. Trees cover {pct(s['tree_phase2'], 0)} "
+      f"of the city (median height {s['tree_height_median_m']:.0f} m). Covered walkways ({s4['covered_km_total']:.1f} km) are always in shade.")
 ```
 
 ```{python}
@@ -67,16 +64,12 @@ fig("phase_02_ucity.png")
 ```{python}
 #| output: asis
 a, b = (met[d.strftime("%Y-%m-%d")] for d in dates)
-print(f"""Shade says where the sun is blocked; it does not say how hot a sidewalk feels. For that, the same 1 m heights go into
-SOLWEIG, a model of the radiation a standing person receives from the sun, the sky, walls and the ground, which it turns into
-the **mean radiant temperature** and, with air temperature, humidity and wind, into the **UTCI** (Universal Thermal Climate
-Index), a temperature in °C that describes how the weather feels to the body. UTCI above 38 °C is *very strong* heat stress,
-above 46 °C *extreme*.
+print(f"""Shade says where the sun is blocked, not how hot a sidewalk feels. For that, the same heights go into SOLWEIG, which
+computes the radiation a standing person receives from sun, sky, walls and ground and, with the weather, the **UTCI**: how hot
+it feels, in °C. Above 38 °C is *very strong* heat stress, above 46 °C *extreme*.
 
-The model needs real weather, so the study uses two real hot, sunny days of summer 2025 rather than a calendar date:
-**{dates[0].strftime('%B %-d')}**, three days after the solstice, during a heat wave, and **{dates[1].strftime('%B %-d')}**,
-the nearest hot, sunny day to August 1 (August 1, 2025 itself was cool and overcast). Shadows are computed for the same days and
-moments, so shade and heat describe the same sidewalks at the same time.\n""")
+The model needs real weather, so the study uses two hot, sunny days of 2025: **{dates[0].strftime('%B %-d')}**, during a heat
+wave, and **{dates[1].strftime('%B %-d')}**. Shadows are computed for the same moments.\n""")
 ```
 
 ```{python}
@@ -88,10 +81,9 @@ for d in dates:
                 f"{m['kdown_max_wm2']:.0f} W/m² | {m['ta_max_c']:.1f} °C |")
 print("| Day | Air temperature, 15:00 | Humidity, 15:00 | Wind, 15:00 | Peak solar radiation | Daily maximum |\n| --- | --- | --- | --- | --- | --- |")
 print("\n".join(rows))
-print(f"""\nWeather from ERA5 for one 0.25° cell over the city ({a['grid_lat']}° N, {abs(a['grid_lon'])}° W), used for every
-sidewalk: the heat map varies with sun, shade, walls and ground, not with air temperature or wind, which are the same
-everywhere. The model ran in {s10['server_files'][a['date']]} one-kilometre tiles per day on a rented GPU and gives a UTCI value at
-every one of the {s10['points'] / 1e6:.1f} million sidewalk points, every hour.""")
+print(f"""\nOne ERA5 cell covers the whole city, so air temperature and wind are the same everywhere; the heat map varies with
+sun, shade, walls and ground. The model ran in {s10['server_files'][a['date']]} one-kilometre tiles per day on a GPU and gives a
+UTCI value at all {s10['points'] / 1e6:.1f} million sidewalk points, every hour.""")
 ```
 
 ## Whose walks
@@ -99,9 +91,8 @@ every one of the {s10['points'] / 1e6:.1f} million sidewalk points, every hour."
 ```{python}
 #| output: asis
 c = s6["city"]
-print(f"Each walk starts at a stop: any rapid-transit station (Regional Rail, L (Market-Frankford), B (Broad Street) or the T trolley "
-      f"tunnel) or a bus stop with at least {c['min_per_hour']} buses an hour in one direction between 15:00 and 19:00. "
-      f"Every home within 1.2 km walking distance of such a stop is one walk, {c['parcels_within_1200m']:,} in all. "
+print(f"Each walk starts at a rapid-transit station (Regional Rail, L, B, T tunnel) or at a bus stop with at least "
+      f"{c['min_per_hour']} buses an hour (15:00–19:00), and ends at a home within 1.2 km on foot: {c['parcels_within_1200m']:,} walks. "
       f"The other {c['parcels_uncovered']:,} homes ({pct(c['parcels_uncovered_share'], 1)}), mostly in the Northeast and Roxborough, "
       "have no frequent stop that close.")
 ```
@@ -117,17 +108,15 @@ fig("phase_06_uncovered.png", width=640)
 ```{python}
 #| output: asis
 b8 = s8
-print(f"For University City we mapped the entrances and indoor passages of {b8['buildings']['total']} buildings "
-      f"({b8['indoor_km']:.1f} km of passages); {b8['buildings']['no_penncard']} of them can be entered without a Penn ID. "
-      "Campus footpaths from OpenStreetMap are added to the sidewalk network there.")
+print(f"In University City, entrances and indoor passages of {b8['buildings']['total']} buildings were mapped "
+      f"({b8['indoor_km']:.1f} km; {b8['buildings']['no_penncard']} buildings open without a Penn ID), and campus footpaths "
+      "from OpenStreetMap were added.")
 ```
 
 ## Known gaps
 
-- Outside University City, campus and park paths are missing, so cooler options inside campuses and parks are understated.
-- Shadows assume clear skies on two summer days; trees are mapped from leaf-off LiDAR and 2018 land cover, buildings from 2022.
-- The heat model uses one weather cell for the whole city: air temperature and wind do not vary between neighbourhoods, so
-  the UTCI map shows the effect of sun, shade and surfaces only. Trees let a fixed 3% of the sun through, and grass, water and
-  paving are from the 2018 land cover.
-- Missing or misplaced footprints, newer buildings and temporary objects (parked trains, scaffolding) affect shade locally.
-- The timetable is one weekday in fall 2026; summer service may differ.
+- Campus and park paths are missing outside University City, so cooler options there are understated.
+- Two clear, hot days; trees from leaf-off LiDAR and 2018 land cover, buildings from 2022.
+- One weather cell for the city: no neighbourhood differences in air temperature or wind. Trees let a fixed 3% of the sun through.
+- Missing footprints, new buildings and temporary objects affect shade locally.
+- The timetable is one weekday in fall 2026.

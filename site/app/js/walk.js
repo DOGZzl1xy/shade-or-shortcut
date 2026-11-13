@@ -74,11 +74,12 @@ export function createWalk(map, data, chart, { onStep = () => {}, onEnd = () => 
   }
 
   // ---- profile chart (SVG): UTCI against distance walked, both walks, the heat-stress bands behind
-  const M = { l: 40, r: 92, t: 22, b: 26 };
+  const M = { l: 34, r: 92, t: 22, b: 26 };
   let x, y, dots = {}, clip, WD = 760, HT = height;
   function drawChart() {
     // drawn at the size of its box (1 unit = 1 px), so the text keeps its size on any screen
-    WD = Math.max(480, chart.clientWidth || 760);
+    WD = Math.max(420, chart.clientWidth || 760);
+    M.r = 96;                                    // room for the heat-stress names at the right
     const maxD = Math.max(W.short.total, W.cool.total);
     const all = [...W.short.sm, ...W.cool.sm].filter((v) => v !== null);
     const lo = Math.floor(Math.min(34, ...all) - 0.5), hi = Math.ceil(Math.max(47, ...all) + 0.5);

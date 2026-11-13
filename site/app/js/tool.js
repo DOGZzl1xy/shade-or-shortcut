@@ -90,7 +90,6 @@ const mp = (x, len) => `${Math.round(x)} m<small>${pct(x / len, 0)}</small>`;
 function legend() {
   const heat = metric === "heat";
   $("legend").innerHTML = sidewalkLegend(metric);
-  $("scen-note").textContent = heat ? "Indoor passages have no UTCI, so the coolest walk stays outdoors." : "";
   document.querySelectorAll("#scen button").forEach((b) => { b.disabled = heat; });
   document.querySelector("table.cmp").classList.toggle("heat", heat);
   $("c-name").textContent = MEASURES[metric].route;

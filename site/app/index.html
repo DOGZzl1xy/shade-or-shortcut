@@ -25,7 +25,9 @@
   main { position: relative; z-index: 2; pointer-events: none; }
   section { min-height: 100vh; scroll-snap-align: start; position: relative;
     display: flex; align-items: center; padding: calc(var(--top) + 24px) 5vw 32px 28px; }
-  section .panel { pointer-events: auto; max-width: 440px; }
+  section .panel { pointer-events: auto; max-width: 440px; transition: opacity 0.7s ease, transform 0.7s ease; }
+  section:not(.active) .panel, section:not(.active) .content { opacity: 0; transform: translateY(18px); }
+  .hero .content { transition: opacity 0.7s ease, transform 0.7s ease; }
 
   /* chapter bar under the navigation: where we are in the story; click to jump */
   .chapters { position: fixed; top: var(--nav-h); left: 0; right: 0; height: var(--chap-h); z-index: 40; display: flex; gap: 0;
@@ -125,9 +127,11 @@
   .hourchart svg { width: 100%; height: auto; display: block; overflow: visible; }
   .hourchart text { font: 10px var(--mono); fill: var(--dim); }
 
-  /* walk screen (13): profile panel at the bottom right */
-  section .walkbox { position: absolute; right: 28px; bottom: 28px; width: min(860px, calc(100vw - 560px)); padding: 10px 14px 6px; pointer-events: auto; max-width: none; }
-  .walkbox .row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  /* walk screen (13): the UTCI profile sits in the card, the map keeps the whole route */
+  section .panel.walkcard { max-width: 600px; width: 600px; }
+  .walkcard h2 { font-size: clamp(24px, 2.1vw, 31px); }
+  .wk-head2 { display: flex; align-items: center; justify-content: space-between; margin: 16px 0 4px; }
+  .wk-head2 .ghost { padding: 5px 10px; font-size: 11px; }
   .wc-axis text, .wc-band { font: 10px var(--mono); fill: var(--dim); }
   .wc-band { text-transform: uppercase; letter-spacing: 0.08em; }
   .wc-grid { stroke: rgba(255,255,255,0.06); }
@@ -254,7 +258,7 @@
 
   <section data-step="hours" data-ch="2">
     <div class="panel step">
-      <div class="label">Center City · June 24</div>
+      <div class="label">University City · June 24</div>
       <h2>Every sidewalk, <em>every hour</em>.</h2>
       <p class="detail">Long morning and evening shadows; around midday the sun is high and little shade is left.</p>
       <div class="clock"><div class="big num" data-clock>08:00</div><svg class="dial" data-dial viewBox="0 0 92 56"></svg></div>
@@ -332,18 +336,16 @@
   </section>
 
   <section data-step="walk" data-ch="4">
-    <div class="panel step">
-      <div class="label" id="wk-label">Heat · the walk, felt</div>
+    <div class="panel step walkcard">
+      <div class="label" id="wk-label">&nbsp;</div>
       <h2 id="wk-head">&nbsp;</h2>
       <div class="readout">
         <div><div class="who sun">Shortest walk</div><div class="now" id="wk-n-short">–</div><div class="sub" id="wk-s-short"></div></div>
         <div><div class="who cool">Coolest walk</div><div class="now" id="wk-n-cool">–</div><div class="sub" id="wk-s-cool"></div></div>
       </div>
-      <div class="end-line" id="wk-end"></div>
-    </div>
-    <div class="walkbox panel">
-      <div class="row"><div class="label">UTCI along the walk · distance walked</div><button class="ghost" id="wk-replay">Replay</button></div>
+      <div class="wk-head2"><div class="label">UTCI along the walk</div><button class="ghost" id="wk-replay">Replay</button></div>
       <div id="wk-chart"></div>
+      <div class="end-line" id="wk-end"></div>
     </div>
   </section>
 

@@ -13,10 +13,12 @@ const EMPTY = { type: "FeatureCollection", features: [] };
 const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 const T15 = 7;                                  // time index of June 24, 15:00 (0624_08 ... 0624_19, 0729_08 ...)
 
-// ---- the map first, so the basemap loads while the data download
+// ---- the map first, so the basemap loads while the data download. Every paint change cross-fades over FADE ms (the
+// style's transition), so layers fade in and out instead of popping
+const FADE = 700;
 const map = newMap({
   container: "map", center: [-75.1932, 39.9522], zoom: 15.6, pitch: 0, interactive: false,
-  style: baseStyle({
+  style: { transition: { duration: FADE, delay: 0 }, ...baseStyle({
     city: { type: "vector", url: `pmtiles://data/city_shade.pmtiles?v=${VERSION}`, attribution: `${ATTR.shade}; ${ATTR.utci}; ${ATTR.chm}; ${ATTR.osm}; ${ATTR.heat}` },
     grid: { type: "geojson", data: EMPTY, attribution: ATTR.transit },
     bld: { type: "geojson", data: EMPTY },
@@ -29,14 +31,13 @@ const map = newMap({
   }, [
     // street level: the sidewalks as thin grey lines over the dimmed Esri base, which carries the street names
     { id: "lines", type: "line", source: "city", "source-layer": "sidewalks", minzoom: 13, layout: { visibility: "none" },
-      paint: { "line-color": "#3b3f47", "line-width": ["interpolate", ["linear"], ["zoom"], 13, 0.4, 16, 1.3] } },
+      paint: { "line-color": "#3b3f47", "line-width": ["interpolate", ["linear"], ["zoom"], 13, 0.4, 16, 1.3], "line-opacity": 0 } },
     { id: "city", type: "line", source: "city", "source-layer": "sidewalks", minzoom: 13, layout: { visibility: "none", "line-cap": "round" },
-      paint: { "line-color": sidewalkColor("shade", T15), "line-width": SIDEWALK_WIDTH, "line-opacity": 0.9 } },
-    { id: "grid", type: "fill", source: "grid", layout: { visibility: "none" },
-      paint: { "fill-color": "#555", "fill-opacity": 0.78, "fill-outline-color": "rgba(7,8,11,0.6)",
-        "fill-opacity-transition": { duration: 600 } } },
+      paint: { "line-color": sidewalkColor("shade", T15), "line-width": SIDEWALK_WIDTH, "line-opacity": 0 } },
+    ...["grid-a", "grid-b"].map((id) => ({ id, type: "fill", source: "grid", layout: { visibility: "none" },
+      paint: { "fill-color": "#555", "fill-opacity": 0, "fill-outline-color": "rgba(7,8,11,0.6)" } })),
     { id: "bld", type: "fill", source: "bld", layout: { visibility: "none" },
-      paint: { "fill-color": "rgba(180,140,255,0.22)", "fill-outline-color": "rgba(180,140,255,0.55)" } },
+      paint: { "fill-color": "rgba(180,140,255,0.22)", "fill-outline-color": "rgba(180,140,255,0.55)", "fill-opacity": 0 } },
     // what shades each campus sidewalk at 15:00; it fades in, "spread onto the map"
     { id: "types", type: "line", source: "types", filter: ["!=", ["get", "t"], "indoor"], layout: { visibility: "none", "line-cap": "round" },
       paint: { "line-color": ["match", ["get", "t"], "tree", COLORS.tree, "bldg", COLORS.bldg, COLORS.sun], "line-width": 2.6,
@@ -45,17 +46,18 @@ const map = newMap({
       paint: { "line-color": COLORS.indoor, "line-width": 3.2, "line-dasharray": [0, 1.8], "line-opacity": 0, "line-opacity-transition": { duration: 1500 } } },
     { id: "st", type: "circle", source: "st", layout: { visibility: "none" },
       paint: { "circle-radius": ["interpolate", ["linear"], ["zoom"], 10, 2.6, 14, 5], "circle-color": "#e8e6df",
-        "circle-stroke-color": "#07080b", "circle-stroke-width": 1 } },
+        "circle-stroke-color": "#07080b", "circle-stroke-width": 1, "circle-opacity": 0, "circle-stroke-opacity": 0 } },
     { id: "ring", type: "line", source: "ring", layout: { visibility: "none" },
-      paint: { "line-color": "#ffffff", "line-width": 1.2, "line-dasharray": [3, 3], "line-opacity": 0.85 } },
+      paint: { "line-color": "#ffffff", "line-width": 1.2, "line-dasharray": [3, 3], "line-opacity": 0 } },
     { id: "spots", type: "circle", source: "spots", layout: { visibility: "none" },
-      paint: { "circle-radius": 7, "circle-color": ["get", "c"], "circle-stroke-color": "#ffffff", "circle-stroke-width": 2 } },
+      paint: { "circle-radius": 7, "circle-color": ["get", "c"], "circle-stroke-color": "#ffffff", "circle-stroke-width": 2,
+        "circle-opacity": 0, "circle-stroke-opacity": 0 } },
     // white-box model of the campus (indoor screen); buildings opened to walkers in pale violet
     { id: "mass", type: "fill-extrusion", source: "mass", layout: { visibility: "none" },
       paint: { "fill-extrusion-color": ["case", ["get", "open"], "#c9b6f2", "#e8e6df"], "fill-extrusion-height": ["get", "h"],
-        "fill-extrusion-opacity": 0.55, "fill-extrusion-vertical-gradient": true } },
+        "fill-extrusion-opacity": 0, "fill-extrusion-vertical-gradient": true } },
     ...routeLayers("hero"),
-  ], { base: 0.55, labelOpacity: 0.45 }),
+  ], { base: 0.55, labelOpacity: 0.45 }) },
 });
 const styleReady = new Promise((res) => map.once("style.load", res));
 getJSON("data/massing.geojson").then((d) => styleReady.then(() => map.getSource("mass").setData(d)));
@@ -365,18 +367,18 @@ function loadHeat() {                       // 12 hourly images of about 1.5 MB:
       paint: { "raster-opacity": 0, "raster-opacity-transition": { duration: 350 }, "raster-fade-duration": 0 } }, "lines");
   }
   map.addSource("thd", { type: "image", url: `data/${story.thermal.detail.image}?v=${VERSION}`, coordinates: story.thermal.detail.corners });
-  map.addLayer({ id: "thd", type: "raster", source: "thd", layout: { visibility: "none" }, paint: { "raster-opacity": 0.95, "raster-fade-duration": 0 } }, "lines");
+  map.addLayer({ id: "thd", type: "raster", source: "thd", layout: { visibility: "none" }, paint: { "raster-opacity": 0, "raster-fade-duration": 0 } }, "lines");
 }
 styleReady.then(() => {
   map.addSource("lst", { type: "image", url: `data/${L.image}?v=${VERSION}`, coordinates: L.coordinates });
-  map.addLayer({ id: "lst", type: "raster", source: "lst", layout: { visibility: "none" }, paint: { "raster-opacity": 0.9, "raster-fade-duration": 0 } }, "lines");
+  map.addLayer({ id: "lst", type: "raster", source: "lst", layout: { visibility: "none" }, paint: { "raster-opacity": 0, "raster-fade-duration": 0 } }, "lines");
   map.moveLayer("ref", "mass");
   map.getSource("grid").setData(grid);
   map.getSource("bld").setData(layers.buildings);
   map.getSource("ring").setData({ type: "Feature", properties: {}, geometry: { type: "LineString", coordinates: circle(P0) } });
   map.getSource("spots").setData({ type: "FeatureCollection", features: story.spots.points.map((p) => (
     { type: "Feature", properties: { c: PILL[p.kind][1] }, geometry: { type: "Point", coordinates: [p.lon, p.lat] } })) });
-  walk = createWalk(map, walkData, $("wk-chart"), {
+  walk = createWalk(map, walkData, $("wk-chart"), { height: 150,
     onStep: (s) => {
       for (const r of ["short", "cool"]) {
         set(`wk-n-${r}`, s[r].now === null ? "–" : degC(s[r].now));
@@ -392,20 +394,56 @@ styleReady.then(() => {
   enter(current, true);
 });
 
-// ---- screens: each sets the map for its sentence
-const vis = (id, on) => map.getLayer(id) && map.setLayoutProperty(id, "visibility", on ? "visible" : "none");
-const routes = (on) => ROUTE_LAYERS("hero").forEach((id) => vis(id, on));
-const gridBy = (key, focus = null) => {
-  const fill = key === "cluster" ? ["match", ["get", "cluster"], ...CLUSTERS.flatMap(([k, , c]) => [k, c]), "#555"] : rampExpr(key);
-  map.setPaintProperty("grid", "fill-color", fill);
-  map.setPaintProperty("grid", "fill-opacity", focus === null ? 0.78 : ["case", ["==", ["get", "cluster"], focus], 0.85, 0.12]);
-  vis("grid", true);
-};
+// ---- screens: each sets the map for its sentence. Layers fade (opacity) rather than switch, the grid cross-fades
+// between two layers, and consecutive screens share their place where they can, so one screen grows out of the last.
+const BASE = { lst: [["raster-opacity", 0.9]], lines: [["line-opacity", 1]], city: [["line-opacity", 0.9]],
+  "grid-a": [["fill-opacity", 0.8]], "grid-b": [["fill-opacity", 0.8]], bld: [["fill-opacity", 1]],
+  types: [["line-opacity", 1]], "types-in": [["line-opacity", 1]], st: [["circle-opacity", 1], ["circle-stroke-opacity", 1]],
+  ring: [["line-opacity", 0.85]], spots: [["circle-opacity", 1], ["circle-stroke-opacity", 1]], mass: [["fill-extrusion-opacity", 0.55]],
+  thd: [["raster-opacity", 0.95]] };
+ROUTE_LAYERS("hero").forEach((id) => { BASE[id] = [["line-opacity", id.includes("case") ? 0.85 : 1]]; });
+const hideT = {};
+function fade(id, on, value) {
+  if (!map.getLayer(id)) return;
+  const shown = map.getLayoutProperty(id, "visibility") !== "none";
+  clearTimeout(hideT[id]);
+  if (on) {
+    if (!shown) map.setLayoutProperty(id, "visibility", "visible");
+    for (const [p, v] of BASE[id]) map.setPaintProperty(id, p, value ?? v);
+  } else if (shown) {
+    for (const [p] of BASE[id]) map.setPaintProperty(id, p, 0);
+    hideT[id] = setTimeout(() => map.setLayoutProperty(id, "visibility", "none"), FADE + 100);
+  }
+}
+let gridOn = null, gridKey = null;
+function gridFill(key) {
+  const dim = (c, a) => `rgba(${parseInt(c.slice(1, 3), 16)},${parseInt(c.slice(3, 5), 16)},${parseInt(c.slice(5, 7), 16)},${a})`;
+  if (key === "cluster") return ["match", ["get", "cluster"], 1, CLUSTERS[1][2], 0, dim(CLUSTERS[0][2], 0.3), 2, dim(CLUSTERS[2][2], 0.3), "#555"];
+  if (key === "end") return ["match", ["get", "cluster"], 0, CLUSTERS[0][2], "rgba(42,51,64,0.55)"];
+  return rampExpr(key);
+}
+function showGrid(key, opacity) {
+  if (!key) { if (gridOn) fade(gridOn, false); gridOn = null; gridKey = null; return; }
+  if (key === gridKey) { fade(gridOn, true, opacity); return; }       // same colours: only the opacity changes
+  const next = gridOn === "grid-a" ? "grid-b" : "grid-a";
+  map.setPaintProperty(next, "fill-color", gridFill(key));
+  fade(next, true, opacity); if (gridOn) fade(gridOn, false);
+  gridOn = next; gridKey = key;
+}
+let thOn = false, thT = 0;
 const showThermal = (i, detail = false) => {
   if (i >= 0) loadHeat();
   if (!heatLoaded) return;
-  TH.forEach((_, j) => { vis(`th${j}`, i >= 0); map.setPaintProperty(`th${j}`, "raster-opacity", j === i ? 0.92 : 0); });
-  vis("thd", detail);
+  clearTimeout(thT);
+  if (i >= 0) {
+    TH.forEach((_, j) => { map.setLayoutProperty(`th${j}`, "visibility", "visible"); map.setPaintProperty(`th${j}`, "raster-opacity", j === i ? 0.92 : 0); });
+    thOn = true;
+  } else if (thOn) {
+    TH.forEach((_, j) => map.setPaintProperty(`th${j}`, "raster-opacity", 0));
+    thOn = false;
+    thT = setTimeout(() => TH.forEach((_, j) => map.setLayoutProperty(`th${j}`, "visibility", "none")), FADE + 100);
+  }
+  fade("thd", detail);
 };
 // heat screens: the wide image fills the window; at least zoom z, centred on the image
 const [[wx0, wy1], , [wx1, wy0]] = story.thermal.wide.corners;
@@ -419,15 +457,16 @@ const fly = (view) => {                      // centre a view in the part of the
   map.flyTo({ pitch: 0, bearing: 0, ...view, padding: p ? { left: p.right + 40, top: 90, right: 0, bottom: 0 } : {} });
 };
 const CITY = { center: [-75.135, 39.995], zoom: 10.9, duration: 2200 };
-const UC = { center: [-75.1915, 39.9532], zoom: 15.6, duration: 1800 };
-function scene({ city = false, lines = false, grid = false, bld = false, route = false, mass = false, types = false, st = false,
-  ring = false, pins = false, th = -1, detail = false, spots = false, cityOpacity = 0.9, measure = "shade", t = T15 } = {}) {
-  vis("lines", lines); vis("city", city); vis("bld", bld); vis("mass", mass); vis("st", st); vis("ring", ring); vis("spots", spots);
-  vis("lst", current === "heat"); routes(route); if (!grid) vis("grid", false);
-  for (const id of ["types", "types-in"]) { vis(id, true); map.setPaintProperty(id, "line-opacity", types ? 1 : 0); }
+const SHADE_AT = hero.types_focus.center;     // the shade chapter stays in one place, next to the story's station
+function scene({ city = false, lines = false, grid = null, gridOpacity = undefined, bld = false, route = false, mass = false, types = false,
+  st = false, lst = false, ring = false, pins = false, th = -1, detail = false, spots = false, cityOpacity = 0.9, t = T15 } = {}) {
+  if (city) map.setPaintProperty("city", "line-color", sidewalkColor("shade", t));
+  fade("lines", lines); fade("city", city, cityOpacity); fade("bld", bld); fade("mass", mass); fade("st", st); fade("ring", ring);
+  fade("spots", spots); fade("lst", lst);
+  ROUTE_LAYERS("hero").forEach((id) => fade(id, route));
+  for (const id of ["types", "types-in"]) fade(id, types);
+  showGrid(grid, gridOpacity);
   showPills(typePills, types); showPills(spotPills, spots); showPins(pins);
-  map.setPaintProperty("city", "line-opacity", cityOpacity);
-  map.setPaintProperty("city", "line-color", sidewalkColor(measure, t));
   showThermal(th, detail);
   if (current !== "hours" && current !== "heatday") stopDay();
   if (current !== "example" && current !== "indoor") hideTags();
@@ -436,22 +475,24 @@ function scene({ city = false, lines = false, grid = false, bld = false, route =
 }
 const STEPS = {
   hero: () => { scene({ route: true }); pairIdx = 0; draw("hero"); fitPair(PAIRS[0]); },
-  heat: () => { scene(); fly({ ...CITY, zoom: 10.35 }); },
+  heat: () => { scene({ lst: true }); fly({ ...CITY, zoom: 10.35 }); },
   persona: () => {
-    scene({ st: true }); map.jumpTo({ ...CITY, padding: { left: 0, top: 0, right: 0, bottom: 0 } });
-    setTimeout(() => { if (current !== "persona") return; vis("ring", true); showPins(true); fly({ center: P0, zoom: 14.1, duration: 2600 }); }, 900);
+    // from the city's heat to the stations, then down to one of them: the camera stays put while the layers change
+    scene({ st: true });
+    const go = () => { if (current !== "persona") return; fade("ring", true); showPins(true); fly({ center: P0, zoom: 14.4, duration: 2800 }); };
+    if (map.getZoom() < 12) setTimeout(go, 1200); else go();
   },
-  sources: () => { scene({ lines: true }); fly({ center: hero.types_focus.center, zoom: 17, duration: 2000 }); },
-  types: () => { scene({ lines: true, types: true }); fly({ center: hero.types_focus.center, zoom: 17, duration: 1200 }); },
-  hours: () => { scene({ city: true, t: 0 }); fly({ center: [-75.1652, 39.9502], zoom: 15.3, duration: 2000 }); playDay(dayHours); },
+  sources: () => { scene({ lines: true }); fly({ center: SHADE_AT, zoom: 17, duration: 2600 }); },
+  types: () => { scene({ lines: true, types: true }); fly({ center: SHADE_AT, zoom: 17, duration: 900 }); },
+  hours: () => { scene({ lines: true, city: true, t: 0 }); fly({ center: SHADE_AT, zoom: 16.1, duration: 2000 }); playDay(dayHours); },
   example: () => {
-    scene({ route: true, pins: true }); placeTags(PERSONA, false); hideTags(); draw("example");
+    scene({ lines: true, route: true, pins: true }); placeTags(PERSONA, false); hideTags(); draw("example");
     fitPair(PERSONA, document.querySelector('[data-step="example"] .panel'), true);
   },
-  sunny: () => { scene({ grid: true }); gridBy("sun_share"); fly(CITY); },
-  waffle: () => { scene(); fly({ ...CITY, center: [-75.08, 39.995] }); },
-  clusters: () => { scene({ grid: true }); gridBy("cluster", 1); fly(CITY); },
-  felt: () => { scene({ th: T15 }); map.flyTo({ ...heatView(), duration: 1800 }); },
+  sunny: () => { scene({ grid: "sun_share" }); fly(CITY); },
+  waffle: () => { scene({ grid: "sun_share", gridOpacity: 0.12 }); fly(CITY); },
+  clusters: () => { scene({ grid: "cluster" }); fly(CITY); },
+  felt: () => { scene({ th: T15 }); map.flyTo({ ...heatView(), duration: 2400 }); },
   heatday: () => { scene({ th: 0 }); map.flyTo({ ...heatView(15.5), duration: 1200 }); playDay(dayHeat); },
   trees: () => {
     scene({ th: T15, detail: true, spots: true });
@@ -459,16 +500,16 @@ const STEPS = {
     fly({ center: c, zoom: 17.6, duration: 2000 });
   },
   walk: () => {
-    scene({ th: -1, lines: true });
+    scene({ lines: true });
     const e = PW, b = walk.bounds(e), panel = document.querySelector('[data-step="walk"] .panel').getBoundingClientRect();
-    const box = document.querySelector(".walkbox").getBoundingClientRect();
-    map.fitBounds(b, { padding: { left: panel.right + 40, right: 60, top: 110, bottom: window.innerHeight - box.top + 30 }, duration: 1200, maxZoom: 17 });
+    map.setPadding({ top: 0, bottom: 0, left: 0, right: 0 });       // a flyTo before left its padding on the map
+    map.fitBounds(b, { padding: { left: panel.right + 50, right: 70, top: 120, bottom: 70 }, duration: 1600, maxZoom: 17 });
     $("wk-end").classList.remove("on");
     const W = walk.play(e);
     $("wk-head").innerHTML = `On the shortest walk home, <b class="sun">${m(W.short.ext)}</b> are in extreme heat stress. On the coolest, <b class="cool">${m(W.cool.ext)}</b>.`;
-    set("wk-label", `${stationName(PERSONA)} → home · June 24, 15:00 · same pace`);
+    set("wk-label", `${stationName(PERSONA)} → home · June 24, 15:00`);
   },
-  cityheat: () => { scene({ grid: true }); gridBy("u_cool"); fly(CITY); },
+  cityheat: () => { scene({ grid: "u_cool" }); fly(CITY); },
   indoor: () => {
     scene({ city: true, route: true, mass: true, cityOpacity: 0.35 });
     const p = hero.indoor;
@@ -476,12 +517,7 @@ const STEPS = {
     placeTags(p, true); showTag("short", true); showTag("cool", true);
     fitPair(p, document.querySelector('[data-step="indoor"] .panel'), true, true);
   },
-  end: () => {
-    scene({ grid: true });
-    map.setPaintProperty("grid", "fill-color", ["match", ["get", "cluster"], 0, CLUSTERS[0][2], "#2a3340"]);
-    map.setPaintProperty("grid", "fill-opacity", ["case", ["==", ["get", "cluster"], 0], 0.85, 0.35]); vis("grid", true);
-    fly(CITY);
-  },
+  end: () => { scene({ grid: "end" }); fly(CITY); },
 };
 $("wk-replay").addEventListener("click", () => { if (current === "walk") STEPS.walk(); });
 
@@ -526,6 +562,23 @@ function chapterBar(sec) {
     b.querySelector(".fill").style.width = +b.dataset.c < +c ? "calc(100% - 20px)" : b.dataset.c === c ? `calc((100% - 20px) * ${(k + 1) / mine.length})` : "0";
   });
 }
+// the big numbers of a screen count up when it comes on
+function countUp(sec) {
+  if (reduce) return;
+  sec.querySelectorAll(".big.num:not([data-clock])").forEach((el) => {
+    const final = el.dataset.final ?? (el.dataset.final = el.textContent);
+    const mm = final.match(/[\d,]*\.?\d+/);
+    if (!mm) return;
+    const target = parseFloat(mm[0].replace(/,/g, "")), dec = (mm[0].split(".")[1] || "").length, t0 = performance.now();
+    const fmt = (v) => v.toLocaleString("en-US", { minimumFractionDigits: dec, maximumFractionDigits: dec, useGrouping: mm[0].includes(",") });
+    const step = (now) => {
+      const f = Math.min(1, (now - t0) / 900);
+      el.textContent = final.replace(mm[0], fmt(target * (1 - (1 - f) ** 3)));
+      if (f < 1) requestAnimationFrame(step);
+    };
+    requestAnimationFrame(step);
+  });
+}
 let current = "hero";
 function enter(step, force = false) {
   if (step === current && !force) return;
@@ -533,6 +586,7 @@ function enter(step, force = false) {
   const sec = SECS.find((s) => s.dataset.step === step);
   SECS.forEach((s) => s.classList.toggle("active", s === sec));
   chapterBar(sec);
+  countUp(sec);
   if (ready) STEPS[step]();
 }
 function onScroll() {
