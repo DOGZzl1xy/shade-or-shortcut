@@ -1,8 +1,8 @@
 // Shared helpers for the hand-written pages: navigation, basemap, colours, data loading.
 
 // cache key for scripts and data: "dev" in the source; scripts/publish_site.sh writes the commit into the published copy
-// (here and in every "?v=3c920dd"), so returning visitors never mix new scripts with cached old data
-export const VERSION = "3c920dd";
+// (here and in every "?v=7c8c65c"), so returning visitors never mix new scripts with cached old data
+export const VERSION = "7c8c65c";
 
 export const COLORS = { sun: "#ff8a3d", bldg: "#5b8cff", tree: "#43c27a", indoor: "#b48cff", cool: "#35d0e0", dim: "#8b8a84" };
 // grid clusters 0-2; colour-blind safe (checked with the dataviz palette validator: CVD ΔE >= 16 on #07080b)
