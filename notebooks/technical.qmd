@@ -17,8 +17,7 @@ days = " and ".join(pd.Timestamp(d).strftime("%B %-d") for d in st["dates"])
 th, hs, mt = cfg["routing"]["theta_curve"], cfg["trips"]["home_stops"], cfg["metrics"]
 ```
 
-How the numbers were produced. Code, parameters and result tables are in the
-[project repository](https://github.com/DOGZzl1xy/shade-or-shortcut).
+Code, parameters and result tables are in the [project repository](https://github.com/DOGZzl1xy/shade-or-shortcut).
 
 ## Processing pipeline
 
@@ -29,7 +28,7 @@ How the numbers were produced. Code, parameters and result tables are in the
 | 1. LiDAR | 2022 airborne LiDAR, streamed tile by tile | 1 m ground (DEM) and surface (DSM) grids | ground returns → DEM; highest returns → DSM; each tile is downloaded, rasterised and deleted |
 | 2. Surface model | DEM, DSM, footprints, 2018 land cover, CHMv2 | 1 m building and tree heights | height above ground (nDSM) split into buildings (inside footprints), structures (bridges, viaducts) and trees (canopy mask) |
 | 3. Shadow casting | surface model, sun positions | sun / tree shade / building shade at every sample point and hour | a ray from each point (1.5 m above the ground) towards the sun, marched 1 m at a time for up to 1 km |
-| 4. Heat model (phase 10) | surface model, 2018 land cover, ERA5 hourly weather | mean radiant temperature and UTCI at 1 m, every hour; sampled at the same points | SOLWEIG 2022a on the GPU (solweig-gpu 2.0.0), in 1 km tiles with a 400 m margin, on a rented server |
+| 4. Heat model | surface model, 2018 land cover, ERA5 hourly weather | mean radiant temperature and UTCI at 1 m, every hour; sampled at the same points | SOLWEIG 2022a on the GPU (solweig-gpu 2.0.0), in 1 km tiles with a 400 m margin |
 | 5. Edge attributes | DVRPC sidewalks and crossings, OSM bridges and covered walkways | metres of sun, tree shade and building shade per edge and hour; mean UTCI and metres per heat-stress class | sample points summed per edge; covered walkways always in building shade |
 | 6. Routing | edge table | shortest, shadiest and coolest path per walk | Dijkstra on length, on the shade cost of Wen et al. (2025) and on the heat (UTCI) cost, θ growing with distance walked |
 | 7. Walk samples | SEPTA timetable, residential parcels | one walk per home, stop → home | nearest frequent stop along the network, within 1.2 km |
@@ -51,8 +50,9 @@ rows = [
     ("Minimum tree height", f"{tr['min_height_m']:.0f} m"),
     ("Shade cost (shadiest walk)", "C = L_sun + (1 − 0.5θ) L_tree + (1 − θ) L_building + (1 − 1.5θ) L_indoor"),
     ("θ curve (distance walked l, in m)", f"θ(l) = {th['a']} / (1 + exp(−{th['k']} (l − {th['x0']:.1f}))) + {th['b']}"),
+    ("Stations", "all rapid-transit stations: Regional Rail, the L and B subway lines, the T trolley tunnel"),
     ("Frequent stop", f"≥ {hs['min_per_hour']} departures per hour on one route and direction, weekday 15:00–19:00 "
-                      f"({hs['rep_date']}); all rapid-transit stations"),
+                      f"({hs['rep_date']}, SEPTA timetable release v202609271)"),
     ("Maximum walk", f"{hs['max_network_m']:,} m along the network"),
     ("Walk-length bands", "under 300 m, 300–800 m, 800–1,200 m"),
     ("No cooler option", f"the shadiest walk avoids less than {mt['no_alt_threshold']:.0%} of the sun "
@@ -83,9 +83,6 @@ md(pd.DataFrame(rows, columns=["Parameter", "Value"]))
 d0, d3 = dg["definitions"]["0_all_stops_with_service_on_rep_date"], dg["definitions"]["3_rapid_plus_ge6"]
 sil = s7["silhouette"]
 items = [
-    ("Streaming the LiDAR", "The point cloud is far larger than the available disk, so each tile is downloaded, rasterised and "
-     "deleted in turn. The horizontal coordinates are used as they are; the datum difference is about 1 m and matches the "
-     "vector layers."),
     ("Roof holes", f"Dark or glassy roofs return no points, and filling them from the ground would make buildings disappear. "
      f"Holes inside a footprint take the median height of the same building; buildings with less than "
      f"{fh['roof_fill_min_valid_share']:.0%} valid pixels use the recorded height."),
@@ -99,7 +96,7 @@ items = [
      "interpolation, so bridge decks stay above the ground instead of being merged with it."),
     ("Leaf-off LiDAR", f"The survey was flown in March, so canopies have gaps. Inside the 2018 canopy mask, pixels below "
      f"{tr['min_height_m']:.0f} m take the median of taller pixels in a {tr['gap_fill_window_m']} × {tr['gap_fill_window_m']} m "
-     "window; a maximum filter was rejected because it raised the median tree height by about 5 m."),
+     "window."),
     ("Trees outside the city", "The land-cover layer stops at the city limit, so trees in the 1 km buffer come from CHMv2 "
      "(≥ 2 m); they only cast shadows onto city sidewalks."),
     ("Structures without footprints", f"Bridges and rail viaducts are kept as structures: areas at least {us['min_height_m']:.0f} m "
@@ -109,10 +106,11 @@ items = [
     ("Flat-roof extrusion", f"Footprints with almost no LiDAR height (median below {fh['lidar_median_max_m']:.0f} m) but a "
      f"recorded height of at least {fh['approx_hgt_min_m']:.0f} m are built after the survey; they are extruded to the recorded "
      f"height. Footprints where {fh['skip_share_range'][0]:.0%}–{fh['skip_share_range'][1]:.0%} of pixels are tall overlap a "
-     "neighbour and are skipped. In University City every extruded building was checked on 2025 aerial photos."),
+     "neighbour and are skipped."),
     ("Bridge decks", f"A sidewalk segment is on a bridge when at least {bd['min_length_share']:.0%} of it lies within "
      f"{bd['buffer_m']} m of an OSM road bridge and the two run within {bd['max_angle_deg']}° of each other; its observer then "
-     "stands on the deck. A plain intersection test would put every underpass on the bridge above it."),
+     f"stands on the deck. SOLWEIG treats a bridge as a building and gives no UTCI on it, so for the {s10['bridge_points']:,} "
+     "points on bridge decks UTCI is computed from the mean radiant temperature of the deck pixel."),
     ("Covered walkways", "OpenStreetMap covered walkways and passages are always building shade; in the heat model they take "
      "the hour's median UTCI of building-shaded points (SOLWEIG does not see their roofs)."),
     ("Cost function kept as published", f"The shadiest path sometimes has more sun than the shortest, when it trades tree "
@@ -128,11 +126,10 @@ items = [
      "continuum rather than natural types."),
     ("Campus footways", f"The regional sidewalk data lack most campus paths, so University City adds OpenStreetMap footways "
      f"({s8['connectivity']['osm_km_in_main_component']:.0f} km), leaving out sidewalks, crossings, private and indoor ways. "
-     "Each mapped entrance is linked to the nearest sidewalk point without crossing a building; links over 30 m were checked "
-     "by hand and the ones that are not walkable removed."),
-    ("Two real days", "The heat model needs real weather, so the calendar dates of the shade analysis (June 21, August 1) were "
-     "replaced by the hot, sunny days nearest to them in 2025: June 24 (Philadelphia airport 101 °F) and July 29 (98 °F); "
-     "August 1, 2025 was cool and overcast. The shadows were recomputed for the same days."),
+     "Each mapped entrance is linked to the nearest sidewalk point without crossing a building; links over 30 m that are not "
+     "walkable are removed."),
+    ("Study days", "June 24, 2025, during a heat wave (101 °F at Philadelphia airport), and July 29, 2025 (98 °F), both hot "
+     "and sunny. Shadows and heat are computed for the same days and hours."),
     ("Own tiling", "solweig-gpu can split a large area itself, but its tiles overlap only to the right and below, so a tower "
      "just left of or above a tile edge would cast no shadow into it. Every 1 km core is run on its own with a 400 m margin on "
      "all four sides and only the core is kept."),
@@ -141,13 +138,8 @@ items = [
      f"domain, {pct(inp['tall_tree_px_dropped'] / (inp['tree_px_share'] * (2 * (sw['half_size_m'] + sw['margin_m'])) ** 2), 1)} of its canopy)."),
     ("Points inside buildings", f"SOLWEIG has no UTCI on roofs. {s10['points_moved_off_buildings']:,} sidewalk points that fall on a "
      "building pixel (footprints overlap the sidewalk lines) take the value of the nearest open pixel."),
-    ("Bridge decks", f"SOLWEIG treats a bridge as a building and gives no UTCI on it. For the {s10['bridge_points']:,} points on "
-     "bridge decks, UTCI is computed from the mean radiant temperature of the deck pixel."),
-    ("One weather cell", "Air temperature, humidity and wind are the same everywhere: ERA5 cells are about 25 km wide, and "
-     "within-city differences in air temperature and wind are left for later work. The UTCI differences shown here come from "
-     "radiation: sun, shade, sky view, walls and ground."),
-    ("Pinned timetable", "SEPTA replaced its GTFS feed during the project; the analysis uses the archived release v202609271, "
-     "so stop frequencies stay reproducible."),
+    ("One weather cell", "Air temperature, humidity and wind are the same everywhere, since ERA5 cells are about 25 km wide. "
+     "The UTCI differences shown here come from radiation: sun, shade, sky view, walls and ground."),
 ]
 for t, s in items:
     print(f"- **{t}.** {s}")
@@ -161,19 +153,18 @@ b, dc = q2["buildings"], s6["direction_check"]
 print(f"""- **Synthetic shadows.** Unit tests cast shadows from box buildings and trees on flat ground and check the shadow
   length against height / tan(sun elevation) for several sun positions, no shadow on the sunny side, tree versus building
   priority, terrain shadows and observers on bridge decks.
-- **Building heights.** LiDAR heights agree with the city's recorded heights for {b['compared']:,} buildings
-  (Spearman ρ = {b['spearman_r']:.2f}; Pearson r = {b['pearson_r']:.2f}). The median difference (LiDAR minus record) is
-  {num(b['median_err_m'], '+.1f')} m, so LiDAR heights are typically {abs(b['median_err_m']):.1f} m {'lower' if b['median_err_m'] < 0 else 'higher'} than the records;
-  the median absolute difference is {b['median_abs_err_m']:.1f} m.
+- **Building heights.** LiDAR heights are typically {abs(b['median_err_m']):.1f} m {'lower' if b['median_err_m'] < 0 else 'higher'} than the city's
+  records (median of {b['compared']:,} buildings; Spearman ρ = {b['spearman_r']:.2f}).
 - **Routing.** With θ fixed, the search reproduces networkx Dijkstra exactly on {s5['networkx_nodes_checked']:,} nodes
   (largest absolute difference {s5['networkx_fixed_theta_max_abs_err']:g}). Hand-computed small networks check the cost
   rule, tree versus building shade and the indoor term.
 - **Browser and analysis agree.** The route tool's JavaScript router returns the same shortest, shadiest and coolest paths as
   the Python analysis for 100 random walks, scenarios and hours, half of them with the heat cost.
 - **Direction of travel.** Reversing {dc['trips']} walks of at least 400 m (home → stop) changes little: mean sun
-  reduction {pct(dc['sun_red_mean_stop_to_home'])} one way and {pct(dc['sun_red_mean_home_to_stop'])} the other,
-  correlation {dc['sun_red_corr']:.2f}.
-- **Visual checks.** The University City entrances and passages were checked one by one on aerial photos.""")
+  reduction {pct(dc['sun_red_mean_stop_to_home'])} either way (correlation {dc['sun_red_corr']:.2f}).
+- **Visual checks.** On aerial photos: every University City entrance and indoor passage, every extruded building in
+  University City, every entrance link over 30 m, and the shortest and shadiest walks of the five stations with the largest
+  sun reduction.""")
 ```
 
 ### The heat model
@@ -188,7 +179,6 @@ print(f"""- **Two shadow models agree.** SOLWEIG computes its own shadows. At th
   models agree on sun or shade at {pct(bh.agree.min(), 0)}–{pct(bh.agree.max(), 0)} of points in every hour (Cohen's κ
   {bh.kappa.min():.2f}–{bh.kappa.max():.2f}). SOLWEIG finds slightly more shade ({pct((bh.solweig_shaded - bh.project_shaded).mean(), 1)}
   of points on average), as expected: it shades the ground, our rays start 1.5 m above it.
-- **Complete coverage.** Every sidewalk point has a UTCI value at every hour on both days, and no edge is without one.
 - **Margin.** The {s10s['margin800']['cores']} cores with the most tall buildings 400–800 m away were rerun with an 800 m margin
   ({s10s['margin800']['points']:,} points). UTCI changed by more than 0.1 °C at {pct(mg['share_abs_gt_0.1'].max(), 2)} of points
   at most and by more than 0.5 °C at {pct(mg['share_abs_gt_0.5'].max(), 2)}.
