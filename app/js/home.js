@@ -2,8 +2,8 @@
 // sentence; on two screens the day plays by itself (08:00 -> 19:00).
 // Colours, ramps, legends and route styles are the shared ones of common.js, as on the route tool and the city map.
 import { VERSION, nav, baseStyle, getJSON, pmtilesProtocol, COLORS, CLUSTERS, GRID_RAMPS, ATTR, pct, degC, newMap, routeLayers,
-  ROUTE_LAYERS, sidewalkColor, sidewalkLegend, SIDEWALK_WIDTH, rampHTML, rampExpr, UTCI_STOPS } from "./common.js?v=00c01c4";
-import { createWalk } from "./walk.js?v=00c01c4";
+  ROUTE_LAYERS, sidewalkColor, sidewalkLegend, SIDEWALK_WIDTH, rampHTML, rampExpr, UTCI_STOPS } from "./common.js?v=9270be5";
+import { createWalk } from "./walk.js?v=9270be5";
 
 nav("index.html");
 pmtilesProtocol();
@@ -111,7 +111,7 @@ document.querySelector('[data-legend="heat"]').innerHTML = sidewalkLegend("heat"
 set("ex-label", `${stationName(PERSONA)} · June 24, 15:00`);
 set("ex-short", m(PERSONA.shortest.length)); set("ex-short-cap", `shortest · ${sunPct(PERSONA.shortest)} in the sun`);
 set("ex-cool", m(PERSONA.coolest.length)); set("ex-cool-cap", `shadiest · ${sunPct(PERSONA.coolest)} in the sun`);
-$("ex-detail").innerHTML = `${Math.round(PERSONA.coolest.length - PERSONA.shortest.length)} m more walking, <b>${m(PERSONA.shortest.sun - PERSONA.coolest.sun)}</b> less in the sun: the shadiest walk keeps to the building-shaded side of Chestnut Street.`;
+$("ex-detail").innerHTML = `${Math.round(PERSONA.coolest.length - PERSONA.shortest.length)} m more walking, <b>${m(PERSONA.shortest.sun - PERSONA.coolest.sun)}</b> less in the sun.`;
 set("s-sun", pct(b6.short_sun_share, 0));
 set("w-noalt", inTen(b7.no_alt_share));
 const WS = story.waffle.sun_red.shares;
@@ -131,22 +131,22 @@ set("f-drop", `${Math.round(r15.u_sun - (r15.u_bldg + r15.u_tree) / 2)} °C`);
 const vs = H24.filter((r) => r.u_bldg > 38).map((r) => +r.label.slice(5));
 set("hd-from", Math.min(...vs)); set("hd-to", Math.max(...vs));
 const SP = story.spots.points.reduce((o, p) => ({ ...o, [p.kind]: p }), {});
-$("tr-detail").innerHTML = `The shade cost of the shadiest walk counts a metre under trees as half as good as building shade. In felt
-  temperature it is as good: across the city at 15:00, sidewalks under trees average <b class="t-tree">${degC(r15.u_tree)}</b>, under
-  buildings <b class="t-bldg">${degC(r15.u_bldg)}</b>, in the sun <b class="sun">${degC(r15.u_sun)}</b>. Here, a block apart:
-  <b class="sun">${degC(SP.sun.u)}</b>, <b class="t-tree">${degC(SP.tree.u)}</b> and <b class="t-bldg">${degC(SP.bldg.u)}</b>.`;
-set("ch-du", degC(h10.heat_dutci, 2)); set("ch-ext", "−" + pct(h10.heat_extreme_red, 0)); set("ch-det", "+" + pct(h10.heat_detour, 1));
+$("tr-detail").innerHTML = `The shade cost counts a metre under trees as half as good as building shade. Here, a block apart:
+  <b class="sun">${degC(SP.sun.u)}</b> in the sun, <b class="t-tree">${degC(SP.tree.u)}</b> under trees,
+  <b class="t-bldg">${degC(SP.bldg.u)}</b> in building shade.`;
+$("f-meds").innerHTML = `City-wide at 15:00: <b class="sun">${degC(r15.u_sun)}</b> in the sun, <b class="t-bldg">${degC(r15.u_bldg)}</b> in
+  building shade, <b class="t-tree">${degC(r15.u_tree)}</b> under trees.`;
+set("ch-du", degC(h10.heat_dutci, 2).replace(" °C", "°C")); set("ch-ext", "−" + pct(h10.heat_extreme_red, 0)); set("ch-det", "+" + pct(h10.heat_detour, 1));
 set("ch-ext-w", part(h10.heat_extreme_red));
-$("ch-detail").innerHTML = `For ${pct(h10.heat_eq_shade, 0)} of walks the coolest walk is the shadiest walk. Where they differ, it takes the tree-lined street the shade cost undervalues; the shadiest walk alone cuts the extreme-heat metres by ${pct(h10.shade_extreme_red, 0)}.`;
+$("ch-detail").innerHTML = `For ${pct(h10.heat_eq_shade, 0)} of walks, the coolest walk is also the shadiest.`;
 // chapter 5, 6
 set("s-ind-words", oneIn(indoorShare));
 {
   const c0 = prof[0], all = grid.features, wsum = (fs, k) => fs.reduce((a, f) => a + f.properties.trips * (k ? f.properties[k] : 1), 0);
   const n0 = wsum(c0);
-  $("end-detail").innerHTML = `In <b class="c-noalt">${c0.length} of ${all.length}</b> half-kilometre cells, the walk home from a frequent bus
-    stop is <b>${pct(wsum(c0, "sun_share") / n0, 0)}</b> in the sun, and for <b>${pct(wsum(c0, "no_alt_share") / n0, 0)}</b> of these walks no
-    street nearby is shadier: ${pct(n0 / wsum(all), 0)} of all walks of 300–800 m. Choosing a route cannot help here; shade has to be added,
-    by street trees, awnings or shelters.`;
+  $("end-detail").innerHTML = `In <b class="c-noalt">${c0.length} of ${all.length}</b> cells the walk home is
+    <b>${pct(wsum(c0, "sun_share") / n0, 0)}</b> in the sun, with no shadier street nearby. Here shade has to be added: street trees,
+    awnings, shelters.`;
 }
 
 // ---- small graphics: sun dial, felt temperature, UTCI by hour, waffle
@@ -214,7 +214,7 @@ function hourChart(h) {
   let rest = 100 - n.reduce((a, b) => a + b, 0);
   raw.map((v, i) => [v - Math.floor(v), i]).sort((a, b) => b[0] - a[0]).forEach(([, i]) => { if (rest > 0) { n[i] += 1; rest -= 1; } });
   let k = 0;
-  $("waffle").innerHTML = `<div class="label" style="margin-bottom:4px">100 walks home · one square = one walk</div>` + n.map((c, i) =>
+  $("waffle").innerHTML = n.map((c, i) =>
     `<div class="wrow"><div class="wn" style="color:${cols[i]}">${c}</div><div><div class="wt">${text[i]}</div>
       <div class="sq">${Array.from({ length: c }, () => `<i style="background:${cols[i]};transition-delay:${(k++ * 12) / 1000}s"></i>`).join("")}</div></div></div>`).join("");
 })();
@@ -489,7 +489,7 @@ const STEPS = {
   },
   sources: () => { scene({ lines: true }); fly({ center: SHADE_AT, zoom: 17, duration: 2600 }); },
   types: () => { scene({ lines: true, types: true }); fly({ center: SHADE_AT, zoom: 17, duration: 900 }); },
-  hours: () => { scene({ lines: true, city: true, t: 0 }); fly({ center: SHADE_AT, zoom: 16.1, duration: 2000 }); playDay(dayHours); },
+  hours: () => { scene({ lines: true, city: true, t: 0 }); fly({ center: SHADE_AT, zoom: 15.1, duration: 2000 }); playDay(dayHours); },
   example: () => {
     scene({ lines: true, route: true, pins: true }); placeTags(PERSONA, false); hideTags(); draw("example");
     fitPair(PERSONA, document.querySelector('[data-step="example"] .panel'), true);
