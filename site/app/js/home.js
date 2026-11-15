@@ -148,8 +148,8 @@ set("s-ind-words", oneIn(indoorShare));
 {
   const c0 = prof[0], all = grid.features;
   $("end-detail").innerHTML = `In <b class="c-noalt">${c0.length} of ${all.length}</b> cells the walk home is
-    <b>${pct(avg(c0, "sun_share"), 0)}</b> in the sun, with no shadier street nearby. Here shade has to be added: street trees,
-    awnings, shelters.`;
+    <b>${pct(avg(c0, "sun_share"), 0)}</b> in the sun, and <b>${pct(avg(c0, "no_alt_share"), 0)}</b> of walks have no shadier street
+    nearby. Here shade has to be added: street trees, awnings, shelters.`;
 }
 
 // ---- small graphics: sun dial, felt temperature, UTCI by hour, waffle
