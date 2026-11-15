@@ -1,8 +1,9 @@
-"""Route check for the 5 rapid-transit stations with the highest sun reduction (300-800 m, 15:00).
+"""Route check for the 5 rapid-transit stations with the highest sun reduction (300-800 m, 15:00), among the stations
+ranked on the website (at least metrics.min_trips_station_rank walks of 300-800 m).
 
     uv run python -m scripts.phase_07_route_check
 
-For each station: all city-sample trips of 300-800 m are re-routed at 06-21 15:00 (dynamic θ).
+For each station: all city-sample trips of 300-800 m are re-routed at the first study date, 15:00 (dynamic θ).
 Figure (dark, in the website's route style: shortest = orange solid, shadiest = cyan dashed), left: one
 representative trip (a changed path whose sun reduction is closest to the station mean) on the 2025
 PASDA orthophoto. Right: all trips — edges used only by shortest paths vs only by shade paths, width = trips.
@@ -60,7 +61,8 @@ def main():
     cfg = load_config()
     proc, figs, rep = cfg["paths"]["processed"], cfg["paths"]["figures"], cfg["paths"]["tables"]
     st = pd.read_csv(rep / "phase_07_rapid_stations.csv")
-    top = st[st.length_bin == BIN].nlargest(TOP, "sun_red").station.tolist()
+    ranked = st[(st.length_bin == BIN) & (st.trips >= cfg["metrics"]["min_trips_station_rank"])]     # as the results table
+    top = ranked.nlargest(TOP, "sun_red").station.tolist()
     g, L, shade = load_city_graph(cfg)
     ls, lt, lb = shade[LABEL]
     tp, tf = theta_params(cfg), cfg["routing"]["tree_factor"]

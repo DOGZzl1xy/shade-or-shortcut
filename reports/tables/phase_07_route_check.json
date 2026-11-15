@@ -42,20 +42,6 @@
     "short_only_sun_share": 0.8543698102107978
   },
   {
-    "station": "BSL: Broad-Girard",
-    "trips": 16,
-    "sun_red_mean": 0.3250976672975404,
-    "changed_share": 0.875,
-    "bldg_shade_gained_m_per_trip": 90.77392475306988,
-    "tree_shade_gained_m_per_trip": 2.781078040599823,
-    "shade_only_edges_km": 0.26351086337550356,
-    "shade_only_under_footprint_share": 0.0,
-    "shade_only_under_structure_share": 0.0,
-    "shade_only_within_15m_of_structure_share": 0.0,
-    "shade_only_bldg_shade_share": 0.44185969315867263,
-    "short_only_sun_share": 0.9022916516161797
-  },
-  {
     "station": "Regional Rail: Wyndmoor",
     "trips": 51,
     "sun_red_mean": 0.263333754926537,
@@ -68,5 +54,19 @@
     "shade_only_within_15m_of_structure_share": 0.0,
     "shade_only_bldg_shade_share": 0.0946124036478224,
     "short_only_sun_share": 0.7629890862363298
+  },
+  {
+    "station": "BSL: Lombard-South",
+    "trips": 2021,
+    "sun_red_mean": 0.24663881659372314,
+    "changed_share": 0.802078179119248,
+    "bldg_shade_gained_m_per_trip": 112.45754579793457,
+    "tree_shade_gained_m_per_trip": -30.819083102736833,
+    "shade_only_edges_km": 2.947800012169586,
+    "shade_only_under_footprint_share": 0.007905138339920948,
+    "shade_only_under_structure_share": 0.0006587615283267457,
+    "shade_only_within_15m_of_structure_share": 0.14756258234519104,
+    "shade_only_bldg_shade_share": 0.5981633933129615,
+    "short_only_sun_share": 0.6879515781237369
   }
 ]
