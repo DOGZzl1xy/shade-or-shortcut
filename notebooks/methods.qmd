@@ -8,7 +8,7 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 cfg = load_config()
-s5, s6, s10 = table("phase_05_stats.json"), table("phase_06_stats.json"), table("phase_10_city.json")
+s10 = table("phase_10_city.json")
 days = " and ".join(pd.Timestamp(d).strftime("%B %-d") for d in cfg["study"]["dates"])
 year = pd.Timestamp(cfg["study"]["dates"][0]).year
 ```
@@ -18,9 +18,9 @@ year = pd.Timestamp(cfg["study"]["dates"][0]).year
 ```{python}
 #| output: asis
 print(f"""1. **Heights.** 2022 LiDAR: ground, buildings and trees at 1 m.
-2. **Shadows.** Every hour from 8:00 to 19:00 on {days}, {year}, a ray from every 2 m of sidewalk towards the sun: *building
-   shade* if a building, bridge or the ground blocks it, *tree shade* if only trees do, otherwise sun. The sun of an hour sits at
-   half past the hour before (15:00 = 14:30), as in the heat model.
+2. **Shadows.** Every hour from 8:00 to 19:00 on {days}, {year}, a ray is cast from every 2 m of sidewalk towards the sun.
+   A point is in *building shade* if a building, a bridge or the ground blocks the ray, in *tree shade* if only trees do, and in
+   the sun otherwise.
 3. **Heat.** SOLWEIG turns the same heights and the weather into the **UTCI**, how hot it feels, at every square metre.
 4. **Sidewalks.** Each sidewalk gets, per hour, its metres of sun, tree shade and building shade, and its UTCI.
 5. **Routes.** Each walk has three routes: **shortest**, **shadiest** (shade cost) and **coolest** (heat cost).""")
@@ -56,29 +56,25 @@ With θ near 0.2 for the first 500 m, a short walk only leaves the shortest rout
 ```{python}
 #| output: asis
 bh = pd.DataFrame(s10["by_hour"]).set_index("label")
-k = [f"{d[5:7]}{d[8:10]}_{cfg['study']['key_hour']:02d}" for d in cfg["study"]["dates"]]
-us, ub = bh.loc[k, "u_sun"].mean(), bh.loc[k, "u_bldg"].mean()
-print(f"""The coolest walk keeps θ but values each metre by its UTCI:
+d0 = pd.Timestamp(cfg["study"]["dates"][0])
+k0 = f"{d0:%m%d}_{cfg['study']['key_hour']:02d}"
+us, ub = bh.loc[k0, "u_sun"], bh.loc[k0, "u_bldg"]
+print(f"""The coolest walk uses the same θ but prices each metre by its UTCI instead of its shade class:
 
 $$C_{{\\text{{heat}}}} = \\sum_{{\\text{{edges}}}} L\\,(1 - \\theta\\,r), \\qquad r = \\frac{{U_{{\\text{{sun}}}} - U}}{{U_{{\\text{{sun}}}} - U_{{\\text{{building}}}}}}$$
 
 $U$ is the sidewalk's UTCI; $U_{{\\text{{sun}}}}$ and $U_{{\\text{{building}}}}$ are the city medians in sun and in building shade at that hour
-(15:00: about {us:.1f} and {ub:.1f} °C). A typically sunny metre costs 1 and a typically building-shaded one 1 − θ, as in the shade
-cost; everything in between follows its UTCI ($r$ kept between −1 and 1.5). Indoor passages have no UTCI, so the coolest walk stays
-outdoors.""")
+(at {cfg['study']['key_hour']}:00 on {d0:%B} {d0.day}, {us:.1f} and {ub:.1f} °C). A metre as hot as a typical sunny sidewalk costs 1, and a metre
+as cool as typical building shade costs 1 − θ, as in the shade cost. Every other metre falls in between, in proportion to its UTCI.
+Indoor passages have no UTCI, so the coolest walk stays outdoors.""")
 ```
 
 ## Walks home from transit
 
 ```{python}
 #| output: asis
-c = s6["city"]
-print(f"Every home within 1.2 km of a frequent stop is one walk, stop to home ({c['trips']:,} walks). Results are reported by "
-      "length (under 300 m, 300–800 m, 800–1,200 m), since short walks rarely have an alternative, and for rapid transit and buses "
-      "separately.")
-d = s6["direction_check"]
-print(f"\nThe direction does not matter: walking home to stop instead gives a mean sun reduction of {pct(d['sun_red_mean_home_to_stop'])} "
-      f"against {pct(d['sun_red_mean_stop_to_home'])} (500 walks, correlation {d['sun_red_corr']:.2f}).")
+print("Each walk runs from the stop to the home. Results are reported by walk length (under 300 m, 300–800 m, 800–1,200 m), "
+      "since short walks rarely have an alternative, and for stations and bus or trolley stops separately.")
 ```
 
 ## Metrics
@@ -98,12 +94,8 @@ print(f"\nThe direction does not matter: walking home to stop instead gives a me
 | Detour | (length of the walk − shortest length) ÷ shortest length |
 | Indoor Contribution Index | (1 − L<sub>shadiest</sub> ÷ L<sub>shortest, outdoor</sub>) × indoor share of the shadiest path's shade (Wen et al. 2025) |
 
-Weighted exposure falls about a tenth as much as sun: with θ near 0.2, each metre of sun avoided lowers C by only 0.15–0.2 m.
+Weighted exposure falls much less than sun because, with θ near 0.2, each metre of sun avoided lowers C by only 0.15–0.2 m.
 
 ## Indoor scenarios (University City)
 
 Mapped entrances are linked to the nearest sidewalk; passages through buildings count as indoor walking. Three cases: outdoor only, plus buildings open without a Penn ID, plus all mapped buildings. The shortest route is always the outdoor one.
-
-## How we checked
-
-The five stations with the largest sun reduction were checked on aerial photos; checks of the heat model are in the [technical notes](technical.qmd).
