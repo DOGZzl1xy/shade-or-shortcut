@@ -122,7 +122,7 @@ def uncovered_figure(cfg):
     ax.scatter(unc.x, unc.y, s=0.2, c="#d62728", alpha=0.4, label=f"homes without a frequent stop within 1.2 km ({len(unc):,})")
     sm = par.sample(min(len(par), 30000), random_state=cfg["project"]["seed"])
     ax.scatter(sm.x, sm.y, s=0.2, c="#888", alpha=0.3, label="other homes (sample)")
-    for k, name, c, sz in (("surface", "frequent bus stop", "#1f77b4", 3), ("Regional Rail", "Regional Rail", "#2a9d3a", 16),
+    for k, name, c, sz in (("surface", "frequent bus or trolley stop", "#1f77b4", 3), ("Regional Rail", "Regional Rail", "#2a9d3a", 16),
                            ("MFL", "L", "#ff7f0e", 16), ("BSL", "B", "#e377c2", 16), ("trolley tunnel", "T", "#9467bd", 16)):
         ss = stops[stops.kind == k]
         ax.scatter(ss.geometry.x, ss.geometry.y, s=sz, c=c, label=f"{name} ({len(ss):,})")
