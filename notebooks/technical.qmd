@@ -119,7 +119,7 @@ items = [
      f"shade for building shade ({pct(s5['sun_increase_share'], 1)} of test walks). The cost was kept unchanged, and the "
      "weighted exposure C is reported next to the sun share."),
     ("Which stops", f"Using every stop gave a median walk of {d0['median_m']:.0f} m, too short for any choice of route. "
-     f"Rapid transit plus frequent buses gives a median of {d3['median_m']:.0f} m and still reaches "
+     f"Rapid transit plus frequent stops gives a median of {d3['median_m']:.0f} m and still reaches "
      f"{pct(d3['share_within_1200m'], 0)} of homes within 1.2 km."),
     ("Threshold for no cooler option", f"Sun reduction has a spike at exactly 0 (the shadiest walk is the shortest) and is "
      f"continuous from about {mt['no_alt_threshold']:.0%} on, so the cut is placed where the spike ends."),

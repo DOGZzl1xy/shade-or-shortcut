@@ -1,4 +1,4 @@
-// City map: sidewalk sun or heat by hour (PMTiles), the 500 m grid of walks home from frequent bus stops and the
+// City map: sidewalk sun or heat by hour (PMTiles), the 500 m grid of walks home from frequent stops and the
 // rapid-transit stations. Panel, legend, time bar and sidewalk colours are the shared components of common.js, as on
 // the route tool; one measure toggle (sun / heat) switches the sidewalks, the grid and the stations together.
 import { VERSION, readState, writeState, nav, collapsible, baseStyle, getJSON, pmtilesProtocol, COLORS, CLUSTERS, GRID_RAMPS, ATTR,
@@ -110,7 +110,7 @@ map.once("style.load", async () => {
 // ---- details in the panel (cells and stations alike), the clicked cell outlined
 const v = (x, f) => (x === null || x === undefined ? "–" : f(x));
 const cellTable = (p) => `<h2>${p.cluster_name}</h2>
-  <div class="sub">500 m cell · ${p.trips} walks home from frequent bus stops, 300–800 m, 15:00</div>
+  <div class="sub">500 m cell · ${p.trips} walks home from frequent stops, 300–800 m, 15:00</div>
   <table class="cmp"><thead><tr><th></th><th>sun</th><th>heat</th></tr></thead><tbody>
     <tr><td>Shortest walk</td><td>${v(p.sun_share, (x) => `${pct(x, 0)} sunny`)}</td><td>${v(p.u_short, (x) => degC(x))}</td></tr>
     <tr><td>Shadiest / coolest</td><td class="cool-t">${v(p.sun_red, (x) => `−${pct(x, 0)} sun`)}</td><td class="cool-t">${v(p.u_cool, (x) => degC(-x))}</td></tr>
