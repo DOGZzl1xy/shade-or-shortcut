@@ -1,8 +1,8 @@
 // Route tool: two clicks -> shortest walk (outdoor network) and the shadiest (sun) or coolest (heat) walk, recomputed in
 // the browser. Panel, legend, time bar and sidewalk colours are the shared components of common.js, as on the city map.
 import { readState, writeState, nav, collapsible, baseStyle, getJSON, COLORS, DEMO_CENTER, ATTR, pct, degC, timeBar, newMap, edgeCoords,
-  pathCoords, routeLayers, sidewalkColor, sidewalkLegend, SIDEWALK_WIDTH, SIDEWALK_OPACITY, SIDEWALK_DIM, measureControl, MEASURES } from "./common.js?v=bd204e4";
-import { route } from "./router.js?v=bd204e4";
+  pathCoords, routeLayers, sidewalkColor, sidewalkLegend, SIDEWALK_WIDTH, SIDEWALK_OPACITY, SIDEWALK_DIM, measureControl, MEASURES } from "./common.js?v=3c920dd";
+import { route } from "./router.js?v=3c920dd";
 
 nav("tool.html");
 const $ = (id) => document.getElementById(id);

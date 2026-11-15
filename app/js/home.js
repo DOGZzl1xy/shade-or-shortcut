@@ -2,8 +2,8 @@
 // sentence; on two screens the day plays by itself (08:00 -> 19:00).
 // Colours, ramps, legends and route styles are the shared ones of common.js, as on the route tool and the city map.
 import { VERSION, nav, baseStyle, getJSON, pmtilesProtocol, COLORS, CLUSTERS, GRID_RAMPS, ATTR, pct, degC, newMap, routeLayers,
-  ROUTE_LAYERS, sidewalkColor, sidewalkLegend, SIDEWALK_WIDTH, rampHTML, rampExpr, UTCI_STOPS } from "./common.js?v=bd204e4";
-import { createWalk } from "./walk.js?v=bd204e4";
+  ROUTE_LAYERS, sidewalkColor, sidewalkLegend, SIDEWALK_WIDTH, rampHTML, rampExpr, UTCI_STOPS } from "./common.js?v=3c920dd";
+import { createWalk } from "./walk.js?v=3c920dd";
 
 nav("index.html");
 pmtilesProtocol();
@@ -80,7 +80,9 @@ const h10 = summary.phase10.by_mode_bin_key_hour.find((r) => r.mode === "bus" &&
 const byHour = Object.fromEntries(summary.phase10.by_hour.map((r) => [r.label, r]));
 const H24 = summary.phase10.by_hour.filter((r) => r.label.startsWith("0624"));
 const r15 = byHour["0624_15"];
-const indoorShare = summary.phase8_at_15h.find((r) => r.set === "campus" && r.scenario === "all").shade_uses_indoor;
+// share of shadiest walks that go indoors, campus and station walks (as on the results page)
+const indoorShare = summary.phase8_at_15h.filter((r) => r.set !== "home" && r.scenario === "all")
+  .reduce((a, r, _, all) => a + r.shade_uses_indoor / all.length, 0);
 const PERSONA = hero.opener[0], PW = walkData.hours.find((h) => h.time === "0624_15");
 const stationName = (p) => `${p.station.replace(/-/g, "–")} (${p.line.startsWith("Regional") ? "Regional Rail" : p.line[0]})`;
 const sunPct = (p) => pct(p.sun / p.length, 0);
@@ -119,8 +121,10 @@ $("w-detail").innerHTML = `For the others a shadier street is close, and it can 
   the shadiest walk avoids a quarter of the sun or more. Averaged over all walks, the shadiest walk has <b>${pct(b6.sun_red_mean, 1)} less sun</b>
   for <b>${pct(b6.detour_mean, 1)} more distance</b>.`;
 const prof = Object.fromEntries(CLUSTERS.map(([k]) => [k, grid.features.filter((f) => f.properties.cluster === k)]));
+// cluster figures as on the results page: means over cells, medians for the cell features (sidewalk density)
 const avg = (fs, k) => fs.reduce((a, f) => a + f.properties[k], 0) / fs.length;
-$("cl-detail").innerHTML = `In <b class="c-choice">${prof[1].length} cells</b> a shadier walk is usually within reach: about ${Math.round(avg(prof[1], "network_km_km2"))} km of sidewalk per km² against ${Math.round(avg(prof[0], "network_km_km2"))} where there is <b class="c-noalt">no cooler option</b>.`;
+const median = (fs, k) => { const v = fs.map((f) => f.properties[k]).sort((a, b) => a - b), n = v.length; return n % 2 ? v[(n - 1) / 2] : (v[n / 2 - 1] + v[n / 2]) / 2; };
+$("cl-detail").innerHTML = `In <b class="c-choice">${prof[1].length} cells</b> a shadier walk is usually within reach: about ${Math.round(median(prof[1], "network_km_km2"))} km of sidewalk per km² against ${Math.round(median(prof[0], "network_km_km2"))} where there is <b class="c-noalt">no cooler option</b>.`;
 $("clusters").innerHTML = CLUSTERS.map(([, n, c]) => `<span><span class="legend-swatch" style="background:${c};height:10px"></span>${n.toLowerCase()}</span>`).join("");
 document.querySelectorAll("[data-grid-legend]").forEach((el) => {
   const k = el.dataset.gridLegend, r = GRID_RAMPS[k];
@@ -142,10 +146,9 @@ $("ch-detail").innerHTML = `For ${pct(h10.heat_eq_shade, 0)} of walks, the coole
 // chapter 5, 6
 set("s-ind-words", oneIn(indoorShare));
 {
-  const c0 = prof[0], all = grid.features, wsum = (fs, k) => fs.reduce((a, f) => a + f.properties.trips * (k ? f.properties[k] : 1), 0);
-  const n0 = wsum(c0);
+  const c0 = prof[0], all = grid.features;
   $("end-detail").innerHTML = `In <b class="c-noalt">${c0.length} of ${all.length}</b> cells the walk home is
-    <b>${pct(wsum(c0, "sun_share") / n0, 0)}</b> in the sun, with no shadier street nearby. Here shade has to be added: street trees,
+    <b>${pct(avg(c0, "sun_share"), 0)}</b> in the sun, with no shadier street nearby. Here shade has to be added: street trees,
     awnings, shelters.`;
 }
 
@@ -506,7 +509,9 @@ const STEPS = {
   },
   walk: () => {
     scene({ lines: true });
-    const e = PW, b = walk.bounds(e), panel = document.querySelector('[data-step="walk"] .panel').getBoundingClientRect();
+    // the walks of the example screen, so both screens give the same lengths (the profile's 2 m points add up to 0.1-1 m less)
+    const e = { ...PW, short: { ...PW.short, length: PERSONA.shortest.length }, cool: { ...PW.cool, length: PERSONA.coolest.length } };
+    const b = walk.bounds(e), panel = document.querySelector('[data-step="walk"] .panel').getBoundingClientRect();
     map.setPadding({ top: 0, bottom: 0, left: 0, right: 0 });       // a flyTo before left its padding on the map
     map.fitBounds(b, { padding: { left: panel.right + 50, right: 70, top: 120, bottom: 70 }, duration: 1600, maxZoom: 17 });
     $("wk-end").classList.remove("on");
