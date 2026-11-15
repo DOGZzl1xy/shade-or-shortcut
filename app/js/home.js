@@ -2,8 +2,8 @@
 // sentence; on two screens the day plays by itself (08:00 -> 19:00).
 // Colours, ramps, legends and route styles are the shared ones of common.js, as on the route tool and the city map.
 import { VERSION, nav, baseStyle, getJSON, pmtilesProtocol, COLORS, CLUSTERS, GRID_RAMPS, ATTR, pct, degC, newMap, routeLayers,
-  ROUTE_LAYERS, sidewalkColor, sidewalkLegend, SIDEWALK_WIDTH, rampHTML, rampExpr, UTCI_STOPS } from "./common.js?v=9270be5";
-import { createWalk } from "./walk.js?v=9270be5";
+  ROUTE_LAYERS, sidewalkColor, sidewalkLegend, SIDEWALK_WIDTH, rampHTML, rampExpr, UTCI_STOPS } from "./common.js?v=bd204e4";
+import { createWalk } from "./walk.js?v=bd204e4";
 
 nav("index.html");
 pmtilesProtocol();

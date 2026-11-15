@@ -39,14 +39,14 @@
     "href": "methods.html",
     "title": "Methods",
     "section": "",
-    "text": "Heights. 2022 LiDAR: ground, buildings and trees at 1 m.\nShadows. Every hour from 8:00 to 19:00 on June 24 and July 29, 2025, a ray from every 2 m of sidewalk towards the sun: building shade if a building, bridge or the ground blocks it, tree shade if only trees do, otherwise sun. The sun of an hour sits at half past the hour before (15:00 = 14:30), as in the heat model.\nHeat. SOLWEIG turns the same heights and the weather into the UTCI, how hot it feels, at every square metre.\nSidewalks. Each sidewalk gets, per hour, its metres of sun, tree shade and building shade, and its UTCI.\nRoutes. Each walk has three routes: shortest, shadiest (shade cost) and coolest (heat cost)."
+    "text": "Heights. 2022 LiDAR: ground, buildings and trees at 1 m.\nShadows. Every hour from 8:00 to 19:00 on June 24 and July 29, 2025, a ray is cast from every 2 m of sidewalk towards the sun. A point is in building shade if a building, a bridge or the ground blocks the ray, in tree shade if only trees do, and in the sun otherwise.\nHeat. SOLWEIG turns the same heights and the weather into the UTCI, how hot it feels, at every square metre.\nSidewalks. Each sidewalk gets, per hour, its metres of sun, tree shade and building shade, and its UTCI.\nRoutes. Each walk has three routes: shortest, shadiest (shade cost) and coolest (heat cost)."
   },
   {
     "objectID": "methods.html#pipeline",
     "href": "methods.html#pipeline",
     "title": "Methods",
     "section": "",
-    "text": "Heights. 2022 LiDAR: ground, buildings and trees at 1 m.\nShadows. Every hour from 8:00 to 19:00 on June 24 and July 29, 2025, a ray from every 2 m of sidewalk towards the sun: building shade if a building, bridge or the ground blocks it, tree shade if only trees do, otherwise sun. The sun of an hour sits at half past the hour before (15:00 = 14:30), as in the heat model.\nHeat. SOLWEIG turns the same heights and the weather into the UTCI, how hot it feels, at every square metre.\nSidewalks. Each sidewalk gets, per hour, its metres of sun, tree shade and building shade, and its UTCI.\nRoutes. Each walk has three routes: shortest, shadiest (shade cost) and coolest (heat cost)."
+    "text": "Heights. 2022 LiDAR: ground, buildings and trees at 1 m.\nShadows. Every hour from 8:00 to 19:00 on June 24 and July 29, 2025, a ray is cast from every 2 m of sidewalk towards the sun. A point is in building shade if a building, a bridge or the ground blocks the ray, in tree shade if only trees do, and in the sun otherwise.\nHeat. SOLWEIG turns the same heights and the weather into the UTCI, how hot it feels, at every square metre.\nSidewalks. Each sidewalk gets, per hour, its metres of sun, tree shade and building shade, and its UTCI.\nRoutes. Each walk has three routes: shortest, shadiest (shade cost) and coolest (heat cost)."
   },
   {
     "objectID": "methods.html#the-cost-of-a-sunny-metre",
@@ -60,21 +60,21 @@
     "href": "methods.html#the-cost-of-a-hot-metre",
     "title": "Methods",
     "section": "The cost of a hot metre",
-    "text": "The cost of a hot metre\nThe coolest walk keeps θ but values each metre by its UTCI:\n\\[C_{\\text{heat}} = \\sum_{\\text{edges}} L\\,(1 - \\theta\\,r), \\qquad r = \\frac{U_{\\text{sun}} - U}{U_{\\text{sun}} - U_{\\text{building}}}\\]\n\\(U\\) is the sidewalk’s UTCI; \\(U_{\\text{sun}}\\) and \\(U_{\\text{building}}\\) are the city medians in sun and in building shade at that hour (15:00: about 45.3 and 40.5 °C). A typically sunny metre costs 1 and a typically building-shaded one 1 − θ, as in the shade cost; everything in between follows its UTCI (\\(r\\) kept between −1 and 1.5). Indoor passages have no UTCI, so the coolest walk stays outdoors."
+    "text": "The cost of a hot metre\nThe coolest walk uses the same θ but prices each metre by its UTCI instead of its shade class:\n\\[C_{\\text{heat}} = \\sum_{\\text{edges}} L\\,(1 - \\theta\\,r), \\qquad r = \\frac{U_{\\text{sun}} - U}{U_{\\text{sun}} - U_{\\text{building}}}\\]\n\\(U\\) is the sidewalk’s UTCI; \\(U_{\\text{sun}}\\) and \\(U_{\\text{building}}\\) are the city medians in sun and in building shade at that hour (at 15:00 on June 24, 45.9 and 41.3 °C). A metre as hot as a typical sunny sidewalk costs 1, and a metre as cool as typical building shade costs 1 − θ, as in the shade cost. Every other metre falls in between, in proportion to its UTCI. Indoor passages have no UTCI, so the coolest walk stays outdoors."
   },
   {
     "objectID": "methods.html#walks-home-from-transit",
     "href": "methods.html#walks-home-from-transit",
     "title": "Methods",
     "section": "Walks home from transit",
-    "text": "Walks home from transit\nEvery home within 1.2 km of a frequent stop is one walk, stop to home (431,114 walks). Results are reported by length (under 300 m, 300–800 m, 800–1,200 m), since short walks rarely have an alternative, and for rapid transit and buses separately.\nThe direction does not matter: walking home to stop instead gives a mean sun reduction of 13.8% against 13.8% (500 walks, correlation 0.99)."
+    "text": "Walks home from transit\nEach walk runs from the stop to the home. Results are reported by walk length (under 300 m, 300–800 m, 800–1,200 m), since short walks rarely have an alternative, and for stations and bus or trolley stops separately."
   },
   {
     "objectID": "methods.html#metrics",
     "href": "methods.html#metrics",
     "title": "Methods",
     "section": "Metrics",
-    "text": "Metrics\n\n\n\n\n\n\n\nMetric\nDefinition\n\n\n\n\nSun\n\n\n\nSun share\nmetres in the sun on the shortest walk ÷ its length\n\n\nSun reduction\n(sun on shortest − sun on shadiest) ÷ sun on shortest\n\n\nWeighted exposure reduction\n(C of shortest − C of shadiest) ÷ C of shortest\n\n\nNo cooler option\nthe shadiest walk avoids less than 2% of the sun\n\n\nHeat\n\n\n\nUTCI of a walk\nlength-weighted mean UTCI along it, in °C\n\n\nUTCI reduction\nUTCI of the shortest − UTCI of the coolest (or shadiest) walk, in °C\n\n\nExtreme heat stress\nmetres with UTCI ≥ 46 °C\n\n\nBoth\n\n\n\nDetour\n(length of the walk − shortest length) ÷ shortest length\n\n\nIndoor Contribution Index\n(1 − Lshadiest ÷ Lshortest, outdoor) × indoor share of the shadiest path’s shade (Wen et al. 2025)\n\n\n\nWeighted exposure falls about a tenth as much as sun: with θ near 0.2, each metre of sun avoided lowers C by only 0.15–0.2 m."
+    "text": "Metrics\n\n\n\n\n\n\n\nMetric\nDefinition\n\n\n\n\nSun\n\n\n\nSun share\nmetres in the sun on the shortest walk ÷ its length\n\n\nSun reduction\n(sun on shortest − sun on shadiest) ÷ sun on shortest\n\n\nWeighted exposure reduction\n(C of shortest − C of shadiest) ÷ C of shortest\n\n\nNo cooler option\nthe shadiest walk avoids less than 2% of the sun\n\n\nHeat\n\n\n\nUTCI of a walk\nlength-weighted mean UTCI along it, in °C\n\n\nUTCI reduction\nUTCI of the shortest − UTCI of the coolest (or shadiest) walk, in °C\n\n\nExtreme heat stress\nmetres with UTCI ≥ 46 °C\n\n\nBoth\n\n\n\nDetour\n(length of the walk − shortest length) ÷ shortest length\n\n\nIndoor Contribution Index\n(1 − Lshadiest ÷ Lshortest, outdoor) × indoor share of the shadiest path’s shade (Wen et al. 2025)\n\n\n\nWeighted exposure falls much less than sun because, with θ near 0.2, each metre of sun avoided lowers C by only 0.15–0.2 m."
   },
   {
     "objectID": "methods.html#indoor-scenarios-university-city",
@@ -102,35 +102,35 @@
     "href": "data.html",
     "title": "Data",
     "section": "",
-    "text": "All inputs are public.\n\n\n\n\n\n\n\n\nLayer\nSource\nUsed for\n\n\n\n\nAirborne LiDAR, March 2022\nCity of Philadelphia (NOAA Digital Coast, PASDA)\nground, building and tree heights at 1 m\n\n\nBuilding footprints\nCity of Philadelphia\nbuilding outlines\n\n\nLand cover 2018\nPASDA\ntree canopy\n\n\nCanopy height (CHMv2)\nMeta / WRI, CC BY 4.0\ntrees just outside the city\n\n\nPedestrian network\nDVRPC\nsidewalks and crosswalks\n\n\nOpenStreetMap\nOSM contributors, ODbL\nbridges, covered walkways, campus footways\n\n\nTransit\nSEPTA, fall 2026 timetable\nstations and frequent bus stops\n\n\nProperties\nCity of Philadelphia (OPA)\nhomes, where walks end\n\n\nHourly weather\nERA5 (ECMWF), via Open-Meteo\nweather for the heat model\n\n\nHeat model\nSOLWEIG 2022a (solweig-gpu 2.0.0)\nfelt temperature (UTCI) at 1 m\n\n\nSurface temperature, air temperature\nUSGS Landsat 8; NOAA ACIS\nheat figures on the Story page"
+    "text": "All inputs are public.\n\n\n\n\n\n\n\n\nLayer\nSource\nUsed for\n\n\n\n\nAirborne LiDAR, March 2022\nCity of Philadelphia (NOAA Digital Coast, PASDA)\nground, building and tree heights at 1 m\n\n\nBuilding footprints\nCity of Philadelphia\nbuilding outlines\n\n\nLand cover 2018\nPASDA\ntree canopy\n\n\nCanopy height (CHMv2)\nMeta / WRI\ntrees just outside the city\n\n\nPedestrian network\nDVRPC\nsidewalks and crosswalks\n\n\nOpenStreetMap\nOSM contributors\nbridges, covered walkways, campus footways in University City\n\n\nBuilding entrances and indoor passages\nmapped for this project, 41 buildings in University City\nwalks through buildings\n\n\nTransit\nSEPTA, fall 2026 timetable\nstations and frequent bus or trolley stops\n\n\nProperties\nCity of Philadelphia (OPA)\nhomes, where walks end\n\n\nHourly weather\nERA5 (ECMWF), via Open-Meteo\nweather for the heat model\n\n\nHeat model\nSOLWEIG 2022a (solweig-gpu 2.0.0)\nfelt temperature (UTCI) at 1 m\n\n\nSurface temperature, air temperature\nUSGS Landsat 8; NOAA ACIS\nheat figures on the Story page"
   },
   {
     "objectID": "data.html#sources",
     "href": "data.html#sources",
     "title": "Data",
     "section": "",
-    "text": "All inputs are public.\n\n\n\n\n\n\n\n\nLayer\nSource\nUsed for\n\n\n\n\nAirborne LiDAR, March 2022\nCity of Philadelphia (NOAA Digital Coast, PASDA)\nground, building and tree heights at 1 m\n\n\nBuilding footprints\nCity of Philadelphia\nbuilding outlines\n\n\nLand cover 2018\nPASDA\ntree canopy\n\n\nCanopy height (CHMv2)\nMeta / WRI, CC BY 4.0\ntrees just outside the city\n\n\nPedestrian network\nDVRPC\nsidewalks and crosswalks\n\n\nOpenStreetMap\nOSM contributors, ODbL\nbridges, covered walkways, campus footways\n\n\nTransit\nSEPTA, fall 2026 timetable\nstations and frequent bus stops\n\n\nProperties\nCity of Philadelphia (OPA)\nhomes, where walks end\n\n\nHourly weather\nERA5 (ECMWF), via Open-Meteo\nweather for the heat model\n\n\nHeat model\nSOLWEIG 2022a (solweig-gpu 2.0.0)\nfelt temperature (UTCI) at 1 m\n\n\nSurface temperature, air temperature\nUSGS Landsat 8; NOAA ACIS\nheat figures on the Story page"
+    "text": "All inputs are public.\n\n\n\n\n\n\n\n\nLayer\nSource\nUsed for\n\n\n\n\nAirborne LiDAR, March 2022\nCity of Philadelphia (NOAA Digital Coast, PASDA)\nground, building and tree heights at 1 m\n\n\nBuilding footprints\nCity of Philadelphia\nbuilding outlines\n\n\nLand cover 2018\nPASDA\ntree canopy\n\n\nCanopy height (CHMv2)\nMeta / WRI\ntrees just outside the city\n\n\nPedestrian network\nDVRPC\nsidewalks and crosswalks\n\n\nOpenStreetMap\nOSM contributors\nbridges, covered walkways, campus footways in University City\n\n\nBuilding entrances and indoor passages\nmapped for this project, 41 buildings in University City\nwalks through buildings\n\n\nTransit\nSEPTA, fall 2026 timetable\nstations and frequent bus or trolley stops\n\n\nProperties\nCity of Philadelphia (OPA)\nhomes, where walks end\n\n\nHourly weather\nERA5 (ECMWF), via Open-Meteo\nweather for the heat model\n\n\nHeat model\nSOLWEIG 2022a (solweig-gpu 2.0.0)\nfelt temperature (UTCI) at 1 m\n\n\nSurface temperature, air temperature\nUSGS Landsat 8; NOAA ACIS\nheat figures on the Story page"
   },
   {
     "objectID": "data.html#the-shade-map",
     "href": "data.html#the-shade-map",
     "title": "Data",
     "section": "The shade map",
-    "text": "The shade map\n\n\n\n7,237 km\n\n\nsidewalks and crossings\n\n\n\n\n3.6 M\n\n\npoints checked for shade, every 2 m\n\n\n\n\n24\n\n\nhours: June 24 and July 29, 8:00–19:00\n\n\n\n\n1 m\n\n\nheight model of buildings and trees\n\n\n\nHeights come from the 2022 LiDAR survey. Building heights match the city’s records to 0.5 m (median, 541,222 buildings); bridges and elevated rail cast shadows too. Trees cover 17% of the city (median height 15 m). Covered walkways (4.2 km) are always in shade.\n\n\n\n\n\nUniversity City in the height model: buildings (blue and pink), bridges and other structures (orange) and trees (green)."
+    "text": "The shade map\n\n\n\n7,237 km\n\n\nsidewalks and crossings\n\n\n\n\n3.6 M\n\n\npoints checked for shade, every 2 m\n\n\n\n\n24\n\n\nhours modelled: 8:00–19:00 on June 24 and July 29\n\n\n\nHeights come from the 2022 LiDAR survey; bridges and elevated rail cast shadows too. Trees cover 17% of the city (median height 15 m). Covered walkways (4.2 km) are always in shade.\n\n\n\n\n\nUniversity City in the height model: buildings with LiDAR heights (blue) or recorded heights (pink), bridges and other structures (orange) and trees (green)."
   },
   {
     "objectID": "data.html#the-heat-model",
     "href": "data.html#the-heat-model",
     "title": "Data",
     "section": "The heat model",
-    "text": "The heat model\nShade says where the sun is blocked, not how hot a sidewalk feels. For that, the same heights go into SOLWEIG, which computes the radiation a standing person receives from sun, sky, walls and ground and, with the weather, the UTCI: how hot it feels, in °C. Above 38 °C is very strong heat stress, above 46 °C extreme.\nThe model needs real weather, so the study uses two hot, sunny days of 2025: June 24, during a heat wave, and July 29. Shadows are computed for the same moments.\n\n\n\n\n\n\n\n\n\n\n\nDay\nAir temperature, 15:00\nHumidity, 15:00\nWind, 15:00\nPeak solar radiation\nDaily maximum\n\n\n\n\nJune 24, 2025\n38.5 °C\n32%\n2.8 m/s\n936 W/m²\n38.8 °C\n\n\nJuly 29, 2025\n36.1 °C\n43%\n1.8 m/s\n914 W/m²\n36.1 °C\n\n\n\nOne ERA5 cell covers the whole city, so air temperature and wind are the same everywhere; the heat map varies with sun, shade, walls and ground. The model ran in 400 one-kilometre tiles per day on a GPU and gives a UTCI value at all 3.6 million sidewalk points, every hour."
+    "text": "The heat model\nShade says where the sun is blocked, not how hot a sidewalk feels. SOLWEIG takes the same heights and the weather and computes the radiation a standing person receives from the sun, the sky, walls and the ground. From it comes the UTCI, how hot it feels in °C. Above 38 °C is very strong heat stress, above 46 °C extreme.\nThe heat model uses the weather of two hot, sunny days in 2025: June 24, during a heat wave, and July 29.\n\n\n\n\n\n\n\n\n\n\n\nDay\nAir temperature, 15:00\nHumidity, 15:00\nWind, 15:00\nPeak solar radiation\nDaily maximum\n\n\n\n\nJune 24, 2025\n38.5 °C\n32%\n2.8 m/s\n936 W/m²\n38.8 °C\n\n\nJuly 29, 2025\n36.1 °C\n43%\n1.8 m/s\n914 W/m²\n36.1 °C\n\n\n\nOne ERA5 cell covers the whole city, so air temperature and wind are the same everywhere; the heat map varies with sun, shade, walls and ground."
   },
   {
     "objectID": "data.html#whose-walks",
     "href": "data.html#whose-walks",
     "title": "Data",
     "section": "Whose walks",
-    "text": "Whose walks\nEach walk starts at a rapid-transit station (Regional Rail, L, B, T tunnel) or at a bus stop with at least 6 buses an hour (15:00–19:00), and ends at a home within 1.2 km on foot: 431,114 walks. The other 91,659 homes (17.5%), mostly in the Northeast and Roxborough, have no frequent stop that close.\n\n\n\n\n\nHomes without a frequent stop within 1.2 km (red)."
+    "text": "Whose walks\nEach walk starts at a rapid-transit station (Regional Rail, the L and B subway lines, and the T trolley tunnel) or at a bus or trolley stop with at least 6 departures an hour on one route between 15:00 and 19:00, and ends at a home within 1.2 km on foot: 431,114 walks. The other 91,659 homes (17.5%), mostly in the Northeast and Roxborough, have no frequent stop that close.\n\n\n\n\n\nHomes without a frequent stop within 1.2 km (red)."
   },
   {
     "objectID": "data.html#university-city",
@@ -144,7 +144,7 @@
     "href": "data.html#known-gaps",
     "title": "Data",
     "section": "Known gaps",
-    "text": "Known gaps\n\nCampus and park paths are missing outside University City, so cooler options there are understated.\nTwo clear, hot days; trees from leaf-off LiDAR and 2018 land cover, buildings from 2022.\nOne weather cell for the city: no neighbourhood differences in air temperature or wind. Trees let a fixed 3% of the sun through.\nMissing footprints, new buildings and temporary objects affect shade locally.\nThe timetable is one weekday in fall 2026."
+    "text": "Known gaps\n\nCampus and park paths are missing outside University City, so cooler options there are understated.\nMilder or cloudy days are not modelled.\nTrees come from leaf-off LiDAR and 2018 land cover, and let a fixed 3% of the sun through."
   },
   {
     "objectID": "results.html",
@@ -194,5 +194,12 @@
     "title": "Results",
     "section": "Limitations",
     "text": "Limitations\n\nCampus and park paths are missing outside University City, so cooler options there are understated.\n“No cooler option” mixes two cases: no cooler street, or one not worth the detour.\nTwo hot, sunny days in 2025; trees from leaf-off LiDAR and 2018 land cover; buildings from 2022.\nOne weather cell: no neighbourhood differences in air temperature or wind.\nTrees let a fixed 3% of the sun through.\nIndoor passages assume open, air-conditioned buildings; they have no UTCI."
+  },
+  {
+    "objectID": "data.html#heights-and-shade",
+    "href": "data.html#heights-and-shade",
+    "title": "Data",
+    "section": "Heights and shade",
+    "text": "Heights and shade\n\n\n\n7,237 km\n\n\nsidewalks and crossings\n\n\n\n\n3.6 M\n\n\npoints checked for shade, every 2 m\n\n\n\n\n24\n\n\nhours modelled: 8:00–19:00 on two days\n\n\n\nBridges and elevated rail cast shadows as well as buildings and trees. Trees cover 17% of the city (median height 15 m). Covered walkways (4.2 km) are always in shade.\n\n\n\n\n\nUniversity City in the height model: buildings with LiDAR heights (blue) or recorded heights (pink), bridges and other structures (orange) and trees (green)."
   }
 ]

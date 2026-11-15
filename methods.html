@@ -156,7 +156,6 @@ window.Quarto = {
   <li><a href="#walks-home-from-transit" id="toc-walks-home-from-transit" class="nav-link" data-scroll-target="#walks-home-from-transit">Walks home from transit</a></li>
   <li><a href="#metrics" id="toc-metrics" class="nav-link" data-scroll-target="#metrics">Metrics</a></li>
   <li><a href="#indoor-scenarios-university-city" id="toc-indoor-scenarios-university-city" class="nav-link" data-scroll-target="#indoor-scenarios-university-city">Indoor scenarios (University City)</a></li>
-  <li><a href="#how-we-checked" id="toc-how-we-checked" class="nav-link" data-scroll-target="#how-we-checked">How we checked</a></li>
   </ul>
 </nav>
     </div>
@@ -187,7 +186,7 @@ window.Quarto = {
 <h2 class="anchored" data-anchor-id="pipeline">Pipeline</h2>
 <ol type="1">
 <li><strong>Heights.</strong> 2022 LiDAR: ground, buildings and trees at 1 m.</li>
-<li><strong>Shadows.</strong> Every hour from 8:00 to 19:00 on June 24 and July 29, 2025, a ray from every 2 m of sidewalk towards the sun: <em>building shade</em> if a building, bridge or the ground blocks it, <em>tree shade</em> if only trees do, otherwise sun. The sun of an hour sits at half past the hour before (15:00 = 14:30), as in the heat model.</li>
+<li><strong>Shadows.</strong> Every hour from 8:00 to 19:00 on June 24 and July 29, 2025, a ray is cast from every 2 m of sidewalk towards the sun. A point is in <em>building shade</em> if a building, a bridge or the ground blocks the ray, in <em>tree shade</em> if only trees do, and in the sun otherwise.</li>
 <li><strong>Heat.</strong> SOLWEIG turns the same heights and the weather into the <strong>UTCI</strong>, how hot it feels, at every square metre.</li>
 <li><strong>Sidewalks.</strong> Each sidewalk gets, per hour, its metres of sun, tree shade and building shade, and its UTCI.</li>
 <li><strong>Routes.</strong> Each walk has three routes: <strong>shortest</strong>, <strong>shadiest</strong> (shade cost) and <strong>coolest</strong> (heat cost).</li>
@@ -198,7 +197,7 @@ window.Quarto = {
 <p>The shadiest walk uses the cost function of Wen et al.&nbsp;(2025):</p>
 <p><span class="math display">\[C = L_{\text{sun}} + (1 - 0.5\,\theta)\,L_{\text{tree}} + (1 - \theta)\,L_{\text{building}} + (1 - 1.5\,\theta)\,L_{\text{indoor}}\]</span></p>
 <p>A sunny metre costs 1, tree shade 1 − 0.5θ, building shade 1 − θ, an indoor metre 1 − 1.5θ. θ grows with the distance already walked, so shade matters more the longer the walk:</p>
-<div id="89956d1a" class="cell" data-execution_count="3">
+<div id="50773cd6" class="cell" data-execution_count="3">
 <div class="cell-output cell-output-display" data-execution_count="3">
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
@@ -212,14 +211,13 @@ window.Quarto = {
 </section>
 <section id="the-cost-of-a-hot-metre" class="level2">
 <h2 class="anchored" data-anchor-id="the-cost-of-a-hot-metre">The cost of a hot metre</h2>
-<p>The coolest walk keeps θ but values each metre by its UTCI:</p>
+<p>The coolest walk uses the same θ but prices each metre by its UTCI instead of its shade class:</p>
 <p><span class="math display">\[C_{\text{heat}} = \sum_{\text{edges}} L\,(1 - \theta\,r), \qquad r = \frac{U_{\text{sun}} - U}{U_{\text{sun}} - U_{\text{building}}}\]</span></p>
-<p><span class="math inline">\(U\)</span> is the sidewalk’s UTCI; <span class="math inline">\(U_{\text{sun}}\)</span> and <span class="math inline">\(U_{\text{building}}\)</span> are the city medians in sun and in building shade at that hour (15:00: about 45.3 and 40.5 °C). A typically sunny metre costs 1 and a typically building-shaded one 1 − θ, as in the shade cost; everything in between follows its UTCI (<span class="math inline">\(r\)</span> kept between −1 and 1.5). Indoor passages have no UTCI, so the coolest walk stays outdoors.</p>
+<p><span class="math inline">\(U\)</span> is the sidewalk’s UTCI; <span class="math inline">\(U_{\text{sun}}\)</span> and <span class="math inline">\(U_{\text{building}}\)</span> are the city medians in sun and in building shade at that hour (at 15:00 on June 24, 45.9 and 41.3 °C). A metre as hot as a typical sunny sidewalk costs 1, and a metre as cool as typical building shade costs 1 − θ, as in the shade cost. Every other metre falls in between, in proportion to its UTCI. Indoor passages have no UTCI, so the coolest walk stays outdoors.</p>
 </section>
 <section id="walks-home-from-transit" class="level2">
 <h2 class="anchored" data-anchor-id="walks-home-from-transit">Walks home from transit</h2>
-<p>Every home within 1.2 km of a frequent stop is one walk, stop to home (431,114 walks). Results are reported by length (under 300 m, 300–800 m, 800–1,200 m), since short walks rarely have an alternative, and for rapid transit and buses separately.</p>
-<p>The direction does not matter: walking home to stop instead gives a mean sun reduction of 13.8% against 13.8% (500 walks, correlation 0.99).</p>
+<p>Each walk runs from the stop to the home. Results are reported by walk length (under 300 m, 300–800 m, 800–1,200 m), since short walks rarely have an alternative, and for stations and bus or trolley stops separately.</p>
 </section>
 <section id="metrics" class="level2">
 <h2 class="anchored" data-anchor-id="metrics">Metrics</h2>
@@ -285,15 +283,11 @@ window.Quarto = {
 </tr>
 </tbody>
 </table>
-<p>Weighted exposure falls about a tenth as much as sun: with θ near 0.2, each metre of sun avoided lowers C by only 0.15–0.2 m.</p>
+<p>Weighted exposure falls much less than sun because, with θ near 0.2, each metre of sun avoided lowers C by only 0.15–0.2 m.</p>
 </section>
 <section id="indoor-scenarios-university-city" class="level2">
 <h2 class="anchored" data-anchor-id="indoor-scenarios-university-city">Indoor scenarios (University City)</h2>
 <p>Mapped entrances are linked to the nearest sidewalk; passages through buildings count as indoor walking. Three cases: outdoor only, plus buildings open without a Penn ID, plus all mapped buildings. The shortest route is always the outdoor one.</p>
-</section>
-<section id="how-we-checked" class="level2">
-<h2 class="anchored" data-anchor-id="how-we-checked">How we checked</h2>
-<p>The five stations with the largest sun reduction were checked on aerial photos; checks of the heat model are in the <a href="./technical.html">technical notes</a>.</p>
 
 
 </section>
