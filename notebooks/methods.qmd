@@ -74,7 +74,9 @@ Indoor passages have no UTCI, so the coolest walk stays outdoors.""")
 ```{python}
 #| output: asis
 print("Each walk runs from the stop to the home. Results are reported by walk length (under 300 m, 300–800 m, 800–1,200 m), "
-      "since short walks rarely have an alternative, and for stations and bus or trolley stops separately.")
+      "since short walks rarely have an alternative, and for stations and bus or trolley stops separately. On the 500 m grid, "
+      "a cell's figures are means over its walks, and figures for a group of cells are means over the cells, not weighted by "
+      "their number of walks (medians for building height, canopy and sidewalk density).")
 ```
 
 ## Metrics

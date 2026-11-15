@@ -12,7 +12,10 @@ const EMPTY = { type: "FeatureCollection", features: [] };
 const EXTREME = 46;                   // UTCI heat-stress class 'extreme' (Bröde et al. 2012)
 
 // cumulative distance at each point (the point sits in the middle of the length it stands for)
-function prep(w) {
+function prep(w0) {
+  // the points' lengths are scaled to the walk's length, so the walked distance ends at the length shown elsewhere
+  const sum = w0.seg.reduce((a, b) => a + b, 0), k = w0.length ? w0.length / sum : 1;
+  const w = { ...w0, seg: w0.seg.map((g) => g * k) };
   const d = [];
   let s = 0;
   w.seg.forEach((g, i) => { d.push(s + g / 2); s += g; });

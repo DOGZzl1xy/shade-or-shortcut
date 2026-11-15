@@ -28,11 +28,11 @@ Code, parameters and result tables are in the [project repository](https://githu
 | 1. LiDAR | 2022 airborne LiDAR, streamed tile by tile | 1 m ground (DEM) and surface (DSM) grids | ground returns → DEM; highest returns → DSM; each tile is downloaded, rasterised and deleted |
 | 2. Surface model | DEM, DSM, footprints, 2018 land cover, CHMv2 | 1 m building and tree heights | height above ground (nDSM) split into buildings (inside footprints), structures (bridges, viaducts) and trees (canopy mask) |
 | 3. Shadow casting | surface model, sun positions | sun / tree shade / building shade at every sample point and hour | a ray from each point (1.5 m above the ground) towards the sun, marched 1 m at a time for up to 1 km |
-| 4. Heat model | surface model, 2018 land cover, ERA5 hourly weather | mean radiant temperature and UTCI at 1 m, every hour; sampled at the same points | SOLWEIG 2022a on the GPU (solweig-gpu 2.0.0), in 1 km tiles with a 400 m margin |
+| 4. Heat model | surface model, 2018 land cover, ERA5 hourly weather | mean radiant temperature and UTCI at 1 m, every hour; sampled at the same points | SOLWEIG 2022a on the GPU (solweig-gpu 2.0.0) |
 | 5. Edge attributes | DVRPC sidewalks and crossings, OSM bridges and covered walkways | metres of sun, tree shade and building shade per edge and hour; mean UTCI and metres per heat-stress class | sample points summed per edge; covered walkways always in building shade |
 | 6. Routing | edge table | shortest, shadiest and coolest path per walk | Dijkstra on length, on the shade cost of Wen et al. (2025) and on the heat (UTCI) cost, θ growing with distance walked |
-| 7. Walk samples | SEPTA timetable, residential parcels | one walk per home, stop → home | nearest frequent stop along the network, within 1.2 km |
-| 8. Summaries | walk metrics | tables by mode and walk length; stations; 500 m grid clusters | means within length bands; k-means on grid cells |
+| 7. Walk samples | SEPTA timetable, residential parcels | one walk per home, stop → home | nearest station or frequent stop along the network, within 1.2 km |
+| 8. Summaries | walk metrics | tables by stop type and walk length; stations; 500 m grid clusters | means within length bands; k-means on grid cells |
 
 :::
 
@@ -64,8 +64,7 @@ rows = [
     ("Heat model tiles", f"{sw['city']['core_m']:,} m cores, each run with a {sw['city']['margin_m']} m margin on every side; "
                          f"{s10['server_files'][st['dates'][0]]} cores per day (those with sidewalk points)"),
     ("Weather", f"ERA5 hourly via Open-Meteo, one cell ({met[st['dates'][0]]['grid_lat']}° N, "
-                f"{abs(met[st['dates'][0]]['grid_lon'])}° W) for the whole city; rows {sw['met_hours'][0]}–{sw['met_hours'][1]} h"),
-    ("Tree heights in the heat model", f"canopy pixels above {sw['tree_max_m']} m dropped (also in the shadow model)"),
+                f"{abs(met[st['dates'][0]]['grid_lon'])}° W) for the whole city"),
     ("Light through tree crowns", "3% (fixed in SOLWEIG; tested at 5% and 15%)"),
     ("Land cover for the heat model", "2018 land cover → UMEP classes paved, building, grass, bare soil, water; canopy pixels "
                                       "take the class of the nearest non-canopy pixel"),
@@ -128,14 +127,12 @@ items = [
      f"({s8['connectivity']['osm_km_in_main_component']:.0f} km), leaving out sidewalks, crossings, private and indoor ways. "
      "Each mapped entrance is linked to the nearest sidewalk point without crossing a building; links over 30 m that are not "
      "walkable are removed."),
-    ("Study days", "June 24, 2025, during a heat wave (101 °F at Philadelphia airport), and July 29, 2025 (98 °F), both hot "
-     "and sunny. Shadows and heat are computed for the same days and hours."),
     ("Own tiling", "solweig-gpu can split a large area itself, but its tiles overlap only to the right and below, so a tower "
      "just left of or above a tile edge would cast no shadow into it. Every 1 km core is run on its own with a 400 m margin on "
      "all four sides and only the core is kept."),
     ("Tall 'trees'", f"Façade returns beside towers and cranes appear in the canopy layer, up to 270 m tall. Canopy above "
-     f"{sw['tree_max_m']} m is dropped in both models ({inp['tall_tree_px_dropped']:,} pixels in the University City test "
-     f"domain, {pct(inp['tall_tree_px_dropped'] / (inp['tree_px_share'] * (2 * (sw['half_size_m'] + sw['margin_m'])) ** 2), 1)} of its canopy)."),
+     f"{sw['tree_max_m']} m is dropped in both models "
+     f"({pct(inp['tall_tree_px_dropped'] / (inp['tree_px_share'] * (2 * (sw['half_size_m'] + sw['margin_m'])) ** 2), 1)} of the canopy in University City)."),
     ("Points inside buildings", f"SOLWEIG has no UTCI on roofs. {s10['points_moved_off_buildings']:,} sidewalk points that fall on a "
      "building pixel (footprints overlap the sidewalk lines) take the value of the nearest open pixel."),
     ("One weather cell", "Air temperature, humidity and wind are the same everywhere, since ERA5 cells are about 25 km wide. "

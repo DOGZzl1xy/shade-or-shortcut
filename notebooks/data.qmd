@@ -88,7 +88,7 @@ sun, shade, walls and ground.""")
 #| output: asis
 c = s6["city"]
 print(f"Each walk starts at a rapid-transit station (Regional Rail, the L and B subway lines, and the T trolley tunnel) or at a "
-      f"bus or trolley stop with at least {c['min_per_hour']} departures an hour on one route between 15:00 and 19:00, and ends at a home within "
+      f"bus or trolley stop with at least {c['min_per_hour']} departures an hour on one route in one direction between 15:00 and 19:00, and ends at a home within "
       f"1.2 km on foot: {c['parcels_within_1200m']:,} walks. "
       f"The other {c['parcels_uncovered']:,} homes ({pct(c['parcels_uncovered_share'], 1)}), mostly in the Northeast and Roxborough, "
       "have no frequent stop that close.")

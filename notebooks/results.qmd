@@ -236,10 +236,10 @@ noon = g0[(hr >= 11) & (hr <= 15)].heat_dutci.idxmax()
 eve = g0.index[-1]
 mid = mb.xs("300-800", level="length_bin").heat_eq_shade
 print(f"""- **The two walks mostly agree**: for {pct(mid.min(), 0)}–{pct(mid.max(), 0)} of walks of 300–800 m they are the same.
-  Where they differ, the coolest walk takes the tree-lined street.
-- **Averages hide the walks with no choice.** The gain is largest in the morning ({num(g0.loc[best, 'heat_dutci'], '.2f')} °C at
-  {best[5:]}:00), small around midday ({num(g0.loc[noon, 'heat_dutci'], '.2f')} °C at {noon[5:]}:00) and again in the evening
-  ({num(g0.loc[eve, 'heat_dutci'], '.2f')} °C at {eve[5:]}:00), when the low sun no longer heats the sunny side much.""")
+- **Averages hide the walks with no choice.** Hour by hour on {DAYS[D0]}, for walks of every length, the gain is largest in
+  the morning ({num(g0.loc[best, 'heat_dutci'], '.2f')} °C at {best[5:]}:00), small around midday ({num(g0.loc[noon, 'heat_dutci'], '.2f')} °C
+  at {noon[5:]}:00) and small again in the evening ({num(g0.loc[eve, 'heat_dutci'], '.2f')} °C at {eve[5:]}:00), when the low sun no
+  longer heats the sunny side much.""")
 ```
 
 ### Why the coolest walk is cooler
