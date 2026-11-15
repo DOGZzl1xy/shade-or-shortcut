@@ -107,29 +107,32 @@ def main():
     plt.tight_layout()
     plt.savefig(figs / "phase_06_gap.png", dpi=110)
 
-    # ---- parcels with no home stop within 1.2 km
-    crs = cfg["project"]["crs"]
+    uncovered_figure(cfg)
+
+
+def uncovered_figure(cfg):
+    """Homes without a frequent stop within 1.2 km, with the stations and frequent stops (website Data page; current
+    line names L / B / T, no title)."""
+    proc, figs, crs = cfg["paths"]["processed"], cfg["paths"]["figures"], cfg["project"]["crs"]
     unc = pd.read_parquet(proc / "trips_city_uncovered.parquet")
     par = pd.read_parquet(proc / "trips_city_parcels.parquet")
     stops = home_stops(cfg)
     fig, ax = plt.subplots(figsize=(11, 12))
     gpd.GeoSeries([city(cfg)], crs=crs).boundary.plot(ax=ax, color="k", lw=0.7)
-    ax.scatter(unc.x, unc.y, s=0.2, c="#d62728", alpha=0.4, label=f"no home stop within 1.2 km ({len(unc):,} parcels)")
+    ax.scatter(unc.x, unc.y, s=0.2, c="#d62728", alpha=0.4, label=f"homes without a frequent stop within 1.2 km ({len(unc):,})")
     sm = par.sample(min(len(par), 30000), random_state=cfg["project"]["seed"])
-    ax.scatter(sm.x, sm.y, s=0.2, c="#888", alpha=0.3, label="sampled parcels (30k shown)")
-    for k, c, s in (("surface", "#1f77b4", 3), ("Regional Rail", "#2a9d3a", 16), ("MFL", "#ff7f0e", 16),
-                    ("BSL", "#ff7f0e", 16), ("trolley tunnel", "#9467bd", 16)):
+    ax.scatter(sm.x, sm.y, s=0.2, c="#888", alpha=0.3, label="other homes (sample)")
+    for k, name, c, sz in (("surface", "frequent bus stop", "#1f77b4", 3), ("Regional Rail", "Regional Rail", "#2a9d3a", 16),
+                           ("MFL", "L", "#ff7f0e", 16), ("BSL", "B", "#e377c2", 16), ("trolley tunnel", "T", "#9467bd", 16)):
         ss = stops[stops.kind == k]
-        ax.scatter(ss.geometry.x, ss.geometry.y, s=s, c=c, label=f"{k} ({len(ss)})")
+        ax.scatter(ss.geometry.x, ss.geometry.y, s=sz, c=c, label=f"{name} ({len(ss):,})")
     cx.add_basemap(ax, crs=crs, source=cx.providers.Esri.WorldGrayCanvas, zoom=11)
-    ax.legend(loc="lower right", fontsize=8, markerscale=3)
-    ax.set_title(f"Residential parcels without a home stop within 1.2 km network distance\n"
-                 f"SEPTA GTFS fall 2026 timetable (v202609271), weekday {cfg['trips']['home_stops']['rep_date']} 15:00–19:00, "
-                 f"surface stops ≥ {cfg['trips']['home_stops']['min_per_hour']}/h")
+    ax.legend(loc="lower right", fontsize=10, markerscale=3)
     ax.set_axis_off()
     plt.tight_layout()
     plt.savefig(figs / "phase_06_uncovered.png", dpi=100)
 
 
 if __name__ == "__main__":
-    main()
+    import sys
+    uncovered_figure(load_config()) if sys.argv[1:] == ["figure"] else main()   # "figure": the Data page figure only

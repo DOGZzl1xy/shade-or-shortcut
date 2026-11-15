@@ -161,11 +161,19 @@ def main():
     plt.tight_layout()
     plt.savefig(figs / "phase_02_city.png", dpi=100)
 
-    # University City zoom: building source + trees on aerial
+    ucity_figure(cfg)
+
+
+def ucity_figure(cfg):
+    """University City on aerial imagery: buildings by height source, bridges and other structures, tree canopy
+    (website Data page; plain labels, no title)."""
+    import contextily as cx
+    from matplotlib.colors import ListedColormap
+    from matplotlib.patches import Patch
+    proc, figs, crs = cfg["paths"]["processed"], cfg["paths"]["figures"], cfg["project"]["crs"]
     x0, y0, x1, y1 = 482300, 4421500, 484700, 4423500
     with rasterio.open(proc / "building_source.tif") as s:
-        w = from_bounds(x0, y0, x1, y1, transform=s.transform)
-        sz = s.read(1, window=w)
+        sz = s.read(1, window=from_bounds(x0, y0, x1, y1, transform=s.transform))
     with rasterio.open(proc / "surface_tree.tif") as s:
         tz = s.read(1, window=from_bounds(x0, y0, x1, y1, transform=s.transform))
     fig, ax = plt.subplots(figsize=(14, 12))
@@ -174,18 +182,16 @@ def main():
     cx.add_basemap(ax, crs=crs, source=cx.providers.Esri.WorldImagery, zoom=16)
     lay = np.where(tz > 0, 4, sz).astype(float)
     lay[lay == 0] = np.nan
-    cmap = ListedColormap(["#4361ee", "#f72585", "#ff9f1c", "#2a9d3a"])
-    ax.imshow(lay, cmap=cmap, vmin=0.5, vmax=4.5, alpha=0.6, extent=(x0, x1, y0, y1), interpolation="nearest")
-    from matplotlib.patches import Patch
-    ax.legend(handles=[Patch(color=c_, label=l) for c_, l in zip(
-        ["#4361ee", "#f72585", "#ff9f1c", "#2a9d3a"],
-        ["footprint, LiDAR height", "footprint, approx_hgt extrusion (D-015)", "unmapped structure / bridge (D-013)",
-         "tree canopy (D-012)"])], loc="lower left", fontsize=11)
-    ax.set_title("Phase 2 surfaces, University City (blocks shown on Esri imagery)")
+    cols = ["#4361ee", "#f72585", "#ff9f1c", "#2a9d3a"]
+    ax.imshow(lay, cmap=ListedColormap(cols), vmin=0.5, vmax=4.5, alpha=0.6, extent=(x0, x1, y0, y1), interpolation="nearest")
+    ax.legend(handles=[Patch(color=c_, label=l) for c_, l in zip(cols, [
+        "building, height from LiDAR", "building, height from city records", "bridge or other structure", "tree canopy"])],
+        loc="lower left", fontsize=12)
     ax.set_axis_off()
     plt.tight_layout()
     plt.savefig(figs / "phase_02_ucity.png", dpi=110)
 
 
 if __name__ == "__main__":
-    main()
+    import sys
+    ucity_figure(load_config()) if sys.argv[1:] == ["figure"] else main()   # "figure": the Data page figure only

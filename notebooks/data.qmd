@@ -6,9 +6,8 @@ sys.path.insert(0, str(ROOT / "notebooks"))
 from _site import table, md, fig, pct
 from coolpath import load_config
 import pandas as pd
-q2, s3, s4, s6, s8 = (table(n) for n in ("phase_02_qa.json", "phase_03_stats.json", "phase_04_stats.json",
-                                         "phase_06_stats.json", "phase_08_build.json"))
-met, s10 = table("phase_10_met.json"), table("phase_10_city.json")
+q2, s3, s4, s6 = (table(n) for n in ("phase_02_qa.json", "phase_03_stats.json", "phase_04_stats.json", "phase_06_stats.json"))
+met = table("phase_10_met.json")
 cfg = load_config()
 dates = [pd.Timestamp(d) for d in cfg["study"]["dates"]]
 days = " and ".join(d.strftime("%B %-d") for d in dates)
@@ -23,9 +22,10 @@ All inputs are public.
 | Airborne LiDAR, March 2022 | City of Philadelphia (NOAA Digital Coast, PASDA) | ground, building and tree heights at 1 m |
 | Building footprints | City of Philadelphia | building outlines |
 | Land cover 2018 | PASDA | tree canopy |
-| Canopy height (CHMv2) | Meta / WRI, CC BY 4.0 | trees just outside the city |
+| Canopy height (CHMv2) | Meta / WRI | trees just outside the city |
 | Pedestrian network | DVRPC | sidewalks and crosswalks |
-| OpenStreetMap | OSM contributors, ODbL | bridges, covered walkways, campus footways |
+| OpenStreetMap | OSM contributors | bridges, covered walkways, campus footways |
+| Building entrances and indoor passages | mapped for this project, 41 buildings in University City | walks through buildings |
 | Transit | SEPTA, fall 2026 timetable | stations and frequent bus stops |
 | Properties | City of Philadelphia (OPA) | homes, where walks end |
 | Hourly weather | ERA5 (ECMWF), via Open-Meteo | weather for the heat model |
@@ -40,21 +40,19 @@ n, p = s3["net"], s3["points"]
 print(f"""::: {{.stat-row}}
 <div><div class="v">{n['km']:,.0f} km</div><div class="label">sidewalks and crossings</div></div>
 <div><div class="v">{p['points'] / 1e6:.1f} M</div><div class="label">points checked for shade, every 2 m</div></div>
-<div><div class="v">24</div><div class="label">hours: {days}, 8:00–19:00</div></div>
-<div><div class="v">1 m</div><div class="label">height model of buildings and trees</div></div>
+<div><div class="v">24</div><div class="label">hours modelled: 8:00–19:00 on {days}</div></div>
 :::""")
 ```
 
 ```{python}
 #| output: asis
 b, s = q2["buildings"], q2["shares_in_city"]
-print(f"Heights come from the 2022 LiDAR survey. Building heights match the city's records to {b['median_abs_err_m']:.1f} m "
-      f"(median, {b['compared']:,} buildings); bridges and elevated rail cast shadows too. Trees cover {pct(s['tree_phase2'], 0)} "
+print(f"Heights come from the 2022 LiDAR survey; bridges and elevated rail cast shadows too. Trees cover {pct(s['tree_phase2'], 0)} "
       f"of the city (median height {s['tree_height_median_m']:.0f} m). Covered walkways ({s4['covered_km_total']:.1f} km) are always in shade.")
 ```
 
 ```{python}
-#| fig-cap: "University City in the height model: buildings (blue and pink), bridges and other structures (orange) and trees (green)."
+#| fig-cap: "University City in the height model: buildings with LiDAR heights (blue) or recorded heights (pink), bridges and other structures (orange) and trees (green)."
 #| classes: figure-light
 fig("phase_02_ucity.png")
 ```
@@ -64,12 +62,12 @@ fig("phase_02_ucity.png")
 ```{python}
 #| output: asis
 a, b = (met[d.strftime("%Y-%m-%d")] for d in dates)
-print(f"""Shade says where the sun is blocked, not how hot a sidewalk feels. For that, the same heights go into SOLWEIG, which
-computes the radiation a standing person receives from sun, sky, walls and ground and, with the weather, the **UTCI**: how hot
-it feels, in °C. Above 38 °C is *very strong* heat stress, above 46 °C *extreme*.
+print(f"""Shade says where the sun is blocked, not how hot a sidewalk feels. SOLWEIG takes the same heights and the weather and
+computes the radiation a standing person receives from the sun, the sky, walls and the ground. From it comes the **UTCI**, how
+hot it feels in °C. Above 38 °C is *very strong* heat stress, above 46 °C *extreme*.
 
-The model needs real weather, so the study uses two hot, sunny days of 2025: **{dates[0].strftime('%B %-d')}**, during a heat
-wave, and **{dates[1].strftime('%B %-d')}**. Shadows are computed for the same moments.\n""")
+The heat model uses the weather of two hot, sunny days in 2025: **{dates[0].strftime('%B %-d')}**, during a heat wave, and
+**{dates[1].strftime('%B %-d')}**.\n""")
 ```
 
 ```{python}
@@ -82,8 +80,7 @@ for d in dates:
 print("| Day | Air temperature, 15:00 | Humidity, 15:00 | Wind, 15:00 | Peak solar radiation | Daily maximum |\n| --- | --- | --- | --- | --- | --- |")
 print("\n".join(rows))
 print(f"""\nOne ERA5 cell covers the whole city, so air temperature and wind are the same everywhere; the heat map varies with
-sun, shade, walls and ground. The model ran in {s10['server_files'][a['date']]} one-kilometre tiles per day on a GPU and gives a
-UTCI value at all {s10['points'] / 1e6:.1f} million sidewalk points, every hour.""")
+sun, shade, walls and ground.""")
 ```
 
 ## Whose walks
@@ -91,8 +88,9 @@ UTCI value at all {s10['points'] / 1e6:.1f} million sidewalk points, every hour.
 ```{python}
 #| output: asis
 c = s6["city"]
-print(f"Each walk starts at a rapid-transit station (Regional Rail, L, B, T tunnel) or at a bus stop with at least "
-      f"{c['min_per_hour']} buses an hour (15:00–19:00), and ends at a home within 1.2 km on foot: {c['parcels_within_1200m']:,} walks. "
+print(f"Each walk starts at a rapid-transit station (Regional Rail, the L and B subway lines, and the T trolley tunnel) or at a "
+      f"bus stop with at least {c['min_per_hour']} buses an hour on one route between 15:00 and 19:00, and ends at a home within "
+      f"1.2 km on foot: {c['parcels_within_1200m']:,} walks. "
       f"The other {c['parcels_uncovered']:,} homes ({pct(c['parcels_uncovered_share'], 1)}), mostly in the Northeast and Roxborough, "
       "have no frequent stop that close.")
 ```
@@ -103,20 +101,9 @@ print(f"Each walk starts at a rapid-transit station (Regional Rail, L, B, T tunn
 fig("phase_06_uncovered.png", width=640)
 ```
 
-## University City
-
-```{python}
-#| output: asis
-b8 = s8
-print(f"In University City, entrances and indoor passages of {b8['buildings']['total']} buildings were mapped "
-      f"({b8['indoor_km']:.1f} km; {b8['buildings']['no_penncard']} buildings open without a Penn ID), and campus footpaths "
-      "from OpenStreetMap were added.")
-```
-
 ## Known gaps
 
 - Campus and park paths are missing outside University City, so cooler options there are understated.
-- Two clear, hot days; trees from leaf-off LiDAR and 2018 land cover, buildings from 2022.
-- One weather cell for the city: no neighbourhood differences in air temperature or wind. Trees let a fixed 3% of the sun through.
-- Missing footprints, new buildings and temporary objects affect shade locally.
-- The timetable is one weekday in fall 2026.
+- Milder or cloudy days are not modelled.
+- Trees come from leaf-off LiDAR and 2018 land cover, buildings from 2022.
+- Trees let a fixed 3% of the sun through.
