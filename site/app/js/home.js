@@ -97,7 +97,7 @@ set("h-days", A.hot_days);
 set("h-days-cap", `days at ${A.days_at_or_above} °F or above, summer ${A.summer[0].slice(0, 4)}`);
 $("lst-legend").innerHTML = rampHTML(L.ramp.flatMap(([v, c]) => [L.ramp_c[0] + v * (L.ramp_c[1] - L.ramp_c[0]), c]),
   [[L.ramp_c[0], `${L.ramp_c[0]}`], [L.ramp_c[1], `${L.ramp_c[1]} °C`]], { title: "Ground surface temperature (Landsat)" });
-set("lst-cap", `Ground surface on ${day(L.date)}, ${L.time_local} (air ${A.scene_day_max_f} °F): a median of ${Math.round(L.median_c)} °C.`);
+set("lst-cap", `${day(L.date)}, ${L.time_local}: a median of ${Math.round(L.median_c)} °C.`);
 set("n-trips", summary.city_trips.toLocaleString("en-US"));
 set("n-homes", summary.city_trips.toLocaleString("en-US"));
 set("p-station", stationName(PERSONA));
@@ -116,10 +116,7 @@ set("ex-cool", m(PERSONA.coolest.length)); set("ex-cool-cap", `shadiest · ${sun
 $("ex-detail").innerHTML = `${Math.round(PERSONA.coolest.length - PERSONA.shortest.length)} m more walking, <b>${m(PERSONA.shortest.sun - PERSONA.coolest.sun)}</b> less in the sun.`;
 set("s-sun", pct(b6.short_sun_share, 0));
 set("w-noalt", inTen(b7.no_alt_share));
-const WS = story.waffle.sun_red.shares;
-$("w-detail").innerHTML = `For the others a shadier street is close, and it can help a lot: for <b class="cool">${Math.round(100 * WS[3])} in 100</b>
-  the shadiest walk avoids a quarter of the sun or more. Averaged over all walks, the shadiest walk has <b>${pct(b6.sun_red_mean, 1)} less sun</b>
-  for <b>${pct(b6.detour_mean, 1)} more distance</b>.`;
+$("w-detail").innerHTML = `On average the shadiest walk has <b>${pct(b6.sun_red_mean, 1)} less sun</b> for <b>${pct(b6.detour_mean, 1)} more distance</b>.`;
 const prof = Object.fromEntries(CLUSTERS.map(([k]) => [k, grid.features.filter((f) => f.properties.cluster === k)]));
 // cluster figures as on the results page: means over cells, medians for the cell features (sidewalk density)
 const avg = (fs, k) => fs.reduce((a, f) => a + f.properties[k], 0) / fs.length;
@@ -134,10 +131,7 @@ document.querySelectorAll("[data-grid-legend]").forEach((el) => {
 set("f-drop", `${Math.round(r15.u_sun - (r15.u_bldg + r15.u_tree) / 2)} °C`);
 const vs = H24.filter((r) => r.u_bldg > 38).map((r) => +r.label.slice(5));
 set("hd-from", Math.min(...vs)); set("hd-to", Math.max(...vs));
-const SP = story.spots.points.reduce((o, p) => ({ ...o, [p.kind]: p }), {});
-$("tr-detail").innerHTML = `The shade cost counts a metre under trees as half as good as building shade. Here, a block apart:
-  <b class="sun">${degC(SP.sun.u)}</b> in the sun, <b class="t-tree">${degC(SP.tree.u)}</b> under trees,
-  <b class="t-bldg">${degC(SP.bldg.u)}</b> in building shade.`;
+$("tr-detail").innerHTML = `The shadiest walk counts tree shade as only half as good. The three sidewalks on the map are a block apart.`;
 $("f-meds").innerHTML = `City-wide at 15:00: <b class="sun">${degC(r15.u_sun)}</b> in the sun, <b class="t-bldg">${degC(r15.u_bldg)}</b> in
   building shade, <b class="t-tree">${degC(r15.u_tree)}</b> under trees.`;
 set("ch-du", degC(h10.heat_dutci, 2).replace(" °C", "°C")); set("ch-ext", "−" + pct(h10.heat_extreme_red, 0)); set("ch-det", "+" + pct(h10.heat_detour, 1));
@@ -211,8 +205,8 @@ function hourChart(h) {
 (function waffle() {
   // 100 walks in four groups by how much sun the shadiest walk avoids; one square = one walk
   const W = story.waffle.sun_red, cols = ["#d47519", "#2f6f7a", "#3fa3ae", COLORS.cool];
-  const text = ["<b>No shadier way home</b>: the shadiest walk avoids less than 2% of the sun", "<b>A little shade</b>: 2–10% less sun",
-    "<b>Noticeably shadier</b>: 10–25% less sun", "<b>Much shadier</b>: a quarter of the sun or more avoided"];
+  const text = ["<b>No shadier way</b>: under 2% less sun", "<b>A little shadier</b>: 2–10% less sun",
+    "<b>Noticeably shadier</b>: 10–25% less sun", "<b>Much shadier</b>: 25% or more less sun"];
   const raw = W.shares.map((x) => 100 * x), n = raw.map(Math.floor);
   let rest = 100 - n.reduce((a, b) => a + b, 0);
   raw.map((v, i) => [v - Math.floor(v), i]).sort((a, b) => b[0] - a[0]).forEach(([, i]) => { if (rest > 0) { n[i] += 1; rest -= 1; } });
